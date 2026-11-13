@@ -17,13 +17,19 @@ end
 #  rating      :integer
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  consumer_id :bigint
 #  menu_id     :bigint           not null
+#  order_id    :bigint
 #
 # Indexes
 #
-#  index_reviews_on_menu_id  (menu_id)
+#  index_reviews_on_consumer_id  (consumer_id)
+#  index_reviews_on_menu_id      (menu_id)
+#  index_reviews_on_order_id     (order_id) UNIQUE
 #
 # Foreign Keys
 #
+#  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (menu_id => menus.id)
+#  fk_rails_...  (order_id => orders.id)
 #

@@ -62,6 +62,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
+| Calificaciones: viewport y acciones inferiores | `ReviewPage` + `ReviewActions`, en `components/reviews/` | Contenido desplazable, acciones visibles y espacio seguro inferior; respeta el teclado mediante `visualViewport` |
 | Lista de tarjetas | `grid gap-4 md:grid-cols-2` | 1 columna en móvil, 2 desde tablet |
 | Cada ítem de la lista | `ListItemCard` | Tarjeta compacta: `py-4` y `gap-4`, con `px-4` en sus partes |
 | Lista vacía | `Empty className="border"` con `EmptyMedia variant="icon"` | Ver [Empty](#empty) |
@@ -94,7 +95,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter` | `@/components/ui/card` | Superficies: ítems de lista, métricas, formularios, resúmenes |
 | `Alert`, `AlertTitle`, `AlertDescription` | `@/components/ui/alert` | Errores, avisos y confirmaciones dentro de la pantalla |
 | `Field`, `FieldLabel`, `FieldError`, `FieldDescription`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldContent`, `FieldTitle`, `FieldSeparator` | `@/components/ui/field` | Estructura de formularios: etiqueta, ayuda, error, grupos, divisor con texto |
-| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda, archivo. Para fechas, `DatePicker` |
+| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda. Para fechas, `DatePicker`; para archivos, `FileInput` |
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
 | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` | `@/components/ui/input-otp` | Código de verificación en casillas separadas (6 dígitos del reseteo de contraseña) |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
@@ -134,7 +135,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `badge` (al lado del título, como el contador de Empleados), `actions`, `back` y `centered` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `badge` (al lado del título, como el contador de Empleados), `actions`, `back`, `centered` y `actionsCentered` (centra las `actions` verticalmente con el título, como la campana de notificaciones de los inicios) |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
@@ -143,6 +144,11 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DeliveryFilterSheet` | `@/components/orders/delivery-filter-sheet` | Filtro de tipo de entrega (Todas, Oficina, Domicilios) en un sheet inferior, con Cancelar y Aplicar |
 | `ProviderOrderDays` | `@/components/orders/provider-order-days` | Pedidos del proveedor agrupados por día: acordeón en celular, lista de días y panel del día elegido desde `lg` |
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail`, `badge` y `action` opcionales |
+| `DashboardMetric` | `@/components/provider/dashboard-metric` | Número con su etiqueta en el Inicio y en Hallazgos del proveedor; `valueFirst` pone el número arriba y centrado. El fondo y el borde los pasa quien lo usa con `className` |
+| `InsightsMetrics` | `@/components/provider/insights-metrics` | Las tres métricas grises de los hallazgos del proveedor (Pedidos, Platos y ★ Valoración, con «—» si no hay reseñas). Recibe `orders`, `dishes` y `rating` |
+| `AiInsightCard` | `@/components/provider/ai-insight-card` | Tarjeta violeta con gradiente; recibe contenido en `children` y muestra el pie «Generado por IA» solo con `generated` |
+| `BenefitMetric` | `@/components/admin/benefit-metric` | Métrica blanca dentro de la tarjeta gris del beneficio (Participación y Gasto del Inicio, métricas de Reportes): `label`, `value` y `detail` opcional. El ancho lo da el `grid` de la tarjeta |
+| `SummarySection`, `SummaryList`, `SummaryRow` | `@/components/admin/summary-section` | Secciones con lista de RR. HH. («Tus pagos de agosto», «Consumo por proveedor»): título con `HeadingSmall` y `action` opcional (flecha a otra pantalla), la tarjeta con separadores y cada fila |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
@@ -153,6 +159,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
+| `FileInput` | `@/components/file-input` | Elegir un archivo con botón y texto en español; recibe las props de `<input>` y `fileName` con el nombre elegido |
 | `PasswordSetupForm` | `@/components/password-setup-form` | Formulario de contraseña nueva con checklist de requisitos y confirmación; el botón queda deshabilitado hasta que se cumplen. Recibe `action`, `submitLabel` y, opcional, `email` de solo lectura. Lo usan el alta del proveedor y el reseteo |
 | `CompletedSheet` | `@/components/completed-sheet` | Sheet inferior de confirmación («¡Registro completado!») con un botón «Listo» que navega a `href` |
 
@@ -298,10 +305,12 @@ Cada control de formulario va dentro de un `Field`:
 - Con error: `data-invalid` en el `Field` (pinta etiqueta y texto) y `aria-invalid` en el control (pinta el borde).
 - `Field orientation="horizontal"` pone el control al lado de la etiqueta (checkbox, switch). `FieldGroup` apila varios `Field`, y `FieldSet` con `FieldLegend` agrupa opciones bajo un título.
 
-`Input` acepta las mismas props que `<input>` y sirve para cualquier `type`. `Label` sólo se usa suelto, fuera de un `Field`.
+`Input` acepta las mismas props que `<input>` y sirve para cualquier `type` salvo `file`, que muestra el botón nativo del navegador en inglés: para archivos se usa `FileInput`. `Label` sólo se usa suelto, fuera de un `Field`.
+
+Todo `<form>` o `<Form>` lleva `noValidate`. Sin él, `required`, `min`, `max` o `type="email"` disparan los globos del navegador, en inglés y de a un campo por vez. Los errores los resuelve el servidor (o una validación propia antes de enviar) y se muestran todos juntos, cada uno en el `FieldError` de su campo.
 
 ```tsx
-<Form action={providerMenus.create()}>
+<Form action={providerMenus.create()} noValidate>
   {({ errors, processing }) => (
     <FieldGroup>
       <Field data-invalid={!!errors.name}>
@@ -419,12 +428,15 @@ Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español.
 |---|---|
 | `value` / `from` y `to` | Fechas `YYYY-MM-DD`; `""` si no hay |
 | `onChange` | Recibe la fecha elegida (`DatePicker`) o el desde y el hasta (`DateRangePicker`) |
-| `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
+| `min`, `max` | Primer y último día habilitado |
 | `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
 | `id` | Para vincularlo con un `FieldLabel htmlFor` |
 | `className` | Clases del botón; `w-full` para que ocupe todo el ancho (`DateRangePicker`) |
+| `presets` | `{ label, from, to }[]` que se muestran como botones debajo del calendario; tocar uno aplica el rango y cierra el calendario. Se deshabilitan los que quedan fuera de `min`/`max` (`DateRangePicker`) |
+| `commitOnComplete` | `onChange` se llama una sola vez, cuando el rango tiene inicio y fin; el primer click solo marca el inicio, y si se cierra el calendario con el inicio solo, el rango es ese día. Para cuando elegir navega, como en Hallazgos (`DateRangePicker`) |
+| `label` | Texto del botón en lugar del rango, por ejemplo "Octubre 2026" para un mes completo (`DateRangePicker`) |
 
-`DateRangePicker` escribe el rango como en el Figma, "9 junio – 27 junio 2027": el año una sola vez, salvo que el rango cruce de año.
+`DateRangePicker` escribe el rango con fechas cortas, "09/06/27 – 27/06/27", y un solo día una vez. Sin `commitOnComplete` llama a `onChange` en cada click, con `to` vacío mientras falta el fin.
 
 El encabezado del calendario sigue el Figma: domingo primero y días y meses en inglés ("Su Mo Tu…", "Jun"). Los textos accesibles quedan en español.
 
@@ -433,6 +445,19 @@ El encabezado del calendario sigue el Figma: domingo primero y días y meses en 
   <FieldLabel htmlFor="agenda-date">{t("…date")}</FieldLabel>
   <DatePicker id="agenda-date" value={date} min={today} weekdaysOnly onChange={setDate} />
 </Field>
+```
+
+```tsx
+<DateRangePicker
+  from={from}
+  to={to}
+  min={min}
+  max={max}
+  label={monthLabel}
+  commitOnComplete
+  presets={[{ label: t("…today"), from: today, to: today }]}
+  onChange={navigate}
+/>
 ```
 
 - Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango en un solo campo, como el de los cierres programados, es `DateRangePicker`; si el diseño pide dos campos, "Desde" y "Hasta", como en la agenda de un plato, se usan dos `DatePicker`.

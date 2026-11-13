@@ -7,6 +7,7 @@ vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
+    usePage: () => ({ props: { auth: null } }),
     Link: ({
       children,
       href,
@@ -53,7 +54,13 @@ describe("OrderConfirmation Page", () => {
   ]
 
   it("renders the success header and notification text", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    render(
+      <OrderConfirmation
+        total={450}
+        orders={sampleOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
     expect(screen.getByText("¡Pedido recibido!")).toBeInTheDocument()
     expect(
@@ -64,7 +71,13 @@ describe("OrderConfirmation Page", () => {
   })
 
   it("displays items grouped by provider with quantities and prices", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    render(
+      <OrderConfirmation
+        total={450}
+        orders={sampleOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
     expect(screen.getByText("TuViandita")).toBeInTheDocument()
     expect(screen.getByText("Milanesa con puré")).toBeInTheDocument()
@@ -74,31 +87,59 @@ describe("OrderConfirmation Page", () => {
   })
 
   it("displays the total amount to pay", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    render(
+      <OrderConfirmation
+        total={450}
+        orders={sampleOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
     expect(screen.getByText("$450")).toBeInTheDocument()
   })
 
   it("displays delivery address", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    render(
+      <OrderConfirmation
+        total={450}
+        orders={sampleOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
     expect(screen.getByText(/18 de Julio 1006/)).toBeInTheDocument()
   })
 
   it("contains a link to view consumer orders", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    const { container } = render(
+      <OrderConfirmation
+        total={450}
+        orders={sampleOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
-    const ordersLink = screen.getByRole("link", { name: "Ver mis pedidos" })
+    const tickContainer = container.querySelector(".bg-primary.rounded-full")
+    expect(tickContainer).toBeInTheDocument()
+    expect(tickContainer?.querySelector("svg")).toBeInTheDocument()
+
+    const ordersLink = screen.getByRole("link", { name: "Ir a Mis pedidos" })
     expect(ordersLink).toBeInTheDocument()
-    expect(ordersLink).toHaveAttribute("href", "/orders")
+    expect(ordersLink).toHaveAttribute("href", "/pedidos")
   })
 
   it("renders a close button linking back to the dashboard", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    render(
+      <OrderConfirmation
+        total={450}
+        orders={sampleOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
     const closeButton = screen.getByRole("link", { name: "Cerrar" })
     expect(closeButton).toBeInTheDocument()
-    expect(closeButton).toHaveAttribute("href", "/dashboard")
+    expect(closeButton).toHaveAttribute("href", "/menu-semanal")
   })
 
   it("handles orders with different delivery methods and providers", () => {
@@ -125,7 +166,13 @@ describe("OrderConfirmation Page", () => {
       },
     ]
 
-    render(<OrderConfirmation total={520} orders={multiProviderOrders} />)
+    render(
+      <OrderConfirmation
+        total={520}
+        orders={multiProviderOrders}
+        upcoming_orders={[]}
+      />,
+    )
 
     expect(screen.getByText("La Cocina")).toBeInTheDocument()
     expect(screen.getByText("Rotisería del Parque")).toBeInTheDocument()

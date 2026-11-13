@@ -2,9 +2,12 @@ import { Link, usePage } from "@inertiajs/react"
 import {
   CalendarDays,
   CalendarPlus,
+  ChartNoAxesCombined,
+  ChartPie,
   ClipboardList,
   CreditCard,
   FileText,
+  History,
   LayoutGrid,
   Package,
   Percent,
@@ -26,12 +29,17 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminAccounts,
   adminBenefitConfigurations,
+  adminBenefitUsage,
   adminInvoices,
+  adminOrderEvents,
+  adminReports,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
   consumerProfiles,
+  providerAccount,
   providerCollections,
   providerDashboard,
   providerOrders,
@@ -54,7 +62,7 @@ export function AppSidebar() {
         icon: LayoutGrid,
       },
       {
-        title: "Menús",
+        title: t("nav.provider.menus"),
         href: schedules.index().url,
         icon: CalendarPlus,
       },
@@ -68,9 +76,27 @@ export function AppSidebar() {
         href: providerCollections.index().url,
         icon: Wallet,
       },
+      {
+        title: t("nav.provider.account"),
+        href: providerAccount().url,
+        icon: UserRound,
+      },
     ],
     admin: [
-      ...adminPrimaryNavItems,
+      ...adminPrimaryNavItems.slice(0, 1),
+      {
+        title: t("benefit_usage.ui.title"),
+        href: adminBenefitUsage.analysis().url,
+        icon: ChartNoAxesCombined,
+      },
+      {
+        title: t("nav.admin.reports"),
+        href: adminReports.index().url,
+        icon: ChartPie,
+      },
+      ...adminPrimaryNavItems
+        .slice(1)
+        .filter((item) => item.href !== adminAccounts.show().url),
       {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,
@@ -80,6 +106,16 @@ export function AppSidebar() {
         title: t("nav.invoices"),
         href: adminInvoices.index().url,
         icon: FileText,
+      },
+      {
+        title: t("nav.order_events"),
+        href: adminOrderEvents.index().url,
+        icon: History,
+      },
+      {
+        title: t("nav.admin.account"),
+        href: adminAccounts.show().url,
+        icon: UserRound,
       },
     ],
     consumer: [

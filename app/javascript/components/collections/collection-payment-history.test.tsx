@@ -13,10 +13,12 @@ function payment(
     id: 1,
     status: "approved",
     rejection_reason: null,
+    expected_amount: null,
     date: "02/10/26",
-    receipt_url: "/provider/payments/1/receipt",
+    receipt_url: "/provider/comprobantes/1/archivo",
     receipt_filename: "aprobado.png",
     receipt_content_type: "image/png",
+    receipt_size: "63,8 KB",
     ...overrides,
   }
 }
@@ -26,7 +28,7 @@ const rejected = payment({
   id: 2,
   status: "rejected",
   date: "30/09/26",
-  receipt_url: "/provider/payments/2/receipt",
+  receipt_url: "/provider/comprobantes/2/archivo",
   receipt_filename: "rechazado.pdf",
   receipt_content_type: "application/pdf",
 })
@@ -56,14 +58,32 @@ describe("CollectionPaymentHistory", () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it("offers a single download link for one receipt", () => {
-    render(<CollectionPaymentHistory payments={[approved, withoutReceipt]} />)
+  it("offers a single download link for one receipt in the history", () => {
+    render(
+      <CollectionPaymentHistory
+        payments={[approved, withoutReceipt]}
+        showDownloadAll
+      />,
+    )
 
     const link = screen.getByRole("link", { name: "Descargar comprobante" })
 
-    expect(link).toHaveAttribute("href", "/provider/payments/1/receipt")
+    expect(link).toHaveAttribute("href", "/provider/comprobantes/1/archivo")
     expect(link).toHaveAttribute("download")
     expect(screen.getAllByRole("link")).toHaveLength(1)
+  })
+
+  it("shows one receipt as a card while the collection is open", () => {
+    render(<CollectionPaymentHistory payments={[rejected, withoutReceipt]} />)
+
+    expect(screen.getByText("30/09/26")).toBeInTheDocument()
+    expect(screen.getByText("rechazado.pdf")).toBeInTheDocument()
+    expect(
+      screen.queryByRole("link", { name: "Descargar comprobante" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: "Descargar rechazado.pdf" }),
+    ).toHaveAttribute("href", "/provider/comprobantes/2/archivo")
   })
 
   it("lists every receipt directly when showDownloadAll is false", () => {
@@ -97,9 +117,15 @@ describe("CollectionPaymentHistory", () => {
       name: "Descargar rechazado.pdf",
     })
 
-    expect(approvedLink).toHaveAttribute("href", "/provider/payments/1/receipt")
+    expect(approvedLink).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/1/archivo",
+    )
     expect(approvedLink).toHaveAttribute("download")
-    expect(rejectedLink).toHaveAttribute("href", "/provider/payments/2/receipt")
+    expect(rejectedLink).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/2/archivo",
+    )
     expect(screen.getAllByRole("link")).toHaveLength(2)
 
     const approvedEntry = approvedLink.closest<HTMLElement>("div.grid")!
@@ -117,18 +143,38 @@ describe("CollectionPaymentHistory", () => {
     expect(downloadClick).toHaveBeenCalledTimes(2)
   })
 
-  it("shows partial payment badge when rejection reason is partial payment", () => {
+  it("shows partial as its own status without also showing rejected", () => {
     const partialPayment = payment({
       id: 4,
-      status: "rejected",
-      rejection_reason: "El pago es parcial",
+      status: "partial",
+      rejection_reason: null,
+      expected_amount: null,
       date: "01/10/26",
-      receipt_url: "/provider/payments/4/receipt",
+      receipt_url: "/provider/comprobantes/4/archivo",
       receipt_filename: "parcial.png",
     })
 
     render(<CollectionPaymentHistory payments={[partialPayment, approved]} />)
 
     expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
+  })
+
+  it("shows a historical partial rejection as one partial status", () => {
+    const historicalPartial = payment({
+      id: 4,
+      status: "rejected",
+      rejection_reason: "El pago es parcial",
+      expected_amount: null,
+      receipt_url: "/provider/comprobantes/4/archivo",
+      receipt_filename: "parcial-historico.png",
+    })
+
+    render(
+      <CollectionPaymentHistory payments={[historicalPartial, approved]} />,
+    )
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
   })
 })

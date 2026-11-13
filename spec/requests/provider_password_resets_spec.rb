@@ -22,7 +22,7 @@ RSpec.describe "Provider password reset", type: :request do
     patch provider_password_reset_path, params: { password: password, password_confirmation: confirmation }
   end
 
-  describe "POST /provider/password" do
+  describe "POST /provider/contrasena" do
     it "sends a code to a provider and moves to the code screen" do
       expect { request_code }.to have_enqueued_email(UserMailer, :password_reset_code)
 
@@ -56,6 +56,24 @@ RSpec.describe "Provider password reset", type: :request do
       expect { request_code }.not_to have_enqueued_mail(UserMailer, :password_reset_code)
     end
 
+    [ "a provider", "an unknown email" ].each do |who|
+      it "warns and keeps the resend countdown when #{who} asks again during the cooldown" do
+        email = who == "a provider" ? provider.email : "nadie@example.com"
+        freeze_time
+        request_code(email)
+
+        travel 299.seconds
+        expect { request_code(email) }.not_to have_enqueued_mail(UserMailer, :password_reset_code)
+        expect(response).to redirect_to(provider_password_reset_code_path)
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("flash.password_reset_requested"))
+
+        travel 1.second
+        get provider_password_reset_code_path
+        expect(inertia).to have_props(resend_in: 0)
+      end
+    end
+
     it "limits the requests per email" do
       5.times { |i| travel(i * 6.minutes) { request_code } }
 
@@ -66,7 +84,7 @@ RSpec.describe "Provider password reset", type: :request do
     end
   end
 
-  describe "GET /provider/password/code" do
+  describe "GET /provider/contrasena/codigo" do
     it "sends the visitor back to sign in when no code was requested" do
       get provider_password_reset_code_path
 
@@ -100,7 +118,7 @@ RSpec.describe "Provider password reset", type: :request do
     end
   end
 
-  describe "POST /provider/password/code" do
+  describe "POST /provider/contrasena/codigo" do
     before { request_code }
 
     it "accepts the right code and opens the new password screen" do
@@ -192,7 +210,7 @@ RSpec.describe "Provider password reset", type: :request do
     end
   end
 
-  describe "PATCH /provider/password" do
+  describe "PATCH /provider/contrasena" do
     before do
       request_code
       verify_code(current_code)

@@ -1,5 +1,5 @@
-import { Head } from "@inertiajs/react"
-import { Download, FileText } from "lucide-react"
+import { Head, Link } from "@inertiajs/react"
+import { ArrowLeft, Download, FileText } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import PageContainer from "@/components/page-container"
@@ -22,11 +22,12 @@ import {
 } from "@/components/ui/table"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
-import { adminInvoices } from "@/routes"
+import { adminAccount, adminInvoices } from "@/routes"
 import type { AdminInvoicesIndex, BreadcrumbItem } from "@/types"
 
 export default function Index({ invoices }: AdminInvoicesIndex) {
   const { t } = useTranslation()
+  const page = "pages.admin.invoices.index"
   const { formatMoney } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -35,11 +36,20 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={t("pages.admin.invoices.index.title")} />
+      <Head title={t(`${page}.title`)} />
 
       <PageContainer
-        title={t("pages.admin.invoices.index.title")}
-        description={t("pages.admin.invoices.index.description")}
+        title={t(`${page}.title`)}
+        titleVariant="prominent"
+        description={t(`${page}.description`)}
+        mobileBack
+        back={
+          <Button variant="ghost" size="icon" className="md:hidden" asChild>
+            <Link href={adminAccount()} aria-label={t(`${page}.back`)}>
+              <ArrowLeft aria-hidden="true" />
+            </Link>
+          </Button>
+        }
       >
         {invoices.length === 0 ? (
           <Empty className="border">
@@ -108,7 +118,12 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
                             responde el archivo, no una página. */}
                         <Button variant="ghost" size="sm" asChild>
                           <a
-                            href={adminInvoices.file(invoice.id).url}
+                            href={
+                              adminInvoices.file({
+                                id: invoice.id,
+                                filename: invoice.file_name,
+                              }).url
+                            }
                             target="_blank"
                             rel="noreferrer"
                           >
@@ -125,9 +140,10 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
                         >
                           <a
                             href={
-                              adminInvoices.file(invoice.id, {
-                                query: { download: 1 },
-                              }).url
+                              adminInvoices.file(
+                                { id: invoice.id },
+                                { query: { download: 1 } },
+                              ).url
                             }
                           >
                             <Download aria-hidden="true" />

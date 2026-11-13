@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AddAddressSheet } from "./add-address-sheet"
 
-// El servidor es el que valida (POST /delivery_addresses); acá se simula su
+// El servidor es el que valida (POST /direcciones-de-entrega); acá se simula su
 // respuesta para ver qué hace el formulario con ella.
 const form = vi.hoisted(() => ({
   data: { name: "", street: "", apartment: "", save_for_later: false },

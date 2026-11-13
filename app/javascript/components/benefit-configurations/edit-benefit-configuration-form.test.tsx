@@ -37,7 +37,7 @@ vi.mock("@inertiajs/react", async () => {
 describe("EditBenefitConfigurationForm", () => {
   const defaultValues = {
     subsidy_percentage: 50 as const,
-    max_voucher_price: 150 as const,
+    max_voucher_price: "500.0" as const,
     monthly_voucher_limit: 20 as const,
   }
 
@@ -60,18 +60,49 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
-    expect(screen.getByText(/12\/12\/2026/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/los cambios se aplicarán en el próximo período/i),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),
-    ).toHaveValue(150)
+    ).toHaveValue(500)
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveAttribute("step", "1")
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveAttribute("inputmode", "numeric")
     expect(
       screen.getByLabelText(/hasta un límite por empleado de/i),
     ).toHaveValue(20)
+  })
+
+  it("keeps numeric inputs wide enough for three-digit values on mobile", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={{
+          subsidy_percentage: 100,
+          max_voucher_price: 500,
+          monthly_voucher_limit: 100,
+        }}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    expect(screen.getByLabelText(/se descuenta/i)).toHaveClass("max-md:w-20")
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveClass("max-md:w-20")
+    expect(
+      screen.getByLabelText(/hasta un límite por empleado de/i),
+    ).toHaveClass("max-md:w-20")
   })
 
   it("submits the form with replace_pending: false when there is no pending configuration", async () => {
@@ -82,7 +113,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={onSuccess}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
@@ -117,7 +148,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
@@ -128,7 +159,9 @@ describe("EditBenefitConfigurationForm", () => {
 
     expect(postMock).not.toHaveBeenCalled()
     expect(
-      screen.getByText(/ya hay un cambio programado para el 12\/12\/2026/i),
+      screen.getByText(
+        /ya hay un cambio programado para el sábado 12 de diciembre/i,
+      ),
     ).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: /mantener el programado/i }),
@@ -147,7 +180,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={onCancel}
         onSuccess={vi.fn()}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
@@ -170,7 +203,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
@@ -207,7 +240,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={onCancel}
         onSuccess={vi.fn()}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
@@ -234,7 +267,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
-        configurableMonth={"12/12/2026"}
+        configurableMonth={"2026-12-12"}
       />,
     )
 
@@ -242,5 +275,57 @@ describe("EditBenefitConfigurationForm", () => {
     expect(screen.getByText("debe ser mayor que 0")).toBeInTheDocument()
     expect(screen.getByText("debe ser un número entero")).toBeInTheDocument()
     expect(screen.getByText(/error inesperado/i)).toBeInTheDocument()
+  })
+
+  it("prevents entering disallowed characters like dots, commas or letters via onKeyDown", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={defaultValues}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    const input = screen.getByLabelText(/cuando el precio por vianda es/i)
+
+    const dotEvent = new KeyboardEvent("keydown", {
+      key: ".",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(dotEvent)
+    expect(dotEvent.defaultPrevented).toBe(true)
+
+    const commaEvent = new KeyboardEvent("keydown", {
+      key: ",",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(commaEvent)
+    expect(commaEvent.defaultPrevented).toBe(true)
+
+    const exponentEvent = new KeyboardEvent("keydown", {
+      key: "e",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(exponentEvent)
+    expect(exponentEvent.defaultPrevented).toBe(true)
+  })
+
+  it("renders the monthly voucher limit unit without muted text class", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={defaultValues}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    const unit = screen.getByText("viandas")
+    expect(unit).toBeInTheDocument()
+    expect(unit).not.toHaveClass("text-muted-foreground")
   })
 })

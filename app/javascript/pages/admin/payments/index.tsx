@@ -1,20 +1,26 @@
 import { Head, router } from "@inertiajs/react"
-import { CircleCheck, Wallet } from "lucide-react"
+import { CircleCheck, SlidersHorizontal, Wallet } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import MonthSelect from "@/components/admin/month-select"
-import BankDetails from "@/components/admin/payments/bank-details"
 import ConsumptionDetailDialog, {
   type ConsumptionDetail,
 } from "@/components/admin/payments/consumption-detail-dialog"
 import PeriodCard from "@/components/admin/payments/period-card"
-import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
+import BankDetails from "@/components/payments/bank-details"
 import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Empty,
   EmptyDescription,
@@ -27,7 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import { adminPayments } from "@/routes"
-import type { Account, AdminPaymentsIndex, BreadcrumbItem } from "@/types"
+import type { AdminAccount, AdminPaymentsIndex, BreadcrumbItem } from "@/types"
 
 export default function Index({
   accounts,
@@ -42,12 +48,16 @@ export default function Index({
   consumption,
 }: AdminPaymentsIndex) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
 
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<ConsumptionDetail | null>(null)
   const [providerId, setProviderId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [mealsOnly, setMealsOnly] = useState(false)
+  const [historyProviderId, setHistoryProviderId] = useState<number | null>(
+    null,
+  )
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -71,11 +81,13 @@ export default function Index({
   function openMonthDetail() {
     setDetail(consumption)
     setProviderId(null)
+    setMealsOnly(true)
     setOpen(true)
   }
 
-  async function openDetail(account: Account) {
+  async function openDetail(account: AdminAccount) {
     setProviderId(account.provider_id)
+    setMealsOnly(false)
     setOpen(true)
     setLoading(true)
 
@@ -97,6 +109,11 @@ export default function Index({
   const providerName = (id: number) =>
     providers.find((provider) => provider.id === id)?.name
 
+  const filteredHistory =
+    historyProviderId === null
+      ? history
+      : history.filter((account) => account.provider_id === historyProviderId)
+
   const meals =
     summary.limit === null
       ? t("pages.admin.payments.index.meals_used", {
@@ -111,7 +128,10 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.admin.payments.index.title")} />
 
-      <PageContainer title={t("pages.admin.payments.index.title")}>
+      <PageContainer
+        title={t("pages.admin.payments.index.title")}
+        titleVariant="prominent"
+      >
         <Stat
           label={t("pages.admin.payments.index.spending")}
           badge={
@@ -123,9 +143,10 @@ export default function Index({
               label={t("pages.admin.payments.index.month_label")}
             />
           }
-          value={formatMoneyShort(summary.amount)}
-          detail={`| ${meals}`}
-          className="lg:max-w-[50%]"
+          value={formatMoney(summary.amount)}
+          detail={
+            <span className="text-foreground font-semibold">{`| ${meals}`}</span>
+          }
           action={
             <div className="grid w-full gap-4">
               {summary.limit !== null && (
@@ -145,7 +166,9 @@ export default function Index({
           }
         />
 
-        <HeadingSmall title={t("pages.admin.payments.index.section")} />
+        <h2 className="text-xl font-bold">
+          {t("pages.admin.payments.index.section")}
+        </h2>
 
         <Tabs defaultValue="pending" className="gap-4">
           <TabsList className="w-full">
@@ -167,7 +190,7 @@ export default function Index({
               }
               value={
                 <>
-                  {formatMoneyShort(total_debt)}{" "}
+                  {formatMoney(total_debt)}{" "}
                   <span className="text-lg">
                     {t("pages.admin.payments.index.pending_meals", {
                       count: total_meals,
@@ -202,6 +225,9 @@ export default function Index({
                           <PeriodCard
                             key={account.id}
                             account={account}
+                            paymentDetailsMissing={
+                              !provider.payment_details_complete
+                            }
                             onOpenDetail={() => void openDetail(account)}
                           />
                         ))}
@@ -214,7 +240,54 @@ export default function Index({
           </TabsContent>
 
           <TabsContent value="history" className="grid gap-4">
-            {history.length === 0 ? (
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm">
+                {t("pages.admin.payments.index.providers_filter")}{" "}
+                <span className="text-muted-foreground">
+                  {historyProviderId === null
+                    ? t("pages.admin.payments.index.all_providers")
+                    : providerName(historyProviderId)}
+                </span>
+              </p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    aria-label={t(
+                      "pages.admin.payments.index.filter_providers",
+                    )}
+                  >
+                    <SlidersHorizontal aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuRadioGroup
+                    value={String(historyProviderId ?? "all")}
+                    onValueChange={(value) =>
+                      setHistoryProviderId(
+                        value === "all" ? null : Number(value),
+                      )
+                    }
+                  >
+                    <DropdownMenuRadioItem value="all">
+                      {t("pages.admin.payments.index.all_providers")}
+                    </DropdownMenuRadioItem>
+                    {providers.map((provider) => (
+                      <DropdownMenuRadioItem
+                        key={provider.id}
+                        value={String(provider.id)}
+                      >
+                        {provider.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {filteredHistory.length === 0 ? (
               <Empty className="border">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -230,7 +303,7 @@ export default function Index({
               </Empty>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
-                {history.map((account) => (
+                {filteredHistory.map((account) => (
                   <PeriodCard
                     key={account.id}
                     account={account}
@@ -248,6 +321,7 @@ export default function Index({
           providerId={providerId}
           onProviderChange={setProviderId}
           loading={loading}
+          mealsOnly={mealsOnly}
           open={open}
           onOpenChange={setOpen}
         />

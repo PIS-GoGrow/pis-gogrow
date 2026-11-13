@@ -43,22 +43,19 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     delivery_method: "office",
     price: 600,
     date: "2026-10-15",
-    time: "10:15",
+    time: "10:15 AM",
     consumer_name: "Matías Rodríguez",
     consumer_company: "GoGrow",
     menu_name: "Wok de verduras + arroz",
     address: "Av. 18 de Julio 1234, Centro",
     consumer_email: "matias.rodriguez@gogrow.dev",
+    consumer_phone: null,
     created_on: "2026-09-11",
-    menu_description: "Con salsa de soja",
     menu_option_groups: [],
     selected_options: [],
-    discounted_price: 300,
-    subsidy: 300,
-    schedule_amount: 10,
-    remaining_amount: 8,
     rejection_reason: null,
     rejection_details: null,
+    rejectable: true,
   }
 
   return { ...base, ...overrides }
@@ -74,14 +71,14 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Por revisar").closest("[data-status]"),
     ).toHaveAttribute("data-status", "pending")
-    expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
+    expect(screen.getByText("Pedido #1")).toBeInTheDocument()
     expect(
-      screen.getByText("11 de septiembre de 2026 · 10:15"),
+      screen.getByText("11 de septiembre, 2026 · 10:15 AM"),
     ).toBeInTheDocument()
   })
 
-  it("muestra los datos del empleado y deja el teléfono como no disponible", () => {
-    render(<Show order={order()} />)
+  it("muestra los datos del empleado y deja el teléfono como no disponible cuando no tiene", () => {
+    render(<Show order={order({ consumer_phone: null })} />)
 
     expect(screen.getByText("Empleado GoGrow")).toBeInTheDocument()
     expect(screen.getByText("Matías Rodríguez")).toBeInTheDocument()
@@ -90,6 +87,12 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Oficina · Av. 18 de Julio 1234, Centro"),
     ).toBeInTheDocument()
+  })
+
+  it("muestra el teléfono del empleado cuando está presente", () => {
+    render(<Show order={order({ consumer_phone: "+59899123456" })} />)
+
+    expect(screen.getByText("+59899123456")).toBeInTheDocument()
   })
 
   it("muestra el plato, la cantidad y el total", () => {
@@ -102,12 +105,12 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getByText("$600")).toBeInTheDocument()
   })
 
-  it("completa el detalle con la descripción, las notas y la fecha de entrega", () => {
+  it("completa el detalle con las notas, sin la fecha de entrega", () => {
     render(<Show order={order()} />)
 
-    expect(screen.getByText("Con salsa de soja")).toBeInTheDocument()
     expect(screen.getByText("Sin sal")).toBeInTheDocument()
-    expect(screen.getByText("15 de octubre de 2026")).toBeInTheDocument()
+    expect(screen.queryByText("Entrega")).not.toBeInTheDocument()
+    expect(screen.queryByText("Jueves 15 de octubre")).not.toBeInTheDocument()
   })
 
   it("muestra lo que el empleado eligió del plato", () => {
@@ -122,9 +125,11 @@ describe("Provider::Orders Show Page", () => {
       />,
     )
 
-    expect(screen.getByText("Salsas")).toBeInTheDocument()
-    expect(screen.getByText("Tuco · Blanca")).toBeInTheDocument()
-    expect(screen.queryByText("Rellenos")).not.toBeInTheDocument()
+    const options = screen.getByText("Salsas: Tuco · Blanca")
+
+    expect(options).toHaveClass("text-muted-foreground")
+    expect(options.parentElement).toHaveTextContent("Wok de verduras + arroz")
+    expect(screen.queryByText(/Rellenos/)).not.toBeInTheDocument()
   })
 
   it("no muestra el cupo", () => {
@@ -133,51 +138,50 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.queryByText(/cupo/i)).not.toBeInTheDocument()
   })
 
-  it("conserva el subsidio y el importe a cargo del empleado", () => {
-    render(
-      <Show
-        order={order({
-          price: 600.5,
-          subsidy: 300.25,
-          discounted_price: 300.25,
-        })}
-      />,
-    )
+  it("muestra solo el total, sin el beneficio ni lo que paga el empleado", () => {
+    render(<Show order={order({ price: 600.5 })} />)
 
-    expect(screen.getByText("$600,50")).toBeInTheDocument()
-    expect(screen.getByText("Subsidio")).toBeInTheDocument()
-    expect(screen.getByText("-$300,25")).toBeInTheDocument()
-    expect(screen.getByText("Paga el empleado")).toBeInTheDocument()
-    expect(screen.getByText("$300,25")).toBeInTheDocument()
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("$600,50")
+    expect(screen.queryByText("Beneficio aplicado")).not.toBeInTheDocument()
+    expect(screen.queryByText("Paga el empleado")).not.toBeInTheDocument()
   })
 
-  it("conserva un importe cero y distingue un importe desconocido", () => {
-    const { rerender } = render(
-      <Show order={order({ subsidy: 600, discounted_price: 0 })} />,
-    )
-    expect(screen.getByText("$0")).toBeInTheDocument()
+  it("muestra los comentarios debajo del total", () => {
+    render(<Show order={order()} />)
 
-    rerender(<Show order={order({ subsidy: null, discounted_price: null })} />)
-    expect(screen.getByText("Importe no disponible")).toBeInTheDocument()
-    expect(screen.queryByText("Subsidio")).not.toBeInTheDocument()
+    const total = screen.getByText("Total")
+    const comments = screen.getByText("Comentarios")
+
+    expect(
+      total.compareDocumentPosition(comments) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(comments.parentElement).toHaveTextContent("Sin sal")
   })
 
-  it("muestra el motivo y el detalle de un rechazo", () => {
+  it("muestra el texto libre como motivo cuando el rechazo fue «Otro motivo»", () => {
     render(
       <Show
         order={order({
           status: "rejected",
           rejection_reason: "other",
           rejection_details: "Cerrado por reformas",
+          rejectable: false,
         })}
       />,
     )
 
-    expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
-    expect(screen.getByText("Otro motivo")).toBeInTheDocument()
-    expect(screen.getByText("Cerrado por reformas")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
+    const reason = screen.getByText("Motivo de cancelación")
+    const details = screen.getByText("Cerrado por reformas")
+
+    expect(reason.closest("[data-slot=card]")).toContainElement(details)
+    expect(reason.closest("[data-slot=card]")).not.toContainElement(
+      screen.getByText("Total"),
+    )
+    // "Otro motivo" no aporta nada al lado del texto que escribió el proveedor.
+    expect(screen.queryByText("Otro motivo")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Confirmar" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Rechazar" })).toBeNull()
   })
 
   it("permite rechazar un pedido confirmado pero no confirmarlo otra vez", () => {
@@ -186,7 +190,9 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Confirmado").closest("[data-status]"),
     ).toHaveAttribute("data-status", "confirmed")
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeEnabled()
   })
 
@@ -201,8 +207,7 @@ describe("Provider::Orders Show Page", () => {
         })}
       />,
     )
-    expect(screen.getByText("Guarnición")).toBeInTheDocument()
-    expect(screen.getByText("Papas")).toBeInTheDocument()
+    expect(screen.getByText("Guarnición: Papas")).toBeInTheDocument()
   })
   it("no inventa elecciones para un pedido antiguo sin personalizaciones", () => {
     render(
@@ -229,6 +234,7 @@ describe("Provider::Orders Show Page", () => {
           status: "rejected",
           rejection_reason: "out_of_stock",
           rejection_details: null,
+          rejectable: false,
         })}
       />,
     )
@@ -240,20 +246,14 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.queryByText("Detalle del rechazo")).not.toBeInTheDocument()
   })
   it.each([null, ""])(
-    "omite notas y descripción ausentes (%s) sin perder los datos del pedido",
+    "omite notas ausentes (%s) sin perder los datos del pedido",
     (value) => {
-      render(
-        <Show
-          order={order({ notes: value, menu_description: value, date: null })}
-        />,
-      )
+      render(<Show order={order({ notes: value, date: null })} />)
 
       expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
-      expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
-      expect(screen.queryByText("Notas")).not.toBeInTheDocument()
-      expect(screen.queryByText("Entrega")).not.toBeInTheDocument()
+      expect(screen.getByText("Pedido #1")).toBeInTheDocument()
+      expect(screen.queryByText("Comentarios")).not.toBeInTheDocument()
       expect(screen.queryByText("Sin sal")).not.toBeInTheDocument()
-      expect(screen.queryByText("Con salsa de soja")).not.toBeInTheDocument()
     },
   )
 
@@ -263,8 +263,6 @@ describe("Provider::Orders Show Page", () => {
         order={order({
           amount: 3,
           price: 1234.56,
-          discounted_price: 234.56,
-          subsidy: 1000,
         })}
       />,
     )
@@ -272,12 +270,6 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getByText("x3")).toBeInTheDocument()
     expect(screen.getByText("Total").parentElement).toHaveTextContent(
       "$1.234,56",
-    )
-    expect(
-      screen.getByText("Paga el empleado").parentElement,
-    ).toHaveTextContent("$234,56")
-    expect(screen.getByText("Subsidio").parentElement).toHaveTextContent(
-      "-$1.000",
     )
     expect(screen.queryByText("$3.703,68")).not.toBeInTheDocument()
   })
@@ -306,10 +298,20 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getAllByRole("button")).toEqual([confirm, reject])
   })
 
-  it("deja los botones a la vista, deshabilitados, en un pedido cancelado", () => {
-    render(<Show order={order({ status: "cancelled" })} />)
+  it.each([
+    ["cancelado", { status: "cancelled", rejectable: false }],
+    ["rechazado", { status: "rejected", rejectable: false }],
+    ["confirmado histórico", { status: "confirmed", rejectable: false }],
+  ] as const)("no muestra ningún botón en un pedido %s", (_, overrides) => {
+    render(<Show order={order(overrides)} />)
 
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
+
+  it("tacha el total de un pedido que no se cobra", () => {
+    render(<Show order={order({ status: "rejected", rejectable: false })} />)
+
+    expect(screen.getByText("$600")).toHaveClass("line-through")
+    expect(screen.getByText("Este pedido no será cobrado")).toBeInTheDocument()
   })
 })

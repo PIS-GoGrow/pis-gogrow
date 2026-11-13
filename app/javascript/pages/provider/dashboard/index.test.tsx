@@ -1,16 +1,19 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import ProviderDashboard from "./index"
+
+const { reload } = vi.hoisted(() => ({ reload: vi.fn() }))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
     Head: () => null,
+    router: { reload },
     usePage: () => ({
-      url: "/provider/dashboard",
+      url: "/proveedor/inicio",
       props: { auth: { user: { name: "Doña Petrona" } } },
     }),
     Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -34,12 +37,18 @@ describe("Provider Dashboard Page", () => {
     home_orders_count: 1,
     order_deadline: "11:30",
     order_deadline_passed_today: false,
+    seconds_until_order_deadline: 90,
     month_orders_count: 42,
     month_dishes_count: 8,
     average_rating: 4.8,
+    top_rated: [] as { name: string; rating: number }[],
+    completed_sections_count: 3,
+    sections_total: 4,
     provider: {
       order_deadline: "11:30",
     },
+    total_debt: 37000,
+    total_dishes_count: 82,
   }
 
   it("saluda al proveedor por su nombre y muestra la fecha del día", () => {
@@ -68,7 +77,84 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("1")).toBeInTheDocument()
 
     const viewOrdersLink = screen.getByRole("link", { name: "Ver pedidos" })
-    expect(viewOrdersLink).toHaveAttribute("href", "/provider/orders")
+    expect(viewOrdersLink).toHaveAttribute("href", "/proveedor/pedidos")
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    reload.mockClear()
+  })
+
+  it("recarga el estado de recepción al llegar a la hora de cierre", () => {
+    vi.useFakeTimers()
+    render(<ProviderDashboard {...defaultProps} />)
+
+    vi.advanceTimersByTime(89_000)
+    expect(reload).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1_000)
+    expect(reload).toHaveBeenCalledWith({
+      only: ["order_deadline_passed_today", "seconds_until_order_deadline"],
+    })
+  })
+
+  it("no programa la recarga si la recepción ya cerró", () => {
+    vi.useFakeTimers()
+    render(
+      <ProviderDashboard
+        {...defaultProps}
+        order_deadline_passed_today
+        seconds_until_order_deadline={undefined}
+      />,
+    )
+
+    vi.runAllTimers()
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it("cancela el temporizador y evita la recarga si el componente se desmonta antes del cierre", () => {
+    vi.useFakeTimers()
+    const { unmount } = render(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={90} />,
+    )
+
+    unmount()
+    vi.runAllTimers()
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it("no programa la recarga si seconds_until_order_deadline es 0", () => {
+    vi.useFakeTimers()
+    render(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={0} />,
+    )
+
+    vi.runAllTimers()
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it("reprograma la recarga cuando se actualiza seconds_until_order_deadline", () => {
+    vi.useFakeTimers()
+    const { rerender } = render(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={90} />,
+    )
+
+    rerender(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={30} />,
+    )
+
+    vi.advanceTimersByTime(29_000)
+    expect(reload).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1_000)
+    expect(reload).toHaveBeenCalledTimes(1)
+    expect(reload).toHaveBeenCalledWith({
+      only: ["order_deadline_passed_today", "seconds_until_order_deadline"],
+    })
+
+    // El timeout anterior de 90s debe haber sido limpiado
+    vi.advanceTimersByTime(60_000)
+    expect(reload).toHaveBeenCalledTimes(1)
   })
 
   it("muestra la hora de cierre si está configurada", () => {
@@ -101,7 +187,7 @@ describe("Provider Dashboard Page", () => {
 
     expect(
       screen.getByRole("link", { name: "Recibiendo pedidos hasta 11:30" }),
-    ).toHaveAttribute("href", "/provider/operational_settings")
+    ).toHaveAttribute("href", "/proveedor/configuracion-operativa")
   })
 
   it("muestra los hallazgos del mes con pedidos, platos y valoración", () => {
@@ -111,6 +197,20 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("42")).toBeInTheDocument()
     expect(screen.getByText("8")).toBeInTheDocument()
     expect(screen.getByText("4.8")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Generá conclusiones sobre las reseñas desde Hallazgos.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
+  })
+
+  it("lleva a Hallazgos desde el encabezado de los hallazgos del mes", () => {
+    render(<ProviderDashboard {...defaultProps} />)
+
+    expect(
+      screen.getByRole("link", { name: "Hallazgos del mes" }),
+    ).toHaveAttribute("href", "/proveedor/inicio/hallazgos")
   })
 
   it("muestra un guión cuando el proveedor aún no tiene valoraciones", () => {
@@ -119,12 +219,45 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("—")).toBeInTheDocument()
   })
 
-  it("ofrece enlace directo al resumen de cobros", () => {
+  it("lista los platos mejor valorados con su puntaje", () => {
+    render(
+      <ProviderDashboard
+        {...defaultProps}
+        top_rated={[
+          { name: "Wok de Verduras", rating: 5 },
+          { name: "Lasaña veggie", rating: 4.9 },
+        ]}
+      />,
+    )
+
+    const section = screen.getByRole("region", { name: "Mejor valorados" })
+    expect(within(section).getByText("Wok de Verduras")).toBeInTheDocument()
+    expect(within(section).getByText("5")).toBeInTheDocument()
+    expect(within(section).getByText("Lasaña veggie")).toBeInTheDocument()
+    expect(within(section).getByText("4.9")).toBeInTheDocument()
+  })
+
+  it("avisa cuando todavía no hay platos valorados", () => {
+    render(<ProviderDashboard {...defaultProps} top_rated={[]} />)
+
+    expect(
+      screen.getByText("Todavía no hay platos valorados."),
+    ).toBeInTheDocument()
+  })
+
+  it("ofrece enlace directo al resumen de cobros y muestra cobros pendientes", () => {
     render(<ProviderDashboard {...defaultProps} />)
 
     const paymentsLink = screen.getByRole("link", {
       name: "Resumen de cobros",
     })
-    expect(paymentsLink).toHaveAttribute("href", "/provider/collections")
+    expect(paymentsLink).toHaveAttribute("href", "/proveedor/cobros")
+
+    const section = screen.getByRole("region", { name: "Resumen de cobros" })
+
+    expect(within(section).getByText("$37.000")).toBeInTheDocument()
+    expect(
+      within(section).getByText("| 82 viandas entregadas"),
+    ).toBeInTheDocument()
   })
 })

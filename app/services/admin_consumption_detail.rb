@@ -38,6 +38,7 @@ class AdminConsumptionDetail
       vat_rate: (account.vat_rate.to_d * 100).to_f,
       vat_amount: account.vat_amount.to_f,
       payable_amount: account.payable_amount.to_f,
+      paid: account.collection_status == "approved",
       days: ConsumptionDays.call(orders) do |order|
         {
           id: order.id,
@@ -53,7 +54,7 @@ class AdminConsumptionDetail
 
   def orders_by_account
     @orders_by_account ||=
-      Order.confirmed.joins(:order_accounts)
+      Order.consumed.joins(:order_accounts)
            .where(order_accounts: { account_id: accounts.map(&:id) })
            .select("orders.*", "order_accounts.account_id AS detail_account_id")
            .preload(:schedule, consumer: :user)

@@ -1,4 +1,7 @@
-import { Eye, TriangleAlert } from "lucide-react"
+import { WhatsappIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Form } from "@inertiajs/react"
+import { CircleCheck, Download, Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import PaymentReceiptDialog from "@/components/consumer/accounts/payment-receipt-dialog"
@@ -11,70 +14,133 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Spinner } from "@/components/ui/spinner"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
-import { adminPayments } from "@/routes"
-import type { Account } from "@/types"
+import { adminPaymentInvoiceReminders, adminPayments } from "@/routes"
+import type { AdminAccount } from "@/types"
 
 interface PeriodCardProps {
-  account: Account
+  account: AdminAccount
   // En el historial los períodos van todos juntos, así que cada tarjeta dice
   // de qué proveedor es.
   providerName?: string
+  paymentDetailsMissing?: boolean
   onOpenDetail: () => void
 }
 
 export default function PeriodCard({
   account,
   providerName,
+  paymentDetailsMissing = false,
   onOpenDetail,
 }: PeriodCardProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
 
   const status = account.collection_status
+  const title = providerName
+    ? `${providerName}: ${account.month}`
+    : account.month
+
+  if (status === "approved") {
+    return (
+      <Card className="bg-background gap-4 rounded-lg p-4 shadow-none">
+        <div className="flex flex-col gap-1.5">
+          <div className="text-muted-foreground flex items-center justify-between text-sm font-medium">
+            <span>{account.paid_on}</span>
+            <StatusBadge
+              status={status}
+              kind="payment"
+              label={t("pages.admin.payments.index.confirmed")}
+            />
+          </div>
+          <p className="text-foreground text-base font-semibold">{title}</p>
+        </div>
+
+        <div className="border-border flex flex-col gap-3 border-y py-3">
+          <span className="text-muted-foreground text-sm font-medium">
+            {t("pages.admin.payments.index.total_paid")}
+          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-foreground text-base font-semibold">
+              {formatMoney(account.payable_amount)}
+            </span>
+            <Button
+              variant="ghost"
+              onClick={onOpenDetail}
+              className="text-foreground h-auto p-0 text-sm font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
+            >
+              <Eye aria-hidden="true" className="size-4" />
+              {t("pages.admin.payments.index.see_detail")}
+            </Button>
+          </div>
+        </div>
+
+        {account.invoice_download_url && (
+          <Button className="h-10 w-full rounded-[10px] font-medium" asChild>
+            <a href={account.invoice_download_url}>
+              <Download aria-hidden="true" className="size-4" />
+              {t("pages.admin.payments.index.download_invoice")}
+            </a>
+          </Button>
+        )}
+        {account.receipt_download_url && (
+          <Button
+            variant="secondary"
+            className="h-10 w-full rounded-[10px] font-medium"
+            asChild
+          >
+            <a href={account.receipt_download_url} download>
+              <Download aria-hidden="true" className="size-4" />
+              {t("pages.admin.payments.index.download_receipt")}
+            </a>
+          </Button>
+        )}
+      </Card>
+    )
+  }
 
   return (
     <Card className="bg-muted/50 gap-3 py-4">
       <CardHeader className="px-4">
-        <CardDescription>
-          {providerName ? `${providerName}: ${account.month}` : account.month}
+        <CardDescription className="whitespace-nowrap">
+          {providerName ? (
+            <span className="text-foreground font-semibold">{title}</span>
+          ) : (
+            account.month
+          )}
         </CardDescription>
         <CardAction>
-          <StatusBadge status={status} kind="payment" />
+          <span
+            className={cn(
+              "flex items-center gap-1.5 text-xs",
+              account.due_date_passed
+                ? "text-red-600 dark:text-red-400"
+                : "text-amber-600 dark:text-amber-400",
+            )}
+          >
+            <TriangleAlert className="size-3.5" aria-hidden="true" />
+            {t("pages.admin.payments.index.due", { date: account.due_date })}
+          </span>
         </CardAction>
       </CardHeader>
 
-      <CardContent className="grid gap-2 px-4">
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          {/* El monto es un decimal de Rails, así que viaja como texto. */}
-          <strong className="text-2xl">
-            {formatMoney(account.payable_amount)}
-          </strong>
-          <span className="text-muted-foreground text-sm">
-            {"| "}
-            {t("pages.admin.payments.index.meals", {
-              count: account.orders_amount_sum,
-            })}
-          </span>
-        </p>
+      <CardContent className="flex flex-1 flex-col gap-3 px-4">
+        <Separator />
 
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {status === "approved" ? (
-            <span />
-          ) : (
-            <span
-              className={cn(
-                "flex items-center gap-1.5 text-xs",
-                account.due_date_passed
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-amber-600 dark:text-amber-400",
-              )}
-            >
-              <TriangleAlert className="size-3.5" aria-hidden="true" />
-              {t("pages.admin.payments.index.due", { date: account.due_date })}
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            {/* El monto es un decimal de Rails, así que viaja como texto. */}
+            <strong>{formatMoney(account.payable_amount)}</strong>
+            <span className="text-muted-foreground text-sm">
+              {"| "}
+              {t("pages.admin.payments.index.meals", {
+                count: account.orders_amount_sum,
+              })}
             </span>
-          )}
+          </p>
 
           <Button variant="ghost" size="sm" onClick={onOpenDetail}>
             <Eye aria-hidden="true" />
@@ -82,15 +148,71 @@ export default function PeriodCard({
           </Button>
         </div>
 
-        <PaymentReceiptDialog
-          accountId={account.id}
-          uploadDisabled={account.payments.some(
-            ({ status }) => status === "submitted",
-          )}
-          createAction={adminPayments.create()}
-          destroyAction={adminPayments.destroy}
-          payments={account.payments}
-        />
+        {!account.current &&
+          (account.invoice_download_url ? (
+            <Button className="h-10 w-full rounded-[10px] font-medium" asChild>
+              <a href={account.invoice_download_url}>
+                <Download aria-hidden="true" className="size-4" />
+                {t("pages.admin.payments.index.download_invoice")}
+              </a>
+            </Button>
+          ) : (
+            <div className="grid gap-2">
+              <Form
+                action={adminPaymentInvoiceReminders(account.id)}
+                options={{ preserveScroll: true }}
+              >
+                {({ processing }) => (
+                  <Button
+                    type="submit"
+                    disabled={
+                      processing || account.invoice_reminder_days_left != null
+                    }
+                    className="h-10 w-full rounded-[10px] font-medium"
+                  >
+                    {processing ? (
+                      <Spinner />
+                    ) : (
+                      <HugeiconsIcon
+                        icon={WhatsappIcon}
+                        size={16}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                    )}
+                    {t("pages.admin.payments.index.remind_invoice")}
+                  </Button>
+                )}
+              </Form>
+              {account.invoice_reminder_days_left != null && (
+                <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                  <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
+                  {t("pages.admin.payments.index.remind_invoice_sent", {
+                    count: account.invoice_reminder_days_left,
+                  })}
+                </p>
+              )}
+            </div>
+          ))}
+
+        <div className="flex flex-1 flex-col justify-center">
+          <PaymentReceiptDialog
+            accountId={account.id}
+            inlineUpload
+            uploadDisabled={
+              paymentDetailsMissing ||
+              account.payments.some(({ status }) => status === "submitted")
+            }
+            uploadDisabledHint={
+              paymentDetailsMissing
+                ? t("pages.admin.payments.index.bank.missing_upload_hint")
+                : t("pages.accounts.show.receipt_under_review_hint")
+            }
+            createAction={adminPayments.create()}
+            destroyAction={adminPayments.destroy}
+            payments={account.payments}
+          />
+        </div>
       </CardContent>
     </Card>
   )

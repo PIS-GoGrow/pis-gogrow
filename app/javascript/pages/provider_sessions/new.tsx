@@ -31,20 +31,24 @@ export default function ProviderSignIn() {
     <AuthLayout
       title={t("pages.provider_sessions.new.heading")}
       description={t("pages.provider_sessions.new.description")}
+      backHref="/proveedor"
+      hideLogo
+      variant="form"
     >
       <Head title={t("pages.provider_sessions.new.title")} />
 
       <Form
-        action={providerSessions.create()}
+        action={providerSessions.proveedorIniciarSesion()}
         resetOnSuccess={["password"]}
-        className="flex flex-col gap-6"
+        noValidate
+        className="flex flex-1 flex-col justify-between gap-6"
       >
         {({ processing }) => (
           <>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">
-                  {t("common.email_address")}
+                  {t("pages.provider_sessions.new.email_label")}
                 </FieldLabel>
                 <Input
                   id="email"
@@ -88,15 +92,17 @@ export default function ProviderSignIn() {
               </Field>
             </FieldGroup>
 
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full"
-              disabled={!email || !password || processing}
-            >
-              {processing && <Spinner />}
-              {t("pages.provider_sessions.new.submit")}
-            </Button>
+            <div className="mt-auto pt-6">
+              <Button
+                type="submit"
+                size="lg"
+                className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                disabled={!email || !password || processing}
+              >
+                {processing && <Spinner />}
+                {t("pages.provider_sessions.new.submit")}
+              </Button>
+            </div>
           </>
         )}
       </Form>
@@ -114,13 +120,14 @@ export default function ProviderSignIn() {
 
           <Form
             action={providerPasswordResets.create()}
+            noValidate
             className="flex flex-col gap-4"
           >
             {({ processing, errors }) => (
               <>
                 <Field data-invalid={!!errors.email}>
                   <FieldLabel htmlFor="forgot_email">
-                    {t("common.email_address")}
+                    {t("pages.provider_sessions.new.forgot.email_label")}
                   </FieldLabel>
                   <Input
                     id="forgot_email"

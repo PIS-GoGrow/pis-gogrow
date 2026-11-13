@@ -16,6 +16,9 @@ RSpec.describe "Ciclo de vida continuo de beneficios", type: :request do
   it "encadena el ciclo completo: consulta inicial (50%), programación por RRHH (70%), transición temporal con jobs y validación del nuevo beneficio" do
     initial_monday = Date.current.next_occurring(:monday).noon
     travel_to(initial_monday)
+    # El beneficio future de benefits.yml vence hoy + 10: según el día cae después del
+    # lunes del mes siguiente y le gana al beneficio que asignan los jobs.
+    benefits(:future).destroy
 
     benefits(:monthly).update!(
       due_date: Date.current.end_of_month,

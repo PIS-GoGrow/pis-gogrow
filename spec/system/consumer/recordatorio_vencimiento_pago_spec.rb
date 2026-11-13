@@ -15,6 +15,11 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
   let(:title) { "Tu pago vence pronto..." }
 
   before do
+    account.provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Notification::Configuration.find_or_create_by!(key: "automatic_payment_reminders") do |configuration|
       configuration.roles = %w[consumer]
     end
@@ -34,6 +39,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
     sign_in user, role: :consumer
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
   end
 
   it "le muestra al empleado el proveedor, el monto y la fecha de vencimiento" do
@@ -44,7 +50,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
     expect(page).to have_content(title)
     expect(page).to have_content(
       "Te quedan 3 días para pagar $450,75 a #{account.provider.user.name}. " \
-      "Vence el #{I18n.l(account.due_date, format: '%d/%m/%Y')}. ¡Revisá el detalle de tu pago!"
+      "Vence el #{DateFormat.long(account.due_date, inline: true)}. ¡Revisá el detalle de tu pago!"
     )
   end
 
@@ -57,6 +63,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
 
     sign_out
@@ -70,9 +77,8 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
     visit_dashboard_as users(:one)
     expect(page).to have_content(title)
 
-    visit accounts_path
-    within(find("[role=tabpanel]")) { click_on I18n.t("pages.accounts.show.receipt") }
-    within(find("[role=dialog]")) do
+    visit_hydrated accounts_path
+    within(find("[role=tabpanel]")) do
       attach_file(I18n.t("pages.accounts.show.receipt_file"), Rails.root.join("public/icon.png").to_s)
       click_on I18n.t("pages.accounts.show.receipt")
     end
@@ -80,6 +86,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
   end
 

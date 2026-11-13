@@ -16,7 +16,7 @@ vi.mock("@inertiajs/react", () => ({
 
 vi.mock("@/routes", () => ({
   sessions: {
-    create: () => ({ url: "/sign_in", method: "post" }),
+    create: () => ({ url: "/iniciar-sesion", method: "post" }),
   },
 }))
 

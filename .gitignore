@@ -46,4 +46,5 @@ node_modules
 
 # Cobertura de SimpleCov
 /coverage/
+
 docker-compose.override.yaml

@@ -9,6 +9,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
   let(:consumer_user) { users(:one) }
   let(:admin_user) { users(:admin) }
   let(:sorrentinos) { menus(:sorrentinos) }
+  let(:office_menu) { menus(:office_menu) }
 
   after do
     travel_back
@@ -35,6 +36,9 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
 
     Order.destroy_all
     Schedule.delete_all
+    # El beneficio future de benefits.yml vence hoy + 10: según el día cae después del
+    # lunes del mes siguiente y le gana al beneficio que asignan los jobs.
+    benefits(:future).destroy
 
     benefits(:monthly).update!(
       due_date: Date.current.end_of_month,
@@ -43,7 +47,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
       amount: 20
     )
 
-    Schedule.create!(menu: sorrentinos, date: Date.current, amount: 10)
+    Schedule.create!(menu: sorrentinos, date: Date.current)
 
     # -------------------------------------------------------------
     # Paso 1 (Empleado): Inicia sesión, consulta el plato y ve 50%
@@ -72,7 +76,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     fill_in "monthly_voucher_limit", with: "15"
 
     click_button "Programar Subsidio"
-    date = Calendar.new.configurable_month.strftime("%d/%m/%y")
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
     expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     sign_out
@@ -92,7 +96,8 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     expect(new_benefit.percentage).to eq(70)
     expect(new_benefit.amount).to eq(15)
 
-    Schedule.create!(menu: sorrentinos, date: Date.current, amount: 10)
+    Schedule.create!(menu: sorrentinos, date: Date.current)
+    Schedule.create!(menu: office_menu, date: Date.current)
 
     # -------------------------------------------------------------
     # Paso 4 (Empleado): Vuelve a consultar y valida nuevo precio
@@ -101,11 +106,20 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     visit dashboard_path
 
     expect(page).to have_content("Sorrentinos artesanales")
+    expect(page).to have_content("Ensalada de quinoa")
     open_dish(sorrentinos)
 
-    expect(page).to have_content("Beneficio GoGrow (70%)")
-    expect(page).to have_content("- $224")
+    # El límite de precio es 300, los sorrentinos no se subsidian pero la ensalada sí
+    expect(page).to have_no_content("Beneficio GoGrow")
     expect(page).to have_content("Monto a pagar")
-    expect(page).to have_content("$96")
+    expect(page).to have_content("$320")
+
+    visit dashboard_path
+    open_dish(office_menu)
+
+    expect(page).to have_content("Beneficio GoGrow (70%)")
+    expect(page).to have_content("- $175")
+    expect(page).to have_content("Monto a pagar")
+    expect(page).to have_content("$75")
   end
 end

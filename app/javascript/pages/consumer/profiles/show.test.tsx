@@ -2,6 +2,12 @@ import { render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
+import {
+  consumerDeliveryAddresses,
+  settingsNotifications,
+  settingsProfiles,
+} from "@/routes"
+
 import Show from "./show"
 
 const auth = {
@@ -46,7 +52,7 @@ describe("Consumer account page", () => {
   // El Avatar solo monta la imagen cuando el navegador la carga, cosa que jsdom
   // no hace, así que acá se verifica el respaldo con las iniciales.
   it("shows the name, the corporate email and the profile photo", () => {
-    render(<Show benefit={benefit} benefit_summary={summary} />)
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
 
     expect(screen.getByText("Juan Pérez")).toBeInTheDocument()
     expect(screen.getByText("juan@gogrow.com")).toBeInTheDocument()
@@ -54,7 +60,7 @@ describe("Consumer account page", () => {
   })
 
   it("shows the assigned benefit", () => {
-    render(<Show benefit={benefit} benefit_summary={summary} />)
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
 
     expect(screen.getByText("Activo")).toBeInTheDocument()
     expect(screen.getAllByText("50%")).toHaveLength(2)
@@ -66,7 +72,7 @@ describe("Consumer account page", () => {
   // Criterio: sin beneficio asignado se explica, en vez de mostrar ceros que
   // parecerían un beneficio agotado.
   it("explains that there is no benefit instead of showing zeroes", () => {
-    render(<Show benefit={null} benefit_summary={null} />)
+    render(<Show benefit={null} benefit_summary={null} coupons={[]} />)
 
     expect(
       screen.getByText(/Todavía no tenés un beneficio/),
@@ -85,6 +91,7 @@ describe("Consumer account page", () => {
           base: 50,
           specials: [{ name: "Antigüedad (5 años)", percentage: 25 }],
         }}
+        coupons={[]}
       />,
     )
 
@@ -100,17 +107,84 @@ describe("Consumer account page", () => {
     expect(screen.getByText("20 viandas")).toBeInTheDocument()
   })
 
+  // IBP-080: el empleado ve cada cupón con su nombre, su porcentaje y cuántas
+  // viandas le quedan.
+  it("shows each coupon with its percentage and the meals left", () => {
+    render(
+      <Show
+        benefit={benefit}
+        benefit_summary={summary}
+        coupons={[
+          {
+            id: 1,
+            name: "Cupón Día del Trabajador",
+            percentage: 30,
+            remaining: 2,
+            period: "26/10/26 al 01/11/26",
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText("Mis cupones")).toBeInTheDocument()
+    expect(screen.getByText("Cupón Día del Trabajador")).toBeInTheDocument()
+    expect(screen.getByText("30% de descuento")).toBeInTheDocument()
+    expect(screen.getByText("Te quedan").nextSibling).toHaveTextContent(
+      "2 viandas",
+    )
+    expect(screen.getByText("26/10/26 al 01/11/26")).toBeInTheDocument()
+  })
+
   it("offers signing out", () => {
-    render(<Show benefit={benefit} benefit_summary={summary} />)
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
 
     expect(screen.getByRole("button", { name: /Salir/ })).toBeInTheDocument()
   })
 
   it("renders the consumer mobile navigation bar", () => {
-    render(<Show benefit={benefit} benefit_summary={summary} />)
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
 
     expect(screen.getByRole("navigation")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Menú" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Cuenta" })).toBeInTheDocument()
+  })
+
+  it("links to notification settings", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
+
+    expect(
+      screen.getByRole("link", { name: /Notificaciones/ }),
+    ).toHaveAttribute("href", settingsNotifications.index().url)
+  })
+
+  it("links to delivery addresses", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
+
+    expect(screen.getByRole("link", { name: /Direcciones/ })).toHaveAttribute(
+      "href",
+      consumerDeliveryAddresses.index().url,
+    )
+  })
+
+  it("links to account settings", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
+
+    const link = screen.getByRole("link", {
+      name: /Modificá tu teléfono, nombre, correo, contraseña y apariencia/,
+    })
+    expect(link).toHaveAttribute("href", settingsProfiles.show().url)
+    expect(link).toHaveTextContent("Perfil")
+  })
+
+  it("applies bottom padding on mobile to clear the fixed navigation bar", () => {
+    const { container } = render(
+      <Show benefit={benefit} benefit_summary={summary} coupons={[]} />,
+    )
+
+    const section = container.querySelector(
+      "section[aria-labelledby='consumer-settings-title']",
+    )
+    expect(section).toHaveClass("pb-32")
+    expect(section).toHaveClass("md:pb-0")
   })
 })

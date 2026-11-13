@@ -6,7 +6,7 @@ class Consumer::AccountsController < Consumer::InertiaController
   def index
     consumer = Current.user.consumer
 
-    accounts = consumer.accounts.pending.includes(:payments).order :month
+    accounts = consumer.accounts.pending.includes(:payments).order(month: :desc)
     # Calculamos la cantidad total de viandas pedidas y el precio total
     # para cada cuenta. Lo hacemos acá para que esto se pueda hacer con una única
     # consulta a la bd. Si se hiciera en AccountSerializer, se necesitaría una
@@ -22,31 +22,41 @@ class Consumer::AccountsController < Consumer::InertiaController
 
     # La suma de la deuda total se calcula en memoria en el controlador, para no hacer
     # una consulta más redundante a la base de datos.
-    total_debt = accounts.sum(&:amount)
+    total_debt = accounts.sum(&:outstanding_amount)
+    total_meals = sums.values.sum { it[:amount].to_i }
 
     current_accounts = consumer.accounts.current.pluck(:id)
     current_sums = Account.amount_and_price_sum(current_accounts).values
 
-    current_month_ordered = current_sums.reduce(0) { |acc, x| acc + x[:amount] }
     current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
-    benefit_available = consumer.monthly_benefit_available
+
+    current_orders = Order.consumed
+                          .joins(:order_accounts)
+                          .where(order_accounts: { account_id: current_accounts })
+                          .order(:created_at)
 
     render inertia: {
       accounts: AccountSerializer.new(accounts, params: { orders_sum: sums }).as_json,
-      providers: ProviderSerializer.new(providers).as_json,
+      providers: PaymentProviderSerializer.new(providers).as_json,
       history:,
       history_accounts: AccountSerializer.new(history_accounts, params: { orders_sum: history_sums }).as_json,
       current_month_debt:,
-      current_month_ordered:,
+      current_month_detail: {
+        orders: SimplifiedOrderSerializer.new(current_orders).as_json,
+        month: I18n.l(Date.current, format: :month_year),
+        amount: current_month_debt
+      },
       total_debt:,
-      benefit_available:
+      total_meals:,
+      benefit_used: consumer.monthly_benefit_used_this_month,
+      benefit_available: consumer.monthly_benefit_available
     }
   end
 
   # Este endpoint solo maneja JSON (no se accede directamente, sino que se
   # usa para darle datos al frontend)
   def show
-    orders = @account.orders.confirmed.order :created_at
+    orders = @account.orders.consumed.order :created_at
     month = I18n.l(@account.month, format: :month_year)
     amount = @account.amount
 

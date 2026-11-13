@@ -34,7 +34,7 @@ describe("OptionChoices", () => {
       />,
     )
 
-    expect(screen.getByText("Elegí tu Salsa")).toBeInTheDocument()
+    expect(screen.getByText("Elegí tu/s salsa/s")).toBeInTheDocument()
     expect(screen.getByText("Obligatorio")).toBeInTheDocument()
   })
 
@@ -47,8 +47,20 @@ describe("OptionChoices", () => {
       />,
     )
 
-    expect(screen.getByText("Elegí tu Extras")).toBeInTheDocument()
+    expect(screen.getByText("Elegí tu/s extras")).toBeInTheDocument()
     expect(screen.getByText("Opcional")).toBeInTheDocument()
+  })
+
+  it("writes a name ending in a consonant with '/es'", () => {
+    render(
+      <OptionChoices
+        group={{ ...singleChoiceGroup, name: "Guarnición" }}
+        values={[]}
+        setValues={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText("Elegí tu/s guarnición/es")).toBeInTheDocument()
   })
 
   it("selects an option in a single-choice group", async () => {

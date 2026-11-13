@@ -17,6 +17,11 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
   let(:previous_month) { Date.current.prev_month.beginning_of_month }
 
   before do
+    account.provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Notification::Configuration.find_or_create_by!(key: "automatic_payment_reminders") do |configuration|
       configuration.roles = %w[consumer]
     end
@@ -35,10 +40,11 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
     sign_in users(:one), role: :consumer
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
   end
 
   def due_date_text(account)
-    I18n.l(account.due_date, format: "%d/%m/%Y")
+    DateFormat.long(account.due_date, inline: true)
   end
 
   context "con deuda en un solo proveedor" do
@@ -53,7 +59,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
         "Ya podés pagar $450,75 a #{account.provider.user.name}. " \
         "El vencimiento es el #{due_date_text(account)}. ¡Revisá el detalle de tu pago!"
       )
-      expect(due_date_text(account)).to start_with("10/")
+      expect(account.due_date.day).to eq(10)
     end
 
     it "sigue mostrándose mientras no paga y desaparece al presentar el comprobante" do
@@ -66,9 +72,8 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
       visit_dashboard
       expect(page).to have_content(title)
 
-      visit accounts_path
-      within(find("[role=tabpanel]")) { click_on I18n.t("pages.accounts.show.receipt") }
-      within(find("[role=dialog]")) do
+      visit_hydrated accounts_path
+      within(find("[role=tabpanel]")) do
         attach_file(I18n.t("pages.accounts.show.receipt_file"), Rails.root.join("public/icon.png").to_s)
         click_on I18n.t("pages.accounts.show.receipt")
       end
@@ -76,6 +81,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
 
       visit dashboard_path
       expect(page).to have_content("Hola,")
+      open_notifications
       expect(page).to have_no_content(title)
     end
 
@@ -88,6 +94,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
 
       visit dashboard_path
       expect(page).to have_content("Hola,")
+      open_notifications
       expect(page).to have_no_content(title)
 
       sign_out

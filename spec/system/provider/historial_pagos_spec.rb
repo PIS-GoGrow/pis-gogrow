@@ -24,6 +24,11 @@ RSpec.describe "Historial de pagos del proveedor" do
   let(:previous_month) { Date.current.beginning_of_month.months_ago(1) }
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Account.where(provider:).destroy_all
     consumers(:one).orders.destroy_all
   end
@@ -38,7 +43,7 @@ RSpec.describe "Historial de pagos del proveedor" do
   def confirmed_order(month:)
     travel_to(Time.zone.local(month.year, month.month, 5, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer: consumers(:one), schedule:, amount: 1, price: 1000, discounted_price: 300,
@@ -138,20 +143,10 @@ RSpec.describe "Historial de pagos del proveedor" do
   end
 
   def employee_uploads_receipt
-    visit accounts_path
+    visit_hydrated accounts_path
     # El empleado puede deberle a otros proveedores: se sube en la tarjeta de este.
-    upload_button = within(find("[role=tabpanel] [data-slot=card]", text: /\A#{provider_user.name}/)) do
-      find_button("Subir comprobante de pago")
-    end
-
-    3.times do
-      upload_button.click
-      break if page.has_css?("[role=dialog]", wait: 1)
-    end
-
-    expect(page).to have_css("[role=dialog]")
-    within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+    within(find("[role=tabpanel] [data-slot=card]", text: /\A#{provider_user.name}/)) do
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
@@ -172,7 +167,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       click_on "Empleados"
       click_on employee.name
       expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
-      expect(page).to have_content("300,00")
+      expect(page).to have_content("$300")
 
       expect(page).to have_button("Descargar comprobantes", exact: true)
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
@@ -183,7 +178,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
       click_on "Empresa"
       expect(page).to have_content(company.created_at.strftime("%d/%m/%y"))
-      expect(page).to have_content("700,00")
+      expect(page).to have_content("$700")
       expect(page).to have_link("Descargar comprobante", exact: true, href: receipt_provider_payment_path(company))
       expect(page).to have_link("Descargar factura", exact: true, href: file_provider_invoice_path(invoice, download: 1))
     end
@@ -205,7 +200,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     within(find("[role=dialog]")) do
       expect(page).to have_content("Historial de consumo: #{month_name(previous_month)}")
       expect(page).to have_content("Milanesa al pan")
-      expect(page).to have_content("Total: 300,00")
+      expect(page).to have_content("Total: $300")
       click_on "Cerrar"
     end
 
@@ -217,7 +212,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
     within(find("[role=dialog]")) do
       expect(page).to have_content("Total")
-      expect(page).to have_content("700,00")
+      expect(page).to have_content("$700")
       click_on "Viandas"
       expect(page).to have_content("Milanesa al pan")
     end
@@ -296,7 +291,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     visit accounts_path
     find("[role=tab]", text: "Historial").click
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content("Aceptado")
+      expect(page).to have_content("Confirmado")
       expect(page).to have_content("$300")
     end
   end

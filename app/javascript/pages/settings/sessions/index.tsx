@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
 import SettingsPageLayout from "@/layouts/settings/page-layout"
+import { formatShortDateTime } from "@/lib/dates"
 import { sessions as sessionsRoutes, settingsSessions } from "@/routes"
 import type { BreadcrumbItem, Session } from "@/types"
 
@@ -55,7 +56,7 @@ export default function Sessions({ sessions }: SessionsProps) {
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {t("pages.settings.sessions.active_since", {
-                      time: new Date(session.created_at).toLocaleString(),
+                      time: formatShortDateTime(session.created_at),
                     })}
                   </p>
                 </div>

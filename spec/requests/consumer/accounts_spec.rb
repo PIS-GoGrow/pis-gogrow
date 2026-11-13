@@ -1,0 +1,466 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+require "inertia_rails/rspec"
+
+RSpec.describe "Consumer Accounts", type: :request do
+  fixtures :users, :consumers, :companies, :providers, :accounts, :admins, :menus, :schedules, :benefits
+
+  let(:consumer_user) { users(:one) }
+  let(:other_consumer_user) { users(:other_consumer_user) }
+  let(:provider_user) { users(:provider_user) }
+  let(:admin_user) { users(:admin) }
+  let(:provider) { providers(:tuviandita) }
+  let(:other_provider) { providers(:office_provider) }
+
+  describe "GET /payments (accounts_path)" do
+    context "when consumer is signed in" do
+      before do
+        sign_in(consumer_user, role: :consumer)
+      end
+
+      it "renders 200 OK and consumer/accounts/index component via GET /payments" do
+        get "/payments"
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to render_component("consumer/accounts/index")
+      end
+
+      it "renders 200 OK and consumer/accounts/index component via accounts_path helper" do
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to render_component("consumer/accounts/index")
+      end
+
+      it "counts the monthly allowance like every other screen, not the meals ordered" do
+        Order.create!(
+          consumer: consumers(:one), schedule: schedules(:today), amount: 3, price: 900,
+          address: "18 de Julio 1006", delivery_method: :office, status: :confirmed
+        ).apply_benefit! benefits(:monthly), 2
+
+        get accounts_path
+
+        expect(inertia).to have_props(benefit_used: 2, benefit_available: 20)
+      end
+
+      it "returns 404 for legacy route /pagos" do
+        get "/pagos"
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "orders pending accounts from newest to oldest" do
+        consumer = consumers(:one)
+
+        older_account = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 3.months.ago.beginning_of_month,
+          amount: 100
+        )
+
+        newer_account = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 2.months.ago.beginning_of_month,
+          amount: 200
+        )
+
+        get accounts_path
+
+        ids = inertia.props[:accounts].map { |account| account["id"] }
+
+        expect(ids.index(newer_account.id)).to be < ids.index(older_account.id)
+      end
+
+      it "orders all pending accounts strictly from newest to oldest month across multiple periods" do
+        consumer = consumers(:one)
+
+        account_oldest = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 4.months.ago.beginning_of_month,
+          amount: 150
+        )
+        account_middle = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 2.months.ago.beginning_of_month,
+          amount: 250
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        pending_accounts = inertia.props[:accounts]
+        ids = pending_accounts.map { |a| a["id"] }
+
+        expect(ids.index(accounts(:one_tuviandita_current).id)).to be < ids.index(account_middle.id)
+        expect(ids.index(account_middle.id)).to be < ids.index(account_oldest.id)
+      end
+
+      it "includes provider bank details in props[:providers] when configured" do
+        provider.update!(
+          bank_name: "Banco Itaú",
+          bank_account_details: "1951234",
+          beneficiary: "Tu Vianda SRL"
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          serialized = p[:providers].find { |pr| pr[:id] == provider.id }
+          serialized[:bank_name] == "Banco Itaú" &&
+            serialized[:bank_account_details] == "1951234" &&
+            serialized[:beneficiary] == "Tu Vianda SRL" &&
+            serialized[:name] == provider.user.name &&
+            serialized[:home_delivery] == true
+        }
+      end
+
+      it "serializes nil bank fields for providers without configured bank details" do
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          serialized = p[:providers].find { |pr| pr[:id] == other_provider.id }
+          serialized[:bank_name].nil? &&
+            serialized[:bank_account_details].nil? &&
+            serialized[:beneficiary].nil?
+        }
+      end
+
+      it "strictly excludes tax_id (RUT) and user_id from props[:providers]" do
+        provider.update!(
+          tax_id: "219999990019",
+          bank_name: "Banco República",
+          bank_account_details: "001-987654",
+          beneficiary: "Viandas SRL"
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        all_keys = inertia.props[:providers].flat_map { |p| p.keys.map(&:to_s) }
+        expect(all_keys).not_to include("tax_id", "user_id", "order_deadline")
+      end
+
+      it "sends the delivered orders of the current month as the consumption detail" do
+        get accounts_path
+
+        expect(inertia).to have_props { |props|
+          detail = props.deep_symbolize_keys[:current_month_detail]
+          detail[:month] == I18n.l(Date.current, format: :month_year) &&
+            detail[:amount].to_d == BigDecimal("150.25") &&
+            detail[:orders].map { |order| order[:id] } == [ orders(:history_confirmed_past).id ]
+        }
+      end
+
+      it "sends the number of meals behind the pending accounts" do
+        get accounts_path
+
+        # La vianda del pedido confirmado y ya entregado de TuViandita; el de 2
+        # se entrega en tres días, y la cuenta de Endulzate no tiene pedidos.
+        expect(inertia).to have_props(total_meals: 1)
+      end
+
+      it "leaves out the orders of other employees and the ones that are not confirmed" do
+        get accounts_path
+
+        expect(inertia).to have_props { |props|
+          ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |order| order[:id] }
+          ids.exclude?(orders(:other_consumer_upcoming).id) && ids.exclude?(orders(:upcoming_pending_future).id)
+        }
+      end
+
+      it "does not include future confirmed orders in debt and meals until their delivery date" do
+        future_order = orders(:upcoming_confirmed_future)
+        past_order = orders(:history_confirmed_past)
+
+        get accounts_path
+
+        expect(inertia).to have_props(total_meals: 1, current_month_debt: "150.25")
+        expect(inertia).to have_props { |props|
+          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
+          expect(order_ids).to include(past_order.id)
+          expect(order_ids).not_to include(future_order.id)
+          true
+        }
+
+        travel_to future_order.delivery_date
+        DeliveredOrdersSyncJob.perform_now(date: future_order.delivery_date)
+
+        get accounts_path
+
+        expect(inertia).to have_props(total_meals: 3, current_month_debt: "450.75")
+        expect(inertia).to have_props { |props|
+          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
+          expect(order_ids).to contain_exactly(past_order.id, future_order.id)
+          true
+        }
+      end
+
+      it "serializes outstanding_amount for pending accounts and matches total_debt" do
+        account = accounts(:one_tuviandita_current)
+        account.update!(amount: 290.25)
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          target = p[:accounts].find { |a| a[:id] == account.id }
+          target[:outstanding_amount] == 290.25 &&
+            p[:total_debt].to_d >= 290.25.to_d
+        }
+      end
+    end
+
+    describe "Mandatory Edge Case 1: Interface Bypass" do
+      before do
+        sign_in(consumer_user, role: :consumer)
+      end
+
+      it "safely handles invalid query params tampering without crashing and defaults history to false" do
+        get accounts_path, params: { type: "malicious_script_injection" }
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props(history: false)
+
+        get accounts_path, params: { type: [ "array", "injection" ] }
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props(history: false)
+      end
+
+      it "correctly resolves history to true when type is history" do
+        get accounts_path, params: { type: "history" }
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props(history: true)
+      end
+
+      it "prevents direct show endpoint access to another consumer's account returning 404" do
+        other_account = accounts(:other_tuviandita_current)
+
+        get account_path(other_account), headers: { "ACCEPT" => "application/json" }
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns 404 when accessing a non-existent account ID" do
+        get "/accounts/99999999", headers: { "ACCEPT" => "application/json" }
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    describe "Mandatory Edge Case 2: Unexpected Data Types in Bank Details" do
+      before do
+        sign_in(consumer_user, role: :consumer)
+      end
+
+      it "safely serializes bank fields containing special characters and symbols" do
+        provider.update!(
+          bank_name: "Banco Santander - Sucursal 01 / Cta Cte",
+          bank_account_details: "0012-345678/90 (CA$)",
+          beneficiary: "María & José S.A. — Gastronomía"
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          serialized = p[:providers].find { |pr| pr[:id] == provider.id }
+          serialized[:bank_name] == "Banco Santander - Sucursal 01 / Cta Cte" &&
+            serialized[:bank_account_details] == "0012-345678/90 (CA$)" &&
+            serialized[:beneficiary] == "María & José S.A. — Gastronomía"
+        }
+      end
+
+      it "safely serializes partial bank details where only bank_name is provided" do
+        provider.update!(
+          bank_name: "BROU",
+          bank_account_details: nil,
+          beneficiary: nil
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          serialized = p[:providers].find { |pr| pr[:id] == provider.id }
+          serialized[:bank_name] == "BROU" &&
+            serialized[:bank_account_details].nil? &&
+            serialized[:beneficiary].nil?
+        }
+      end
+    end
+
+    describe "Mandatory Edge Case 3: Role Access Control" do
+      it "redirects unauthenticated users to sign in with alert flash" do
+        get accounts_path
+
+        expect(response).to redirect_to(consumer_welcome_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.not_signed_in"))
+      end
+
+      it "blocks providers from accessing GET /payments, redirecting to root_path with alert flash" do
+        sign_in(provider_user, role: :provider)
+
+        get accounts_path
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+
+      it "blocks admins from accessing GET /payments, redirecting to root_path with alert flash" do
+        sign_in(admin_user, role: :admin)
+
+        get accounts_path
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+
+      it "blocks providers from accessing GET /accounts/:id, redirecting to root_path with alert flash" do
+        sign_in(provider_user, role: :provider)
+        account = accounts(:one_tuviandita_current)
+
+        get account_path(account), headers: { "ACCEPT" => "application/json" }
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+
+      it "blocks admins from accessing GET /accounts/:id, redirecting to root_path with alert flash" do
+        sign_in(admin_user, role: :admin)
+        account = accounts(:one_tuviandita_current)
+
+        get account_path(account), headers: { "ACCEPT" => "application/json" }
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+    end
+
+    describe "Mandatory Edge Case 4: 422 / Database Integrity" do
+      it "renders cleanly when consumer has zero accounts and zero debt" do
+        consumers(:other).accounts.destroy_all
+
+        sign_in(other_consumer_user, role: :consumer)
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          p[:total_debt].to_d.zero? &&
+            p[:total_meals] == 0 &&
+            p[:current_month_debt].to_d.zero? &&
+            p[:benefit_used] == 0 &&
+            p[:accounts].empty?
+        }
+      end
+
+      it "rejects unsupported HTTP methods on /payments and /accounts/:id returning 404" do
+        sign_in(consumer_user, role: :consumer)
+        account = accounts(:one_tuviandita_current)
+
+        post "/payments"
+        expect(response).to have_http_status(:not_found)
+
+        patch "/payments"
+        expect(response).to have_http_status(:not_found)
+
+        delete "/payments"
+        expect(response).to have_http_status(:not_found)
+
+        post account_path(account)
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "tolerates unexpected data types and invalid values in query parameters" do
+        sign_in(consumer_user, role: :consumer)
+
+        get accounts_path, params: { type: "invalid_filter", unexpected: { nested: "payload" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to render_component("consumer/accounts/index")
+      end
+
+      it "returns 404 when requesting a non-existent or malformed account ID" do
+        sign_in(consumer_user, role: :consumer)
+
+        get account_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "prevents accessing an account belonging to another consumer returning 404" do
+        sign_in(consumer_user, role: :consumer)
+        other_account = accounts(:other_tuviandita_current)
+
+        get account_path(other_account)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "counts both pending and confirmed orders but ignores cancelled orders in benefit_used prop" do
+        sign_in(consumer_user, role: :consumer)
+        schedule = schedules(:today)
+
+        # 1 confirmed order with 2 subsidized meals
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: 2, price: 600,
+          address: "18 de Julio 1006", delivery_method: :office, status: :confirmed
+        ).apply_benefit! benefits(:monthly), 2
+
+        # 1 pending order with 1 subsidized meal
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: 1, price: 300,
+          address: "18 de Julio 1006", delivery_method: :office, status: :pending
+        ).apply_benefit! benefits(:monthly), 1
+
+        # 1 cancelled order with 3 subsidized meals (must NOT be counted)
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: 3, price: 900,
+          address: "18 de Julio 1006", delivery_method: :office, status: :cancelled
+        ).apply_benefit! benefits(:monthly), 3
+
+        get accounts_path
+
+        expect(inertia).to have_props(benefit_used: 3, benefit_available: 20)
+      end
+    end
+  end
+
+  describe "Access control by role for /payments" do
+    it "redirects an unauthenticated visitor to the sign in page" do
+      get accounts_path
+
+      expect(response).to redirect_to(consumer_welcome_path)
+    end
+
+    it "redirects a user with provider role to the root path with an alert" do
+      sign_in(users(:provider_user), role: :provider)
+
+      get accounts_path
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:alert]).to be_present
+    end
+
+    it "redirects a user with admin role to the root path with an alert" do
+      sign_in(users(:admin), role: :admin)
+
+      get accounts_path
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:alert]).to be_present
+    end
+  end
+end

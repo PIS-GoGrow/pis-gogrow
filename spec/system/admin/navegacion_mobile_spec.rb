@@ -9,7 +9,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
   let(:consumer) { consumers(:one) }
 
   def mobile_nav
-    find("nav[aria-label='Navegación de RRHH']")
+    find("nav[aria-label='Navegación de RR. HH.']")
   end
 
   def sidebar
@@ -28,7 +28,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
     end
 
     it "muestra la barra inferior, oculta el sidebar y la cabecera con hamburguesa" do
-      expect(page).to have_css("nav[aria-label='Navegación de RRHH']")
+      expect(page).to have_css("nav[aria-label='Navegación de RR. HH.']")
       expect(page).to have_no_css("[data-sidebar='trigger']", visible: true)
       expect(page).to have_no_css("[data-sidebar='sidebar']", visible: true)
     end
@@ -58,7 +58,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
       end
     end
 
-    it "navega a Cuenta (/admin/account) y mantiene el estado activo en Subsidios" do
+    it "navega a Cuenta (/admin/cuenta) y mantiene el estado activo en Subsidios" do
       within(mobile_nav) { click_on "Cuenta" }
 
       expect(page).to have_current_path(admin_account_path)
@@ -84,6 +84,24 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
         expect(page).to have_no_css("[aria-current='page']", text: "Pagos")
       end
     end
+
+    it "permite acceder a Facturas desde Cuenta y mantiene Cuenta activa en la barra inferior" do
+      within(mobile_nav) { click_on "Cuenta" }
+
+      expect(page).to have_current_path(admin_account_path)
+      expect(page).to have_content("Facturas")
+      expect(page).to have_content("Consultá las facturas de los proveedores")
+
+      click_link "Facturas"
+
+      expect(page).to have_current_path(admin_invoices_path)
+      within(mobile_nav) do
+        expect(page).to have_css("a[aria-current='page']", text: "Cuenta")
+        expect(page).to have_no_css("a[aria-current='page']", text: "Inicio")
+        expect(page).to have_no_css("a[aria-current='page']", text: "Empleados")
+        expect(page).to have_no_css("a[aria-current='page']", text: "Pagos")
+      end
+    end
   end
 
   describe "vista de escritorio (1400x1400)" do
@@ -94,14 +112,23 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
     end
 
     it "no muestra la barra inferior y mantiene el sidebar visible y funcional" do
-      expect(page).to have_no_css("nav[aria-label='Navegación de RRHH']", visible: true)
+      expect(page).to have_no_css("nav[aria-label='Navegación de RR. HH.']", visible: true)
       expect(page).to have_css("[data-sidebar='sidebar']", visible: true)
 
       within(sidebar) do
         expect(page).to have_link("Inicio")
         expect(page).to have_link("Empleados")
-        expect(page).to have_link("Beneficio general")
+        expect(page).to have_link("Subsidios")
+        expect(page).to have_link("Facturas", href: admin_invoices_path)
+        expect(page).to have_link("Cuenta", href: admin_account_path)
       end
+    end
+
+    it "permite acceder a Cuenta desde el menú de usuario en escritorio" do
+      find("[data-sidebar='menu-button']", text: admin_user.name).click
+      find("[role='menuitem']", text: "Configuración").click
+
+      expect(page).to have_current_path(admin_account_path)
     end
   end
 
@@ -115,7 +142,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
       sign_in users(:one), role: :consumer
       visit root_path
 
-      expect(page).to have_no_css("nav[aria-label='Navegación de RRHH']")
+      expect(page).to have_no_css("nav[aria-label='Navegación de RR. HH.']")
     end
 
     it "no muestra la barra de navegación de RRHH a un usuario proveedor" do
@@ -123,7 +150,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
       sign_in users(:provider_user), role: :provider
       visit provider_dashboard_path
 
-      expect(page).to have_no_css("nav[aria-label='Navegación de RRHH']")
+      expect(page).to have_no_css("nav[aria-label='Navegación de RR. HH.']")
     end
   end
 end

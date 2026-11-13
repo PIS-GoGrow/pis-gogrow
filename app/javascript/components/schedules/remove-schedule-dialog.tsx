@@ -3,17 +3,17 @@ import { X } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
+import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { schedules as schedulesRoutes } from "@/routes"
 import type { Schedule } from "@/types"
@@ -41,37 +41,41 @@ export default function RemoveScheduleDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <AdaptableDialog open={open} onOpenChange={setOpen}>
+      <AdaptableDialogTrigger asChild>
         <Button variant="ghost" size="sm" className="relative z-10">
           <X aria-hidden="true" />
           {t("pages.schedules.index.remove.button")}
         </Button>
-      </DialogTrigger>
+      </AdaptableDialogTrigger>
 
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
+      <AdaptableDialogContent showCloseButton={false} className="p-5 md:p-6">
+        <AdaptableDialogHeader className="p-0">
+          <AdaptableDialogTitle>
             {t("pages.schedules.index.remove.title", {
               name: schedule.menu.name,
             })}
-          </DialogTitle>
-          <DialogDescription>
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription>
             {t("pages.schedules.index.remove.description")}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">
+          </AdaptableDialogDescription>
+        </AdaptableDialogHeader>
+        <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+          <AdaptableDialogClose asChild>
+            <Button variant="outline" className="max-md:flex-1">
               {t("pages.schedules.index.remove.cancel")}
             </Button>
-          </DialogClose>
-          <Button disabled={processing} onClick={handleRemove}>
+          </AdaptableDialogClose>
+          <Button
+            disabled={processing}
+            onClick={handleRemove}
+            className="max-md:flex-1"
+          >
             {processing && <Spinner />}
             {t("pages.schedules.index.remove.confirm")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AdaptableDialogFooter>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

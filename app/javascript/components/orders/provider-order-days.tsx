@@ -1,8 +1,11 @@
-import { ChevronDown, Package } from "lucide-react"
-import { useState } from "react"
+import { ShoppingBasket01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronDown } from "lucide-react"
+import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ProviderOrderCard from "@/components/orders/provider-order-card"
+import type { ProviderOrderDecision } from "@/components/orders/provider-order-decided-sheet"
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,13 +22,11 @@ import { useFormatters } from "@/hooks/use-formatters"
 import {
   type OrderFilters,
   filterOrders,
-  formatDayDate,
   groupByDate,
-  hasActiveFilters,
   initialDate,
   ordersColumns,
+  searchableText,
   summarize,
-  withToday,
 } from "@/lib/provider-orders"
 import { cn } from "@/lib/utils"
 import type { ProviderOrder } from "@/types"
@@ -33,56 +34,50 @@ import type { ProviderOrder } from "@/types"
 interface ProviderOrderDaysProps {
   orders: ProviderOrder[]
   today: string
-  period: "upcoming" | "history"
   filters: OrderFilters
+  footer?: ReactNode
+  onDecided: (decision: ProviderOrderDecision) => void
 }
 
 export default function ProviderOrderDays({
   orders,
   today,
-  period,
   filters,
+  footer,
+  onDecided,
 }: ProviderOrderDaysProps) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney, formatDayMonth } = useFormatters()
   // undefined: el usuario todavía no eligió; null: cerró el día abierto.
   const [selected, setSelected] = useState<string | null | undefined>(undefined)
 
-  const filtered = filterOrders(orders, filters, (order) => [
-    order.consumer_name,
-    order.consumer_company,
-    order.menu_name,
-    order.address,
-    order.notes,
-    t("pages.provider_orders.index.code", { id: order.id }),
-    t(`pages.provider_orders.statuses.${order.status}`),
-    t(`pages.provider_orders.index.delivery_methods.${order.delivery_method}`),
-  ])
-  const grouped = groupByDate(filtered)
-  // Sin filtros, hoy siempre aparece: es el valor inicial de la pantalla.
-  const days =
-    period === "upcoming" && !hasActiveFilters(filters)
-      ? withToday(grouped, today)
-      : grouped
+  const filtered = filterOrders(orders, filters, (order) =>
+    searchableText(order, t),
+  )
+  const days = groupByDate(filtered)
 
   if (days.length === 0) {
-    const description = hasActiveFilters(filters)
-      ? "empty_filtered_description"
-      : period === "upcoming"
-        ? "empty_description"
-        : "empty_history_description"
-
     return (
-      <Empty className="border">
+      <Empty
+        className={cn(
+          "min-h-[50svh]",
+          orders.length === 0 && "max-lg:min-h-[calc(100svh-15rem)]",
+        )}
+      >
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Package aria-hidden="true" />
+          <EmptyMedia variant="icon" className="size-10">
+            <HugeiconsIcon
+              icon={ShoppingBasket01Icon}
+              size={20}
+              className="size-5"
+              aria-hidden="true"
+            />
           </EmptyMedia>
-          <EmptyTitle>
-            {t("pages.provider_orders.index.empty_title")}
+          <EmptyTitle className="text-base">
+            {t("pages.provider_orders.index.no_orders_title")}
           </EmptyTitle>
-          <EmptyDescription>
-            {t(`pages.provider_orders.index.${description}`)}
+          <EmptyDescription className="text-wrap">
+            {t("pages.provider_orders.index.no_orders_description")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -105,7 +100,7 @@ export default function ProviderOrderDays({
 
   return (
     <div
-      className={cn("grid gap-3 lg:items-start", ordersColumns)}
+      className={cn("grid gap-4 lg:items-start lg:gap-3", ordersColumns)}
       style={{ gridTemplateRows: `repeat(${days.length}, auto) 1fr` }}
     >
       {days.map((day) => {
@@ -118,11 +113,11 @@ export default function ProviderOrderDays({
             onOpenChange={(open) => handleOpenChange(day.date, open)}
             className="flex flex-col rounded-lg border lg:contents"
           >
-            <CollapsibleTrigger className="group lg:data-[state=open]:bg-muted flex w-full items-center justify-between gap-2 p-3 text-left text-sm font-medium lg:col-start-1 lg:rounded-lg lg:border">
+            <CollapsibleTrigger className="group lg:data-[state=open]:bg-muted flex w-full items-center justify-between gap-2 p-3.5 text-left text-sm font-medium lg:col-start-1 lg:rounded-lg lg:border lg:p-3">
               {t("pages.provider_orders.index.day_summary", {
-                date: formatDayDate(day.date),
+                date: formatDayMonth(day.date),
                 meals,
-                amount: formatMoneyShort(total),
+                amount: formatMoney(total),
               })}
               <ChevronDown
                 className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180 lg:hidden"
@@ -131,24 +126,24 @@ export default function ProviderOrderDays({
             </CollapsibleTrigger>
 
             <CollapsibleContent
-              className="lg:before:bg-border @container grid gap-3 px-3 pb-3 lg:relative lg:col-start-2 lg:self-stretch lg:px-0 lg:pb-0 lg:before:absolute lg:before:inset-y-0 lg:before:-left-6 lg:before:w-px"
+              className="lg:before:bg-border @container grid gap-3 px-3.5 pb-3.5 lg:relative lg:col-start-2 lg:self-stretch lg:px-0 lg:pb-0 lg:before:absolute lg:before:inset-y-0 lg:before:-left-6 lg:before:w-px"
               style={{ gridRow: "1 / -1" }}
             >
-              {day.orders.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  {t("pages.provider_orders.index.empty_title")}
-                </p>
-              ) : (
-                <div className="grid gap-3 @2xl:grid-cols-2">
-                  {day.orders.map((order) => (
-                    <ProviderOrderCard key={order.id} order={order} />
-                  ))}
-                </div>
-              )}
+              <div className="grid gap-4 lg:gap-3 @2xl:grid-cols-2">
+                {day.orders.map((order) => (
+                  <ProviderOrderCard
+                    key={order.id}
+                    order={order}
+                    onDecided={onDecided}
+                  />
+                ))}
+              </div>
             </CollapsibleContent>
           </Collapsible>
         )
       })}
+
+      {footer && <div className="mt-3 lg:col-start-1">{footer}</div>}
     </div>
   )
 }

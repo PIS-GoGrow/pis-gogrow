@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -47,14 +48,14 @@ describe("ClosuresSection", () => {
       reason: "Vacaciones de invierno",
       starts_on: "2026-10-20",
       ends_on: "2026-10-22",
-      period: "20 al 22 de octubre de 2026",
+      period: "20/10/26 al 22/10/26",
     },
     {
       id: 2,
       reason: "Feriado",
       starts_on: "2026-11-02",
       ends_on: "2026-11-02",
-      period: "2 de noviembre de 2026",
+      period: "02/11/26",
     },
   ]
 
@@ -79,9 +80,9 @@ describe("ClosuresSection", () => {
     render(<ClosuresSection closures={sampleClosures} today="2026-10-12" />)
 
     expect(screen.getByText("Vacaciones de invierno")).toBeInTheDocument()
-    expect(screen.getByText("20 al 22 de octubre de 2026")).toBeInTheDocument()
+    expect(screen.getByText("20/10/26 al 22/10/26")).toBeInTheDocument()
     expect(screen.getByText("Feriado")).toBeInTheDocument()
-    expect(screen.getByText("2 de noviembre de 2026")).toBeInTheDocument()
+    expect(screen.getByText("02/11/26")).toBeInTheDocument()
   })
 
   it("abre el formulario para programar un nuevo cierre al hacer clic en 'Programar cierre'", () => {
@@ -128,7 +129,7 @@ describe("ClosuresSection", () => {
     fireEvent.click(deleteButtons[0])
 
     expect(routerDeleteMock).toHaveBeenCalledWith(
-      expect.stringContaining("/provider/closures/1"),
+      expect.stringContaining("/proveedor/cierres/1"),
       expect.objectContaining({ preserveScroll: true }),
     )
 
@@ -161,5 +162,29 @@ describe("ClosuresSection", () => {
     expect(
       screen.getByText("Ya tenés un cierre programado en esas fechas."),
     ).toBeInTheDocument()
+  })
+
+  it("deshabilita sábados y domingos en el calendario de selección de rango", async () => {
+    const user = userEvent.setup()
+    render(<ClosuresSection closures={[]} today="2026-10-12" />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Programar cierre" }))
+
+    const datePickerButton = screen.getByRole("button", {
+      name: "Rango de fechas",
+    })
+    await user.click(datePickerButton)
+
+    for (const weekend of screen.getAllByRole("button", {
+      name: /^(sábado|domingo),/,
+    })) {
+      expect(weekend).toBeDisabled()
+    }
+    const weekdays = screen.getAllByRole("button", {
+      name: /^(lunes|martes|miércoles|jueves|viernes),/,
+    })
+    expect(weekdays.some((weekday) => !weekday.hasAttribute("disabled"))).toBe(
+      true,
+    )
   })
 })

@@ -28,7 +28,7 @@ RSpec.describe "Provider::Orders", type: :request do
     )
   end
 
-  describe "GET /provider/orders" do
+  describe "GET /provider/pedidos" do
     it "redirects to sign in without a session" do
       get provider_orders_path
 
@@ -90,9 +90,25 @@ RSpec.describe "Provider::Orders", type: :request do
       )
     end
 
+    it "flags which orders the provider can still reject" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_orders_path
+
+      props = inertia.props.deep_symbolize_keys
+      upcoming = props[:upcoming_orders].index_by { it[:id] }
+      past = props[:past_orders].index_by { it[:id] }
+
+      expect(upcoming[orders(:upcoming_pending_today).id]).to include(rejectable: true)
+      expect(upcoming[orders(:upcoming_confirmed_future).id]).to include(rejectable: true)
+      expect(upcoming[orders(:history_cancelled_future).id]).to include(rejectable: false)
+      expect(past[orders(:history_pending_past).id]).to include(rejectable: true)
+      expect(past[orders(:history_confirmed_past).id]).to include(rejectable: false)
+    end
+
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
-      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
+      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10)
       older = Order.create!(
         consumer: consumers(:one),
         schedule: older_schedule,
@@ -135,8 +151,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       tomorrow_schedule = Schedule.create!(
         menu: menus(:milanesa),
-        date: Date.current + 1.day,
-        amount: 5
+        date: Date.current + 1.day
       )
       order_tomorrow = Order.create!(
         consumer: consumers(:one),
@@ -191,7 +206,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "GET /provider/orders/:id" do
+  describe "GET /provider/pedidos/:id" do
     it "redirects to sign in without a session" do
       get provider_order_path(orders(:upcoming_pending_today))
 
@@ -234,22 +249,30 @@ RSpec.describe "Provider::Orders", type: :request do
       }
     end
 
+    it "serializes rejectable flag as false for a past confirmed order and true for upcoming" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(orders(:history_confirmed_past))
+      expect(inertia).to have_props { |props| props["order"]["rejectable"] == false }
+
+      get provider_order_path(orders(:upcoming_confirmed_future))
+      expect(inertia).to have_props { |props| props["order"]["rejectable"] == true }
+    end
+
     it "sends historical dish details and totals rather than the edited menu values" do
       order = Order.create!(
         consumer: consumers(:one), schedule: schedules(:today), amount: 2,
         delivery_method: :office, price: 601, discounted_price: 300.50
       )
       original_name = order.menu_name
-      original_description = order.menu_description
       order.menu.update!(name: "Plato nuevo", description: "Descripción nueva", price: 999)
       sign_in users(:provider_user), role: :provider
 
       get provider_order_path(order)
 
       expect(inertia).to have_props { |props|
-        props["order"].slice("menu_name", "menu_description", "amount", "price", "discounted_price", "subsidy") == {
-          "menu_name" => original_name, "menu_description" => original_description,
-          "amount" => 2, "price" => 601.0, "discounted_price" => 300.50, "subsidy" => 300.50
+        props["order"].slice("menu_name", "amount", "price") == {
+          "menu_name" => original_name, "amount" => 2, "price" => 601.0
         }
       }
     end
@@ -270,12 +293,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
-          order[:menu_name] == "Milanesa con papas fritas" &&
-          order[:menu_description] == "Opción de carne o pollo" &&
-          order[:discounted_price] == 150.25 &&
-          order[:subsidy] == 150.25 &&
-          order[:schedule_amount] == 5 &&
-          order[:remaining_amount] == 4
+          order[:menu_name] == "Milanesa con papas fritas"
       }
     end
 
@@ -381,7 +399,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "PATCH /provider/orders/:id/confirm" do
+  describe "PATCH /provider/pedidos/:id/confirmar" do
     it "redirects to sign in without a session" do
       patch confirm_provider_order_path(orders(:upcoming_pending_today))
 
@@ -418,8 +436,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "redirects back to the order detail when deciding from the detail page" do
@@ -434,6 +451,35 @@ RSpec.describe "Provider::Orders", type: :request do
       follow_redirect!
       expect(inertia).to render_component("provider/orders/show")
       expect(inertia).to have_props { |props| props["order"]["status"] == order.reload.status }
+    end
+
+    it "refuses to confirm a pending order for today after the response deadline" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+      order.provider.update!(order_deadline: "12:00")
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_pending
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_response_window_closed"))
+    end
+
+    it "refuses to reject a pending order for today after the response deadline" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+      order.provider.update!(order_deadline: "12:00")
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_pending
+      expect(order.rejection_reason).to be_nil
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_response_window_closed"))
     end
 
     it "leaves an order that is no longer pending as it was" do
@@ -471,18 +517,17 @@ RSpec.describe "Provider::Orders", type: :request do
     it "still confirms the order when the notification cannot be saved" do
       sign_in users(:provider_user), role: :provider
       order = orders(:upcoming_pending_today)
-      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+      allow_any_instance_of(Notification).to receive(:save!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
 
       patch confirm_provider_order_path(order)
 
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
   end
 
-  describe "PATCH /provider/orders/:id/reject" do
+  describe "PATCH /provider/pedidos/:id/rechazar" do
     it "redirects to sign in without a session" do
       patch reject_provider_order_path(orders(:upcoming_pending_today))
 
@@ -523,8 +568,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejected_at).to be_present
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "rejects a pending order with 'other' reason and details" do
@@ -538,8 +582,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejection_details).to eq("Cerrado por reformas")
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "refuses to reject without a reason and returns an error flash" do
@@ -597,6 +640,85 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejection_reason).to eq("out_of_stock")
     end
 
+    it "leaves a confirmed order whose delivery date has passed as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_confirmed
+      expect(order.rejected_at).to be_nil
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
+    end
+
+    it "blocks rejecting a past confirmed order even with invalid or missing params" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+
+      [ {}, { reason: nil }, { reason: "invalid_reason" }, { reason: 12345 } ].each do |invalid_params|
+        patch reject_provider_order_path(order), params: invalid_params
+
+        expect(order.reload).to be_confirmed
+        expect(order.rejected_at).to be_nil
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
+      end
+    end
+
+    it "preserves accounts amounts and database records when rejection of past confirmed order is rejected" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+      accounts = order.accounts
+      original_amounts = accounts.map(&:amount)
+
+      expect {
+        patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+      }.not_to change(OrderEvent, :count)
+
+      expect(order.accounts.reload.map(&:amount)).to eq(original_amounts)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "leaves a confirmed order without delivery date as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_without_schedule)
+      order.update_columns(status: Order.statuses[:confirmed], delivery_date: nil, provider_id: providers(:tuviandita).id)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_confirmed
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
+    end
+
+    it "redirects unauthenticated requests to sign in" do
+      patch reject_provider_order_path(orders(:history_confirmed_past)), params: { reason: "out_of_stock" }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+    end
+
+    it "denies consumer role access to reject provider orders" do
+      sign_in users(:one), role: :consumer
+
+      patch reject_provider_order_path(orders(:history_confirmed_past)), params: { reason: "out_of_stock" }
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+    end
+
+    it "denies admin role access to reject provider orders" do
+      sign_in users(:admin), role: :admin
+
+      patch reject_provider_order_path(orders(:history_confirmed_past)), params: { reason: "out_of_stock" }
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+    end
+
     it "leaves an order that is no longer pending as it was" do
       sign_in users(:provider_user), role: :provider
       order = orders(:history_cancelled_future)
@@ -616,6 +738,129 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(other_provider_order.reload).to be_pending
+    end
+  end
+
+  describe "GET /provider/pedidos/exportar" do
+    def exported
+      xlsx_rows(response.body)
+    end
+
+    def exported_ids
+      exported[1..-2].map { it.first.delete_prefix("PED-").to_i }
+    end
+
+    def ids(*names)
+      names.map { orders(it).id }
+    end
+
+    it "redirects to sign in without a session" do
+      get export_provider_orders_path
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    %i[consumer admin].each do |role|
+      it "redirects an active #{role} session to the home page" do
+        sign_in(users(role == :consumer ? :one : :admin), role:)
+
+        get export_provider_orders_path
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+    end
+
+    it "exports the upcoming orders of every status by default, in the screen's order" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path
+
+      expect(exported_ids).to match_array(
+        ids(:upcoming_pending_today, :upcoming_pending_future, :upcoming_confirmed_future,
+          :history_cancelled_future, :history_rejected_future, :other_consumer_upcoming)
+      )
+      expect(exported_ids.first).to eq(orders(:upcoming_pending_today).id)
+    end
+
+    it "exports the past orders with periodo=historial" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(periodo: "historial")
+
+      expect(exported_ids).to match_array(ids(:history_confirmed_past, :history_pending_past))
+      expect(response.headers["Content-Disposition"]).to include("_historial_")
+    end
+
+    it "keeps only the orders matching the status, delivery and search filters" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(estado: "confirmed")
+      expect(exported_ids).to match_array(ids(:upcoming_confirmed_future, :other_consumer_upcoming))
+
+      get export_provider_orders_path(estado: "pending", entrega: "home")
+      expect(exported_ids).to match_array(ids(:upcoming_pending_today, :upcoming_pending_future))
+
+      get export_provider_orders_path(entrega: "office")
+      expect(exported_ids).to eq(ids(:upcoming_confirmed_future))
+
+      get export_provider_orders_path(busqueda: "BULEVÁR artigas")
+      expect(exported_ids).to eq(ids(:other_consumer_upcoming))
+
+      get export_provider_orders_path(busqueda: "herrera rechazado")
+      expect(exported_ids).to eq(ids(:history_rejected_future))
+    end
+
+    it "falls back to the defaults with invalid values" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(periodo: "todo", estado: "cancelled", entrega: "drone")
+
+      expect(exported_ids.size).to eq(6)
+      expect(response.headers["Content-Disposition"]).to include("_proximos_")
+    end
+
+    it "never exports orders of another provider" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(busqueda: "sorrentinos")
+      expect(exported_ids).to be_empty
+
+      sign_in users(:other_provider_user), role: :provider
+
+      get export_provider_orders_path
+      expect(exported_ids).to eq([ other_provider_order.id ])
+    end
+
+    it "sends a named XLSX with the operational columns, no contact data and matching totals" do
+      users(:one).update!(phone: "099123456")
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(estado: "pending")
+
+      today = Date.current
+      expect(response.media_type).to eq("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+      expect(response.headers["Content-Disposition"]).to include(
+        "attachment",
+        "pedidos_provider-user_proximos_#{today.iso8601}_al_#{(today + 3).iso8601}_generado_#{today.iso8601}_1200.xlsx"
+      )
+      expect(response.body.b).to start_with("PK".b)
+      expect(exported.first).to eq([
+        "Código", "Fecha de entrega", "Hora del pedido", "Estado", "Empleado", "Empresa", "Plato",
+        "Opciones", "Cantidad", "Entrega", "Dirección", "Notas", "Monto"
+      ])
+      expect(exported.flatten.join).not_to include("one@example.com", "099123456")
+
+      rows = exported[1..-2]
+      expect(rows.map(&:second)).to all(be_a(Date))
+      expect(exported.last).to eq([
+        "Total", nil, nil, nil, nil, nil, nil, nil,
+        rows.sum { it[8] }, nil, nil, nil,
+        rows.sum { it[12] }
+      ])
+      expect(exported.last[12]).to eq(601)
     end
   end
 end

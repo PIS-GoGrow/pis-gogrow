@@ -8,9 +8,14 @@ class Provider::CollectionPaymentSerializer < ApplicationSerializer
 
   attributes :id, :status, :rejection_reason
 
+  typelize :number, nullable: true
+  attribute :expected_amount do |payment|
+    payment.expected_amount&.to_f
+  end
+
   typelize :string
   attribute :date do |payment|
-    payment.created_at.strftime("%d/%m/%y")
+    DateFormat.short(payment.created_at)
   end
 
   typelize :string, nullable: true
@@ -23,6 +28,11 @@ class Provider::CollectionPaymentSerializer < ApplicationSerializer
   typelize :string, nullable: true
   attribute :receipt_filename do |payment|
     payment.receipt.filename.to_s if payment.receipt.attached?
+  end
+
+  typelize :string, nullable: true
+  attribute :receipt_size do |payment|
+    ActiveSupport::NumberHelper.number_to_human_size(payment.receipt.byte_size) if payment.receipt.attached?
   end
 
   typelize :string, nullable: true

@@ -37,8 +37,8 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   # Las publicaciones se guardan en un let y no se buscan por plato: schedules.yml
   # ya trae una publicación de sorrentinos para hoy, así que un find_by(menu:)
   # puede devolver la del fixture en vez de la de acá.
-  let(:sorrentinos_schedule) { Schedule.create!(menu: sorrentinos, date: monday, amount: 10) }
-  let(:milanesa_schedule) { Schedule.create!(menu: milanesa, date: monday, amount: 10) }
+  let(:sorrentinos_schedule) { Schedule.create!(menu: sorrentinos, date: monday) }
+  let(:milanesa_schedule) { Schedule.create!(menu: milanesa, date: monday) }
 
   before do
     # Los dos platos se publican el mismo día: el de sorrentinos trae los grupos
@@ -72,11 +72,11 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   # Cada grupo es una <section> con el título "Elegí tu <nombre>". Buscar por ese
   # título y no por el texto de la opción evita elegir la de otro grupo.
   def pick_option(group_name, option)
-    find("section", text: "Elegí tu #{group_name}").find("label", text: option).click
+    find("section", text: "Elegí tu/s #{group_name.downcase}").find("label", text: option).click
   end
 
   def checked_option(group_name)
-    find("section", text: "Elegí tu #{group_name}")
+    find("section", text: "Elegí tu/s #{group_name.downcase}")
       .find("label:has([role=radio][aria-checked=true])").text
   end
 
@@ -85,7 +85,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 
@@ -127,12 +127,12 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     it "muestra cada grupo del plato con las opciones que definió el proveedor" do
       open_dish(sorrentinos)
 
-      within("section", text: "Elegí tu Salsa") do
+      within("section", text: "Elegí tu/s salsa") do
         expect(page).to have_css("[role=radio]", count: 2)
         expect(page).to have_content("Filetto")
         expect(page).to have_content("Bolognesa")
       end
-      within("section", text: "Elegí tu Relleno") do
+      within("section", text: "Elegí tu/s relleno") do
         expect(page).to have_css("[role=radio]", count: 2)
         expect(page).to have_content("Ricota y nuez")
         expect(page).to have_content("Espinaca y queso")
@@ -152,7 +152,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     it "no ofrece opciones de otro plato ni opciones que el proveedor no cargó" do
       open_dish(sorrentinos)
 
-      expect(page).to have_no_content("Elegí tu Extras")
+      expect(page).to have_no_content("Elegí tu/s extras")
       expect(page).to have_no_content("Papaya")
       expect(page).to have_no_content("Arándanos")
       expect(page).to have_no_content("Limón")
@@ -160,7 +160,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       # El mismo grupo sí existe en el otro plato: no es que el dato no exista.
       click_button "Volver"
       open_dish(milanesa)
-      expect(page).to have_content("Elegí tu Extras")
+      expect(page).to have_content("Elegí tu/s extras")
       expect(page).to have_content("Papaya")
     end
 
@@ -171,13 +171,13 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       pick_option("Extras", "Papaya")
       pick_option("Extras", "Arándanos")
 
-      within("section", text: "Elegí tu Extras") do
+      within("section", text: "Elegí tu/s extras") do
         expect(find("[role=checkbox][aria-label='Limón']")).to be_disabled
       end
 
       pick_option("Extras", "Papaya")
 
-      within("section", text: "Elegí tu Extras") do
+      within("section", text: "Elegí tu/s extras") do
         expect(find("[role=checkbox][aria-label='Limón']")).not_to be_disabled
       end
     end
@@ -225,20 +225,18 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit_hydrated order_path(order)
       calm_animations
 
-      click_button "Editar"
-      within("[role=dialog]") do
-        expect(page).to have_button("Guardar cambios", disabled: false)
+      click_link "Editar"
+      expect(page).to have_button("Modificar", disabled: false)
 
-        pick_option("Extras", "Papaya")
+      pick_option("Extras", "Papaya")
 
-        expect(page).to have_button("Guardar cambios", disabled: true)
-      end
+      expect(page).to have_button("Modificar", disabled: true)
 
       expect(order.reload.selected_options.first["values"]).to eq([ "Papaya" ])
     end
 
-    # Un pedido anterior a la funcionalidad no tiene elección guardada, así que el
-    # diálogo arranca con los grupos sin responder: tampoco se puede cambiar solo
+    # Un pedido anterior a la funcionalidad no tiene elección guardada, así que la
+    # pantalla arranca con los grupos sin responder: tampoco se puede cambiar solo
     # la cantidad hasta elegir la personalización.
     it "exige elegir la personalización de un pedido hecho antes de la funcionalidad" do
       order = order_with_selections
@@ -246,17 +244,15 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit_hydrated order_path(order)
       calm_animations
 
-      click_button "Editar"
-      within("[role=dialog]") do
-        expect(page).to have_button("Guardar cambios", disabled: true)
+      click_link "Editar"
+      expect(page).to have_button("Modificar", disabled: true)
 
-        pick_option("Salsa", "Bolognesa")
-        pick_option("Relleno", "Ricota y nuez")
+      pick_option("Salsa", "Bolognesa")
+      pick_option("Relleno", "Ricota y nuez")
 
-        expect(page).to have_button("Guardar cambios", disabled: false)
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_no_selector("[role=dialog]")
+      expect(page).to have_button("Modificar", disabled: false)
+      click_button "Modificar"
+      confirm_order_modified
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Bolognesa" ], [ "Ricota y nuez" ])
@@ -271,8 +267,8 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
       it "deja pedir el plato sin elegir nada de ese grupo" do
         open_dish(sorrentinos)
-        expect(find("section", text: "Elegí tu Salsa")).to have_content("Opcional")
-        expect(find("section", text: "Elegí tu Relleno")).to have_content("Obligatorio")
+        expect(find("section", text: "Elegí tu/s salsa")).to have_content("Opcional")
+        expect(find("section", text: "Elegí tu/s relleno")).to have_content("Obligatorio")
 
         pick_option("Relleno", "Ricota y nuez")
         expect(page).to have_button("Agregar", disabled: false)
@@ -292,7 +288,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
         expect(checked_option("Salsa")).to eq("Bolognesa")
 
         pick_option("Salsa", "Bolognesa")
-        expect(find("section", text: "Elegí tu Salsa")).to have_no_selector("[role=radio][aria-checked=true]")
+        expect(find("section", text: "Elegí tu/s salsa")).to have_no_selector("[role=radio][aria-checked=true]")
       end
 
       it "deja quitar la opción elegida al modificar el pedido" do
@@ -300,13 +296,11 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
         visit_hydrated order_path(order)
         calm_animations
 
-        click_button "Editar"
-        within("[role=dialog]") do
-          pick_option("Salsa", "Bolognesa")
-          expect(page).to have_button("Guardar cambios", disabled: false)
-          click_button "Guardar cambios"
-        end
-        expect(page).to have_no_selector("[role=dialog]")
+        click_link "Editar"
+        pick_option("Salsa", "Bolognesa")
+        expect(page).to have_button("Modificar", disabled: false)
+        click_button "Modificar"
+        confirm_order_modified
 
         expect(order.reload.selected_options.pluck("group_id")).to eq([ relleno.id ])
       end
@@ -317,16 +311,15 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit_hydrated order_path(order)
       calm_animations
 
-      click_button "Editar"
-      within("[role=dialog]") do
-        pick_option("Salsa", "Filetto")
-        # El clic y el PATCH son visitas de Inertia: sin esperar a que el radio
-        # refleje el cambio, el envío puede llevar la personalización anterior.
-        expect(checked_option("Salsa")).to include("Filetto")
+      click_link "Editar"
+      pick_option("Salsa", "Filetto")
+      # El clic y el PATCH son visitas de Inertia: sin esperar a que el radio
+      # refleje el cambio, el envío puede llevar la personalización anterior.
+      expect(checked_option("Salsa")).to include("Filetto")
 
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_no_selector("[role=dialog]")
+      click_button "Modificar"
+      confirm_order_modified
+      visit_hydrated order_path(order)
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Filetto" ], [ "Ricota y nuez" ])

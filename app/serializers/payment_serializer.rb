@@ -4,9 +4,14 @@ class PaymentSerializer < ApplicationSerializer
   typelize_from Payment
   attributes :id, :status, :created_at, :rejection_reason
 
+  typelize :number, nullable: true
+  attribute :expected_amount do |payment|
+    payment.expected_amount&.to_f
+  end
+
   typelize :string
   attribute :receipt_uploaded_at do |payment|
-    I18n.l(payment.created_at.to_date)
+    DateFormat.short(payment.created_at)
   end
 
   typelize :string?
@@ -31,6 +36,11 @@ class PaymentSerializer < ApplicationSerializer
   attribute :receipt_content_type do |payment|
     payment.receipt.content_type if payment.receipt.attached?
   end
+
+  typelize :number?
+  attribute :receipt_byte_size do |payment|
+    payment.receipt.blob.byte_size if payment.receipt.attached?
+  end
 end
 
 # == Schema Information
@@ -38,6 +48,7 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
+#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

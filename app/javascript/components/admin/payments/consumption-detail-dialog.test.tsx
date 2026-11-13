@@ -24,6 +24,7 @@ const tuViandita: ConsumptionDetail["providers"][number] = {
   vat_rate: 22,
   vat_amount: 3564,
   payable_amount: 19764,
+  paid: true,
   days: [
     {
       date: "30/08",
@@ -91,6 +92,16 @@ describe("ConsumptionDetailDialog", () => {
     expect(screen.getByRole("button", { name: "Cerrar" })).toBeInTheDocument()
   })
 
+  // IBP-032 CA3: el detalle no puede llamar "pagado" a lo que la tarjeta muestra
+  // como pendiente.
+  it("rotula el total como a pagar mientras el pago no está aprobado", () => {
+    render(<Harness providers={[{ ...tuViandita, paid: false }]} />)
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Total a pagar$19.764")
+    expect(dialog).not.toHaveTextContent("Total pagado")
+  })
+
   it("no muestra el filtro si el mes tiene un solo proveedor", () => {
     render(<Harness providers={[tuViandita]} />)
 
@@ -136,11 +147,13 @@ describe("ConsumptionDetailDialog", () => {
 
     await user.click(screen.getByRole("tab", { name: "Viandas" }))
 
-    expect(
-      screen.getByRole("button", {
-        name: "Día: 30/08 | Viandas: 3 | Monto: $470",
-      }),
-    ).toBeInTheDocument()
+    const day = screen.getByRole("button", {
+      name: "Día: 30/08 | Viandas: 3 | Monto: $470",
+    })
+    expect(day).toHaveAttribute("aria-expanded", "false")
+    expect(screen.queryByRole("table")).not.toBeInTheDocument()
+
+    await user.click(day)
 
     const table = screen.getByRole("table")
     expect(

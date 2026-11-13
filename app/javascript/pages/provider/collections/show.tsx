@@ -7,12 +7,11 @@ import HeadingSmall from "@/components/heading-small"
 import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
-import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { CardContent } from "@/components/ui/card"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerCollections } from "@/routes"
 import type { BreadcrumbItem, ProviderCollectionsShow } from "@/types"
@@ -90,7 +89,7 @@ export default function Show({
               {account.month}
             </Row>
             <Row label={t("pages.provider_collections.show.status")}>
-              <StatusBadge status={account.status} kind="payment" />
+              <StatusBadge status={account.status} kind="provider_payment" />
             </Row>
             <Row label={t("pages.provider_collections.show.due_date")}>
               {account.due_date}
@@ -164,20 +163,16 @@ export default function Show({
           ) : (
             <dl className="grid gap-2 text-sm">
               {payments.map((payment) => (
-                <Row key={payment.id} label={payment.date}>
-                  <div className="flex items-center gap-1.5">
-                    {payment.rejection_reason ===
-                      PARTIAL_PAYMENT_REJECTION_REASON && (
-                      <Badge
-                        variant="outline"
-                        className="gap-1.5 border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500"
-                      >
-                        <span className="size-1.5 rounded-full" />
-                        {t("pages.provider_collections.partial_payment_badge")}
-                      </Badge>
-                    )}
-                    <StatusBadge status={payment.status} kind="payment" />
-                  </div>
+                <Row
+                  key={payment.id}
+                  label={t("pages.provider_collections.receipt_sent_at", {
+                    date: payment.date,
+                  })}
+                >
+                  <StatusBadge
+                    status={paymentPresentationStatus(payment)}
+                    kind="provider_payment"
+                  />
                 </Row>
               ))}
             </dl>

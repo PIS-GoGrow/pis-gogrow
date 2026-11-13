@@ -11,7 +11,7 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ url: "/admin/consumers", props: { locale: "es" } }),
+    usePage: () => ({ url: "/admin/empleados", props: { locale: "es" } }),
   }
 })
 
@@ -106,5 +106,48 @@ describe("Admin Consumers Page", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: "Pendientes" }))
     expect(title).toHaveTextContent("Empleados22 empleados")
+  })
+
+  it("shows an empty state when search finds no matches", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "inexistente" },
+    })
+
+    expect(screen.getByText("No se encontraron empleados")).toBeInTheDocument()
+    expect(
+      screen.getByText("Probá con otro nombre o correo, o cambiá el filtro."),
+    ).toBeInTheDocument()
+  })
+
+  it("leaves the settled and idle employees out of Pendientes", () => {
+    render(<Index consumers={consumers} filter="pending" />)
+
+    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+    expect(screen.getByText("Carla Review")).toBeInTheDocument()
+    expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
+    expect(screen.queryByText("Diego Idle")).not.toBeInTheDocument()
+  })
+
+  it("filters employees by name or email", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "bruno@" },
+    })
+
+    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+    expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
+  })
+
+  // Figma: nombre, monto y estado; el monto es la deuda que calcula Rails.
+  it("shows each employee with the amount owed and Confirmado once paid", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+    expect(screen.queryByText("ana@gogrow.com")).not.toBeInTheDocument()
+    expect(screen.getByText(/2\.425/)).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
   })
 })

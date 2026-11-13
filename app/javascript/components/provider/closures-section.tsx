@@ -15,12 +15,15 @@ import { DateRangePicker } from "@/components/date-picker"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { providerClosures } from "@/routes"
 import type { ProviderClosure } from "@/types/serializers/ProviderClosure"
 
 interface ClosuresSectionProps {
   closures: ProviderClosure[]
   today: string
+  onboarding?: boolean
+  title?: string
 }
 
 interface Range {
@@ -33,6 +36,8 @@ const page = "pages.provider_operational_settings.show.closures"
 export default function ClosuresSection({
   closures,
   today,
+  onboarding = false,
+  title,
 }: ClosuresSectionProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -41,6 +46,7 @@ export default function ClosuresSection({
   const [range, setRange] = useState<Range>({ from: "", to: "" })
   const [saved, setSaved] = useState<Range>({ from: "", to: "" })
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const isMobile = useIsMobile()
 
   // Un solo día se elige con un solo toque: el fin es el mismo día.
   const endsOn = range.to || range.from
@@ -57,7 +63,8 @@ export default function ClosuresSection({
   }
 
   const handleDelete = (closure: ProviderClosure) => {
-    router.delete(providerClosures.destroy(closure.id).url, {
+    const url = providerClosures.destroy(closure.id).url
+    router.delete(onboarding ? `${url}?onboarding=true` : url, {
       preserveScroll: true,
       onStart: () => setDeletingId(closure.id),
       onFinish: () => setDeletingId(null),
@@ -70,7 +77,12 @@ export default function ClosuresSection({
         <div className="mb-4 flex items-start gap-3">
           <CalendarCog className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
           <div>
-            <h3 className="text-base font-semibold">{t(`${page}.title`)}</h3>
+            <h3 className="text-base font-semibold">
+              {title ??
+                (onboarding
+                  ? `${t(`${page}.title`)} (opcional)`
+                  : t(`${page}.title`))}
+            </h3>
             <p className="text-muted-foreground text-sm">
               {t(`${page}.description`)}
             </p>
@@ -158,6 +170,9 @@ export default function ClosuresSection({
                       </AdaptableDialogDescription>
                     </AdaptableDialogHeader>
                     <div className="flex flex-col gap-4 px-6 pb-6">
+                      {onboarding && (
+                        <input type="hidden" name="onboarding" value="true" />
+                      )}
                       <input
                         type="hidden"
                         name="starts_on"
@@ -173,6 +188,8 @@ export default function ClosuresSection({
                           from={range.from}
                           to={range.to}
                           min={today}
+                          weekdaysOnly
+                          inline={isMobile}
                           className="w-full"
                           onChange={(from, to) => setRange({ from, to })}
                         />

@@ -54,6 +54,7 @@ export default function Email() {
           }}
           resetOnError={["password_challenge"]}
           resetOnSuccess={["password_challenge"]}
+          noValidate
           className="space-y-6"
         >
           {({ errors, processing, recentlySuccessful }) => (

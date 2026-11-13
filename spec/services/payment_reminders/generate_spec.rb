@@ -47,7 +47,7 @@ RSpec.describe PaymentReminders::Generate do
       )
       expect(notification.description).to include("$1.500")
       expect(notification.description).to include(account.provider.user.name)
-      expect(notification.description).to include("10/11/2026")
+      expect(notification.description).to include("martes 10 de noviembre")
     end
 
     describe "payment period opening notice" do
@@ -166,7 +166,7 @@ RSpec.describe PaymentReminders::Generate do
         requires_action: false
       )
       expect(notification.description).to include("3 días")
-      expect(notification.description).to include("10/11/2026")
+      expect(notification.description).to include("martes 10 de noviembre")
       expect(notification.description).to include("$1.500")
       expect(notification.description).to include(account.provider.user.name)
       expect(notification.description).to include("Revisá el detalle de tu pago")
@@ -218,6 +218,22 @@ RSpec.describe PaymentReminders::Generate do
         status: :rejected,
         rejection_reason: "El comprobante no se lee"
       )
+
+      expect {
+        described_class.call(date: Date.new(2026, 11, 7))
+      }.to change {
+        Notification.where(user:, notifiable: account, event: "payment_due_soon").count
+      }.by(1)
+    end
+
+    it "still notifies when the last payment was partial, since the debt remains pending" do
+      payment = account.payments.build(provider: account.provider, status: :partial)
+      payment.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "parcial.png",
+        content_type: "image/png"
+      )
+      payment.save!
 
       expect {
         described_class.call(date: Date.new(2026, 11, 7))

@@ -11,7 +11,7 @@ RSpec.describe "Provider::Menus", type: :request do
   let(:other_provider_user) { users(:other_provider_user) }
   let(:other_provider) { providers(:endulzate) }
 
-  describe "GET /provider/menus/new" do
+  describe "GET /provider/platos/nuevo" do
     it "renders the new dish page with the publication dates" do
       travel_to Date.new(2030, 1, 9)
       sign_in provider_user, role: :provider
@@ -44,7 +44,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "POST /provider/menus" do
+  describe "POST /provider/platos" do
     before { sign_in provider_user, role: :provider }
 
     it "redirects visitors without a session to the sign in page" do
@@ -55,6 +55,12 @@ RSpec.describe "Provider::Menus", type: :request do
 
     it "redirects consumers to the root page" do
       sign_in users(:one), role: :consumer
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects admins to the root page" do
+      sign_in users(:admin), role: :admin
       post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
       expect(response).to redirect_to(root_path)
     end
@@ -144,6 +150,20 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(inertia.props[:errors]).to have_key(:price)
     end
 
+    it "rejects negative and non-numeric price via parameter bypass" do
+      [ -10, "gratis" ].each do |invalid_price|
+        expect do
+          post provider_menus_path, params: {
+            menu: { name: "Plato inválido", price: invalid_price }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:price)
+      end
+    end
+
     context "with an agenda" do
       # Miércoles: la fecha máxima de publicación es el viernes 18.
       before { travel_to Date.new(2030, 1, 9) }
@@ -153,11 +173,11 @@ RSpec.describe "Provider::Menus", type: :request do
       it "programs a single day" do
         post provider_menus_path, params: {
           menu: dish,
-          agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+          agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ] }
         }
 
         created = provider.menus.order(:id).last
-        expect(created.schedules.pluck(:date, :amount)).to eq([ [ Date.new(2030, 1, 10), 6 ] ])
+        expect(created.schedules.pluck(:date)).to eq([ Date.new(2030, 1, 10) ])
         expect(created.agendas).to be_empty
       end
 
@@ -167,7 +187,7 @@ RSpec.describe "Provider::Menus", type: :request do
         expect do
           post provider_menus_path, params: {
             menu: dish,
-            agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+            agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ] }
           }
         end.not_to change { [ Menu.count, Schedule.count ] }
 
@@ -175,24 +195,14 @@ RSpec.describe "Provider::Menus", type: :request do
         expect(inertia).to have_props(errors: { agenda: [ I18n.t("validations.menu_agenda.date_closed") ] })
       end
 
-      it "programs a single day without stock" do
-        post provider_menus_path, params: {
-          menu: dish,
-          agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: "" }
-        }
-
-        created = provider.menus.order(:id).last
-        expect(created.schedules.pluck(:date, :amount)).to eq([ [ Date.new(2030, 1, 10), nil ] ])
-      end
-
       it "programs every week from the start date" do
         post provider_menus_path, params: {
           menu: dish,
-          agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 1, 3 ], amount: 4 }
+          agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 1, 3 ] }
         }
 
         created = provider.menus.order(:id).last
-        expect(created.agendas.sole).to have_attributes(weekdays: [ 1, 3 ], starts_on: Date.new(2030, 1, 9), ends_on: nil, amount: 4)
+        expect(created.agendas.sole).to have_attributes(weekdays: [ 1, 3 ], starts_on: Date.new(2030, 1, 9), ends_on: nil)
         expect(created.schedules.order(:date).pluck(:date))
           .to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 14), Date.new(2030, 1, 16) ])
       end
@@ -200,7 +210,7 @@ RSpec.describe "Provider::Menus", type: :request do
       it "programs a range on the saved dish without creating variants" do
         post provider_menus_path, params: {
           menu: dish.merge(option_groups_attributes: [ { name: "Salsa", options: [ "Soja", "Teriyaki" ], limit: 1 } ]),
-          agenda: { mode: "range", starts_on: "2030-01-10", ends_on: "2030-01-15", weekdays: [ 2, 4 ], amount: 3 }
+          agenda: { mode: "range", starts_on: "2030-01-10", ends_on: "2030-01-15", weekdays: [ 2, 4 ] }
         }
 
         created = provider.menus.order(:id).last
@@ -222,22 +232,60 @@ RSpec.describe "Provider::Menus", type: :request do
         expect do
           post provider_menus_path, params: {
             menu: dish,
-            agenda: { mode: "single", date: "2030-01-12", weekdays: [ 6 ], amount: 0 }
+            agenda: { mode: "single", date: "2030-01-12", weekdays: [ 6 ] }
           }
         end.not_to change(Menu, :count)
 
         follow_redirect!
         expect(inertia.props[:errors][:agenda]).to contain_exactly(
-          I18n.t("validations.menu_agenda.invalid_date"),
-          I18n.t("validations.menu_agenda.invalid_amount")
+          I18n.t("validations.menu_agenda.invalid_date")
         )
       end
 
+      it "does not create the dish when weekly repetition has empty weekdays via parameter bypass" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [] }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      end
+
+      it "does not create the dish when range repetition has empty weekdays via parameter bypass" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "range", starts_on: "2030-01-10", ends_on: "2030-01-15", weekdays: [] }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      end
+
+      it "rejects weekly repetition with non-weekday numbers or malformed types via parameter bypass" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 0, 6, 7 ] }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      end
+
       # IBP-054: los bordes del rango, de a un dato inválido por vez.
-      def program_single_day(date, amount: 6)
+      def program_single_day(date)
         post provider_menus_path, params: {
           menu: dish,
-          agenda: { mode: "single", date:, weekdays: [ Date.iso8601(date).cwday ], amount: }
+          agenda: { mode: "single", date:, weekdays: [ Date.iso8601(date).cwday ] }
         }
       end
 
@@ -262,18 +310,11 @@ RSpec.describe "Provider::Menus", type: :request do
         end
       end
 
-      it "does not create the dish with zero stock" do
-        expect { program_single_day("2030-01-10", amount: 0) }.not_to change(Menu, :count)
-
-        follow_redirect!
-        expect(inertia.props[:errors][:agenda]).to eq([ I18n.t("validations.menu_agenda.invalid_amount") ])
-      end
-
       it "returns the dish and agenda errors together" do
         expect do
           post provider_menus_path, params: {
             menu: dish.merge(name: ""),
-            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [], amount: 2 }
+            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [] }
           }
         end.not_to change(Menu, :count)
 
@@ -283,7 +324,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "GET /provider/menus/:id/edit" do
+  describe "GET /provider/platos/:id/editar" do
     it "redirects visitors without a session to the sign in page" do
       get edit_provider_menu_path(menus(:milanesa))
 
@@ -323,7 +364,7 @@ RSpec.describe "Provider::Menus", type: :request do
 
       it "serializes exact Inertia props for a dish with an existing weekly agenda" do
         menu = menus(:milanesa)
-        menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+        menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current)
 
         get edit_provider_menu_path(menu)
 
@@ -338,7 +379,6 @@ RSpec.describe "Provider::Menus", type: :request do
         agenda_prop = inertia.props[:agenda].deep_symbolize_keys
         expect(agenda_prop[:mode]).to eq("weekly")
         expect(agenda_prop[:weekdays]).to eq([ 1, 3 ])
-        expect(agenda_prop[:amount]).to eq(8)
       end
 
       it "serializes mode none when dish has no agenda and no schedule" do
@@ -349,7 +389,6 @@ RSpec.describe "Provider::Menus", type: :request do
         agenda_prop = inertia.props[:agenda].deep_symbolize_keys
         expect(agenda_prop[:mode]).to eq("none")
         expect(agenda_prop[:weekdays]).to eq([])
-        expect(agenda_prop[:amount]).to be_nil
       end
 
       it "goes back to the schedules page by default" do
@@ -361,7 +400,7 @@ RSpec.describe "Provider::Menus", type: :request do
       it "goes back to the page the dish was opened from" do
         get edit_provider_menu_path(menus(:milanesa), return_to: schedules_path(tab: "saved"))
 
-        expect(inertia.props[:return_to]).to eq("/schedules?tab=saved")
+        expect(inertia.props[:return_to]).to eq("/publicar-menu?tab=saved")
       end
 
       it "ignores a return_to that points outside the app" do
@@ -376,6 +415,21 @@ RSpec.describe "Provider::Menus", type: :request do
         get edit_provider_menu_path(menus(:sorrentinos))
 
         expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
+      end
+
+      it "returns not found when attempting to edit a non-existent dish" do
+        get edit_provider_menu_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
+      end
+
+      it "returns not found when dish ID is a non-numeric string" do
+        get "/proveedor/platos/invalido/editar"
+
+        expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
       end
 
       it "edits the dish as it is programmed on the day it was opened from" do
@@ -398,16 +452,16 @@ RSpec.describe "Provider::Menus", type: :request do
         starts_on = Date.current.next_week(:monday)
         ends_on = starts_on + 4.days
         variant = menus(:milanesa).build_variant(valid_from: starts_on, valid_until: ends_on)
-        variant.agendas.build(weekdays: [ 2, 4 ], starts_on:, ends_on:, amount: 6)
+        variant.agendas.build(weekdays: [ 2, 4 ], starts_on:, ends_on:)
         variant.save!
-        schedule = variant.schedules.create!(date: starts_on + 1.day, amount: 6)
+        schedule = variant.schedules.create!(date: starts_on + 1.day)
 
         get edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id)
 
         expect(inertia).to have_props { |props|
           props.deep_symbolize_keys[:agenda] == {
             mode: "range", weekdays: [ 2, 4 ], starts_on: starts_on.iso8601,
-            ends_on: ends_on.iso8601, date: nil, amount: 6
+            ends_on: ends_on.iso8601, date: nil
           }
         }
       end
@@ -430,7 +484,7 @@ RSpec.describe "Provider::Menus", type: :request do
       it "opens a day programmed from a weekly agenda preserving mode weekly" do
         menu = menus(:milanesa)
         target_date = Date.current.next_week(:tuesday)
-        menu.agendas.create!(weekdays: [ 2, 4 ], starts_on: Date.current, amount: 7)
+        menu.agendas.create!(weekdays: [ 2, 4 ], starts_on: Date.current)
         Menus::AgendaScheduler.call(menu)
         schedule = Schedule.find_by!(menu_id: menu.family_ids, date: target_date)
 
@@ -441,13 +495,12 @@ RSpec.describe "Provider::Menus", type: :request do
         agenda_prop = inertia.props[:agenda].deep_symbolize_keys
         expect(agenda_prop[:mode]).to eq("weekly")
         expect(agenda_prop[:weekdays]).to eq([ 2, 4 ])
-        expect(agenda_prop[:amount]).to eq(7)
         expect(agenda_prop[:starts_on]).to eq(Date.current.iso8601)
       end
 
       it "returns not found when attempting to open edit with a past schedule" do
         menu = menus(:milanesa)
-        past_schedule = menu.schedules.create!(date: Date.current - 3.days, amount: 5)
+        past_schedule = menu.schedules.create!(date: Date.current - 3.days)
 
         get edit_provider_menu_path(menu, schedule_id: past_schedule.id)
 
@@ -457,18 +510,17 @@ RSpec.describe "Provider::Menus", type: :request do
       it "opens a single day variant without range agenda in mode single" do
         variant = menus(:milanesa).build_variant(valid_from: Date.current.next_week(:monday), valid_until: Date.current.next_week(:monday))
         variant.save!
-        variant_schedule = variant.schedules.create!(date: Date.current.next_week(:monday), amount: 4)
+        variant_schedule = variant.schedules.create!(date: Date.current.next_week(:monday))
 
         get edit_provider_menu_path(menus(:milanesa), schedule_id: variant_schedule.id)
 
         agenda_prop = inertia.props[:agenda].deep_symbolize_keys
         expect(agenda_prop[:mode]).to eq("single")
-        expect(agenda_prop[:amount]).to eq(4)
       end
     end
   end
 
-  describe "PATCH /provider/menus/:id" do
+  describe "PATCH /provider/platos/:id" do
     it "redirects visitors without a session to the sign in page" do
       patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
 
@@ -603,14 +655,14 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "PATCH /provider/menus/:id from a programmed day" do
+  describe "PATCH /provider/platos/:id from a programmed day" do
     before { sign_in provider_user, role: :provider }
 
     let(:schedule) { schedules(:future) }
     let(:params) do
       {
         menu: { name: "Milanesa napolitana", description: "Con jamón y queso", price: 350 },
-        agenda: { mode: "single", date: schedule.date.iso8601, amount: schedule.amount },
+        agenda: { mode: "single", date: schedule.date.iso8601 },
         scope: "day",
         schedule_id: schedule.id
       }
@@ -628,10 +680,10 @@ RSpec.describe "Provider::Menus", type: :request do
     end
 
     it "keeps the page the dish was opened from after saving" do
-      patch provider_menu_path(menus(:milanesa)), params: params.merge(return_to: "/schedules?tab=saved")
+      patch provider_menu_path(menus(:milanesa)), params: params.merge(return_to: "/publicar-menu?tab=saved")
 
       expect(response).to redirect_to(
-        edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id, return_to: "/schedules?tab=saved")
+        edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id, return_to: "/publicar-menu?tab=saved")
       )
     end
 
@@ -670,7 +722,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
 
     it "returns the agenda errors" do
-      patch provider_menu_path(menus(:milanesa)), params: params.deep_merge(agenda: { amount: 0 })
+      patch provider_menu_path(menus(:milanesa)), params: params.deep_merge(agenda: { mode: "single", date: "invalid-date" })
 
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:agenda)
@@ -696,7 +748,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "successfully publishes dish with weekly recurrence and creates schedules" do
       patch provider_menu_path(menus(:milanesa)), params: {
         menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
-        agenda: { mode: "weekly", weekdays: [ 1, 4 ], starts_on: Date.current.iso8601, amount: 8 }
+        agenda: { mode: "weekly", weekdays: [ 1, 4 ], starts_on: Date.current.iso8601 }
       }
 
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
@@ -704,7 +756,6 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(menu.name).to eq("Milanesa con puré")
       expect(menu.current_agenda).to be_present
       expect(menu.current_agenda.weekdays).to eq([ 1, 4 ])
-      expect(menu.current_agenda.amount).to eq(8)
 
       future_mondays_and_thursdays = Schedule.where(menu_id: menu.family_ids, date: Date.current..).order(:date)
       expect(future_mondays_and_thursdays).not_to be_empty
@@ -714,30 +765,45 @@ RSpec.describe "Provider::Menus", type: :request do
       expect do
         patch provider_menu_path(menus(:milanesa)), params: {
           menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
-          agenda: { mode: "weekly", weekdays: [], starts_on: Date.current.iso8601, amount: 8 }
+          agenda: { mode: "weekly", weekdays: [], starts_on: Date.current.iso8601 }
         }
       end.not_to change { menus(:milanesa).reload.agendas.count }
 
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
       follow_redirect!
-      expect(inertia.props[:errors]).to have_key(:agenda)
+      expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
     end
 
-    it "rejects weekly agenda with non-positive amount via parameter bypass" do
-      patch provider_menu_path(menus(:milanesa)), params: {
-        menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
-        agenda: { mode: "weekly", weekdays: [ 2, 3 ], starts_on: Date.current.iso8601, amount: -5 }
-      }
+    it "rejects range agenda with empty weekdays array via parameter bypass" do
+      expect do
+        patch provider_menu_path(menus(:milanesa)), params: {
+          menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
+          agenda: { mode: "range", weekdays: [], starts_on: Date.current.iso8601, ends_on: (Date.current + 5.days).iso8601 }
+        }
+      end.not_to change { menus(:milanesa).reload.variants.count }
 
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
       follow_redirect!
-      expect(inertia.props[:errors]).to have_key(:agenda)
+      expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+    end
+
+    it "rejects repetition agenda with weekdays outside 1..5 via parameter bypass" do
+      expect do
+        patch provider_menu_path(menus(:milanesa)), params: {
+          menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
+          agenda: { mode: "weekly", weekdays: [ 0, 6 ], starts_on: Date.current.iso8601 }
+        }
+      end.not_to change { menus(:milanesa).reload.agendas.count }
+
+      expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
+      follow_redirect!
+      expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
     end
 
     it "rejects weekly agenda with start date in the past via parameter bypass" do
       patch provider_menu_path(menus(:milanesa)), params: {
         menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
-        agenda: { mode: "weekly", weekdays: [ 2, 3 ], starts_on: (Date.current - 7.days).iso8601, amount: 5 }
+        agenda: { mode: "weekly", weekdays: [ 2, 3 ], starts_on: (Date.current - 7.days).iso8601 }
       }
 
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
@@ -748,16 +814,32 @@ RSpec.describe "Provider::Menus", type: :request do
     it "rejects weekly agenda with unexpected data types without unhandled server error" do
       patch provider_menu_path(menus(:milanesa)), params: {
         menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
-        agenda: { mode: "weekly", weekdays: [ "invalid_day" ], starts_on: "not-a-date", amount: "not_a_number" }
+        agenda: { mode: "weekly", weekdays: [ "invalid_day" ], starts_on: "not-a-date" }
       }
 
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:agenda)
     end
+
+    it "rejects non-positive or non-numeric price via parameter bypass without updating" do
+      menu = menus(:milanesa)
+
+      [ 0, -15, "gratis" ].each do |invalid_price|
+        expect do
+          patch provider_menu_path(menu), params: {
+            menu: { name: menu.name, price: invalid_price }
+          }
+        end.not_to change { menu.reload.price }
+
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:price)
+      end
+    end
   end
 
-  describe "DELETE /provider/menus/:id" do
+  describe "DELETE /provider/platos/:id" do
     before { sign_in provider_user, role: :provider }
 
     it "removes the dish from the saved dishes and redirects to that tab" do
@@ -826,11 +908,21 @@ RSpec.describe "Provider::Menus", type: :request do
       end.not_to change(Menu, :count)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when attempting to delete a non-existent dish" do
+      expect do
+        delete provider_menu_path(id: 999_999)
+      end.not_to change(Menu, :count)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
   end
 
   # IBP-051 CA3: es el camino que usa "Agregar platos → Platos guardados".
-  describe "POST /provider/menus/publish" do
+  describe "POST /provider/platos/publicar" do
     let(:milanesa) { menus(:milanesa) }
 
     before do

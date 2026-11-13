@@ -2,9 +2,9 @@
 
 class AdminConsumerSummary
   # Estado que resume varias cuentas del mismo mes: el que más atención pide.
-  STATUS_PRIORITY = %w[pending rejected submitted approved].freeze
+  STATUS_PRIORITY = %w[partial pending rejected submitted approved].freeze
 
-  ConsumerRow = Data.define(:consumer, :amount, :status) do
+  ConsumerRow = Data.define(:consumer, :amount, :status, :debt) do
     delegate :id, to: :consumer
 
     def name = consumer.user.name
@@ -14,7 +14,7 @@ class AdminConsumerSummary
     def avatar_url = consumer.user.avatar_url
   end
 
-  ProviderRow = Data.define(:name, :amount, :status)
+  ProviderRow = Data.define(:id, :name, :amount, :status, :receipt_url)
 
   MonthRow = Data.define(:month, :accounts) do
     def key = month.strftime("%Y-%m")
@@ -26,15 +26,30 @@ class AdminConsumerSummary
     def status = AdminConsumerSummary.status_of(accounts)
 
     def orders
-      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by(&:created_at)
+      accounts.flat_map { it.orders.select(&:consumed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }.reverse
     end
 
     def subsidy = orders.sum { it.subsidy || 0 }.to_f
 
     def providers
       accounts
-        .map { ProviderRow.new(name: it.provider.user.name, amount: it.amount.to_f, status: it.collection_status) }
+        .map do |account|
+          ProviderRow.new(
+            id: account.provider_id,
+            name: account.provider.user.name,
+            amount: account.amount.to_f,
+            status: account.collection_status,
+            receipt_url: receipt_url_of(account)
+          )
+        end
         .sort_by(&:name)
+    end
+
+    private
+
+    def receipt_url_of(account)
+      payment = account.payments.select { it.receipt.attached? }.max_by(&:created_at)
+      Rails.application.routes.url_helpers.receipt_admin_payment_path(payment) if payment
     end
   end
 
@@ -48,14 +63,19 @@ class AdminConsumerSummary
     STATUS_PRIORITY.find { it.in?(statuses) }
   end
 
-  def self.rows_for(company, month: Date.current)
+  # Lo que el empleado debe de todos los períodos, igual que Consumer#total_debt:
+  # las cuentas saldadas del mes actual no suman porque no tienen saldo. Quien no
+  # debe nada queda con su consumo del mes.
+  def self.debt_rows_for(company)
     consumers = company.consumers.joins(:user).preload(:user).order("users.name").to_a
-    accounts = Account.where(month: month.beginning_of_month, owner_type: "Consumer", owner_id: consumers.map(&:id))
-                      .preload(:payments).group_by(&:owner_id)
+    scope = Account.where(owner_type: "Consumer", owner_id: consumers.map(&:id))
+    accounts = scope.where(month: Date.current.beginning_of_month).or(scope.pending)
+                    .preload(:payments).group_by(&:owner_id)
 
     consumers.map do |consumer|
-      current = accounts.fetch(consumer.id, [])
-      ConsumerRow.new(consumer:, amount: amount_of(current), status: status_of(current))
+      owed = accounts.fetch(consumer.id, [])
+      debt = owed.sum(&:outstanding_amount).to_f
+      ConsumerRow.new(consumer:, amount: debt.positive? ? debt : amount_of(owed), status: status_of(owed), debt:)
     end
   end
 
@@ -68,7 +88,7 @@ class AdminConsumerSummary
 
     {
       amount: self.class.amount_of(current),
-      status: self.class.status_of(current),
+      status: self.class.status_of(accounts.select { it.current? || it.outstanding_amount.positive? }),
       meals_used: @consumer.monthly_benefit_used_this_month,
       meals_limit: @consumer.monthly_benefit_available,
       providers: meals_by_provider
@@ -76,26 +96,31 @@ class AdminConsumerSummary
   end
 
   def months
-    accounts.group_by(&:month)
-            .map { |month, group| MonthRow.new(month:, accounts: group) }
-            .sort_by { -it.month.jd }
+    accounts_by_month = accounts.group_by(&:month)
+    history_years = accounts_by_month.keys.map(&:year).uniq.select { it <= Date.current.year }.sort.reverse
+    years = [ Date.current.year, *history_years.reject { it == Date.current.year } ]
+
+    years.flat_map do |year|
+      last_month = year == Date.current.year ? Date.current.month : 12
+
+      last_month.downto(1).map do |month_number|
+        month = Date.new(year, month_number, 1)
+        MonthRow.new(month:, accounts: accounts_by_month.fetch(month, []))
+      end
+    end
   end
 
   private
 
   def accounts
     @accounts ||= @consumer.accounts
-                           .preload(:payments, provider: :user, orders: { schedule: { menu: { provider: :user } } })
+                           .preload({ payments: { receipt_attachment: :blob } }, provider: :user, orders: { schedule: { menu: { provider: :user } } })
                            .to_a
   end
 
-  # Mismo criterio que Consumer#monthly_benefit_used_this_month, abierto por proveedor.
   def meals_by_provider
-    OrderBenefit
+    @consumer.monthly_benefit_usages
       .joins(order: { schedule: { menu: { provider: :user } } })
-      .where(schedules: { date: Date.current.all_month })
-      .where.not(orders: { status: [ :rejected, :cancelled ] })
-      .where(benefit_id: @consumer.monthly_benefits)
       .group("users.name")
       .sum(:benefit_used)
       .sort

@@ -61,7 +61,7 @@ class Menus::MissingPublicationNotifier
         event_key: EVENT,
         user: provider.user,
         notifiable: provider,
-        description_data: { date: I18n.l(@date) }
+        description_data: { date: DateFormat.long(@date, inline: true) }
       )
     end
   end

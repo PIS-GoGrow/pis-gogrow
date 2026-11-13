@@ -23,6 +23,29 @@ RSpec.describe Review, type: :model do
     review = described_class.new(menu: menus(:milanesa), description: "Muy rico", rating: 5)
     expect(review).to be_valid
   end
+
+  describe "en el contexto :consumer_review" do
+    it "requiere una puntuación" do
+      review = described_class.new(menu: menus(:milanesa), rating: nil)
+      expect(review).not_to be_valid(:consumer_review)
+      expect(review.errors[:rating]).to be_present
+    end
+
+    it "rechaza una puntuación fuera de 1..5" do
+      review = described_class.new(menu: menus(:milanesa), rating: 6)
+      expect(review).not_to be_valid(:consumer_review)
+    end
+
+    it "acepta una reseña vacía cuando hay puntuación válida" do
+      review = described_class.new(menu: menus(:milanesa), rating: 4, description: nil)
+      expect(review).to be_valid(:consumer_review)
+    end
+
+    it "rechaza una reseña de más de 200 caracteres" do
+      review = described_class.new(menu: menus(:milanesa), rating: 4, description: "a" * 201)
+      expect(review).not_to be_valid(:consumer_review)
+    end
+  end
 end
 
 # == Schema Information
@@ -34,13 +57,19 @@ end
 #  rating      :integer
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  consumer_id :bigint
 #  menu_id     :bigint           not null
+#  order_id    :bigint
 #
 # Indexes
 #
-#  index_reviews_on_menu_id  (menu_id)
+#  index_reviews_on_consumer_id  (consumer_id)
+#  index_reviews_on_menu_id      (menu_id)
+#  index_reviews_on_order_id     (order_id) UNIQUE
 #
 # Foreign Keys
 #
+#  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (menu_id => menus.id)
+#  fk_rails_...  (order_id => orders.id)
 #

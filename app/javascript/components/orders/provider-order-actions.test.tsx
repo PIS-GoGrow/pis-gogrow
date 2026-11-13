@@ -10,6 +10,7 @@ interface DecisionCallbacks {
 }
 
 const patchMock = vi.fn<(...args: unknown[]) => void>()
+const onDecided = vi.fn()
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -26,53 +27,123 @@ vi.mock("@inertiajs/react", async () => {
 describe("ProviderOrderActions", () => {
   beforeEach(() => {
     patchMock.mockClear()
+    onDecided.mockClear()
   })
 
   it("lets a confirmed order be rejected but not confirmed again", () => {
-    render(<ProviderOrderActions order={{ id: 1, status: "confirmed" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 1,
+          status: "confirmed",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
-    expect(screen.getByRole("button", { name: /rechazar/i })).toBeEnabled()
-    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Rechazar" })).toBeEnabled()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("muestra Rechazar y Confirmar en un pedido por revisar", () => {
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 1,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
+
+    const reject = screen.getByRole("button", { name: "Rechazar" })
+    const confirm = screen.getByRole("button", { name: "Confirmar" })
+
+    expect(screen.getAllByRole("button")).toEqual([reject, confirm])
+    expect(reject).toBeEnabled()
+    expect(confirm).toBeEnabled()
+    expect(reject.parentElement).toHaveClass("grid-cols-2")
+  })
+
+  it("deja Rechazar a todo el ancho cuando es la única acción", () => {
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 1,
+          status: "confirmed",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Rechazar" }).parentElement,
+    ).not.toHaveClass("grid-cols-2")
+  })
+
+  it("no muestra ningún botón en un confirmado que ya no se puede rechazar", () => {
+    const { container } = render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 9,
+          status: "confirmed",
+          rejectable: false,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
+
+    expect(container).toBeEmptyDOMElement()
   })
 
   it("renders nothing when the order is cancelled or rejected", () => {
     const { container: cancelledContainer } = render(
-      <ProviderOrderActions order={{ id: 2, status: "cancelled" }} />,
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 2,
+          status: "cancelled",
+          rejectable: false,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
     )
     expect(cancelledContainer).toBeEmptyDOMElement()
 
     const { container: rejectedContainer } = render(
-      <ProviderOrderActions order={{ id: 3, status: "rejected" }} />,
-    )
-    expect(rejectedContainer).toBeEmptyDOMElement()
-  })
-
-  it("keeps both buttons visible but disabled on a cancelled order when keepVisible is set", async () => {
-    const user = userEvent.setup()
-    render(
       <ProviderOrderActions
-        order={{ id: 7, status: "cancelled" }}
-        keepVisible
+        onDecided={onDecided}
+        order={{
+          id: 3,
+          status: "rejected",
+          rejectable: false,
+          consumer_name: "Santiago Medina",
+        }}
       />,
     )
-
-    const confirm = screen.getByRole("button", { name: /confirmar/i })
-    const reject = screen.getByRole("button", { name: /rechazar/i })
-
-    expect(confirm).toBeDisabled()
-    expect(reject).toBeDisabled()
-
-    await user.click(confirm)
-
-    expect(patchMock).not.toHaveBeenCalled()
+    expect(rejectedContainer).toBeEmptyDOMElement()
   })
 
   it("pone Confirmar antes de Rechazar en el orden de teclado del detalle móvil", async () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 42, status: "pending" }}
-        keepVisible
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
         stackOnMobile
       />,
     )
@@ -88,9 +159,17 @@ describe("ProviderOrderActions", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(patchMock).not.toHaveBeenCalled()
   })
-  it("keeps the buttons enabled on a pending order when keepVisible is set", () => {
+  it("keeps the buttons enabled on a pending order", () => {
     render(
-      <ProviderOrderActions order={{ id: 8, status: "pending" }} keepVisible />,
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 8,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
     )
 
     expect(screen.getByRole("button", { name: /confirmar/i })).toBeEnabled()
@@ -98,7 +177,17 @@ describe("ProviderOrderActions", () => {
   })
 
   it("renders confirm and reject buttons for pending orders", () => {
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
     expect(
       screen.getByRole("button", { name: /confirmar/i }),
@@ -110,12 +199,22 @@ describe("ProviderOrderActions", () => {
 
   it("sends confirm patch when clicking confirm", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /confirmar/i }))
 
     expect(patchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/provider/orders/42/confirm" }),
+      expect.objectContaining({ url: "/proveedor/pedidos/42/confirmar" }),
       {},
       expect.objectContaining({ preserveScroll: true }),
     )
@@ -123,13 +222,21 @@ describe("ProviderOrderActions", () => {
 
   it("opens reject confirmation dialog with confirm button disabled until reason is chosen", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
 
-    expect(
-      screen.getByText(/¿rechazar el pedido ped-42\?/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText("¿Rechazar pedido?")).toBeInTheDocument()
 
     const confirmRejectBtn = screen.getByRole("button", {
       name: "Rechazar pedido",
@@ -146,7 +253,17 @@ describe("ProviderOrderActions", () => {
 
   it("triggers reject patch with reason when selecting a predefined reason", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
 
@@ -159,7 +276,7 @@ describe("ProviderOrderActions", () => {
     await user.click(confirmRejectBtn)
 
     expect(patchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/provider/orders/42/reject" }),
+      expect.objectContaining({ url: "/proveedor/pedidos/42/rechazar" }),
       {
         reason: "out_of_stock",
         details: null,
@@ -170,7 +287,17 @@ describe("ProviderOrderActions", () => {
 
   it("requires text details when 'Otro motivo' is selected before enabling reject button", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
 
@@ -180,7 +307,7 @@ describe("ProviderOrderActions", () => {
       name: "Rechazar pedido",
     })
     // Text input appears and confirm is disabled because textarea is empty
-    const textarea = screen.getByPlaceholderText("Ingresá el motivo…")
+    const textarea = screen.getByPlaceholderText("Describir el motivo")
     expect(textarea).toBeInTheDocument()
     expect(confirmRejectBtn).toBeDisabled()
 
@@ -195,7 +322,7 @@ describe("ProviderOrderActions", () => {
     await user.click(confirmRejectBtn)
 
     expect(patchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/provider/orders/42/reject" }),
+      expect.objectContaining({ url: "/proveedor/pedidos/42/rechazar" }),
       {
         reason: "other",
         details: "Cocina cerrada por reformas",
@@ -208,14 +335,19 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 42, status: "pending" }}
-        keepVisible
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
       />,
     )
     await user.click(screen.getByRole("button", { name: "Rechazar" }))
     await user.click(screen.getByLabelText("Otro motivo"))
     await user.type(
-      screen.getByPlaceholderText("Ingresá el motivo…"),
+      screen.getByPlaceholderText("Describir el motivo"),
       "Cocina cerrada",
     )
     await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
@@ -228,7 +360,7 @@ describe("ProviderOrderActions", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(screen.getByLabelText("Otro motivo")).toBeChecked()
-    expect(screen.getByPlaceholderText("Ingresá el motivo…")).toHaveValue(
+    expect(screen.getByPlaceholderText("Describir el motivo")).toHaveValue(
       "Cocina cerrada",
     )
     expect(
@@ -242,14 +374,19 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 42, status: "pending" }}
-        keepVisible
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
       />,
     )
     await user.click(screen.getByRole("button", { name: "Rechazar" }))
     await user.click(screen.getByLabelText("Otro motivo"))
     await user.type(
-      screen.getByPlaceholderText("Ingresá el motivo…"),
+      screen.getByPlaceholderText("Describir el motivo"),
       "Cocina cerrada",
     )
     await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
@@ -260,6 +397,13 @@ describe("ProviderOrderActions", () => {
       callbacks.onFinish()
     })
 
+    expect(onDecided).toHaveBeenCalledWith({
+      id: 42,
+      consumer_name: "Santiago Medina",
+      status: "rejected",
+    })
+    expect(screen.queryByText("¿Rechazar pedido?")).not.toBeInTheDocument()
+
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Rechazar" }))
     expect(
@@ -267,17 +411,25 @@ describe("ProviderOrderActions", () => {
     ).toBeDisabled()
     expect(screen.getByLabelText("Otro motivo")).not.toBeChecked()
     await user.click(screen.getByLabelText("Otro motivo"))
-    expect(screen.getByPlaceholderText("Ingresá el motivo…")).toHaveValue("")
+    expect(screen.getByPlaceholderText("Describir el motivo")).toHaveValue("")
   })
   it("allows cancelling out of the reject dialog without sending a request", async () => {
     const user = userEvent.setup()
 
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        onDecided={onDecided}
+        order={{
+          id: 42,
+          status: "pending",
+          rejectable: true,
+          consumer_name: "Santiago Medina",
+        }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
-    expect(
-      screen.getByText(/¿rechazar el pedido ped-42\?/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText("¿Rechazar pedido?")).toBeInTheDocument()
 
     const backBtn = screen.getByRole("button", { name: "Volver" })
     await user.click(backBtn)

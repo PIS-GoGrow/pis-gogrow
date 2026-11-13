@@ -29,11 +29,14 @@ const baseAccount = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 800,
+  outstanding_amount: 800,
+  expected_amount: null,
   source: "consumer",
   status: "submitted",
   can_approve_payment: false,
   overdue: false,
   month: "Octubre 2026",
+  month_name: "octubre",
   due_date: "10/11/26",
   paid_on: null,
   payment_id: 1,
@@ -73,9 +76,9 @@ describe("CollectionAccountDetailDialog", () => {
 
       await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
-      expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+      expect(screen.getByText("$800")).toBeInTheDocument()
       expect(screen.queryByText("IVA (22 %)")).not.toBeInTheDocument()
-      expect(screen.queryByText("976,00 UYU")).not.toBeInTheDocument()
+      expect(screen.queryByText("$976")).not.toBeInTheDocument()
     },
   )
 
@@ -89,8 +92,8 @@ describe("CollectionAccountDetailDialog", () => {
       screen.getByText("Historial de consumo: Octubre 2026"),
     ).toBeInTheDocument()
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
-    expect(screen.getByText("Total: 800,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.getByText("Total: $800")).toBeInTheDocument()
+    expect(screen.getByText("Por revisar")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
     ).not.toBeInTheDocument()
@@ -106,6 +109,7 @@ describe("CollectionAccountDetailDialog", () => {
       vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
+      expected_amount: null,
       status: "pending",
     } satisfies ProviderCollectionAccount
 
@@ -113,11 +117,11 @@ describe("CollectionAccountDetailDialog", () => {
     await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
     expect(screen.getByText("Total")).toBeInTheDocument()
-    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$800")).toBeInTheDocument()
     expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
-    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$176")).toBeInTheDocument()
+    expect(screen.getByText("$976")).toBeInTheDocument()
     expect(screen.getByText("Pendiente")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
@@ -138,16 +142,19 @@ describe("CollectionAccountDetailDialog", () => {
       vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
+      expected_amount: null,
       status: "approved",
       payments: [
         {
           id: 1,
           status: "approved",
           rejection_reason: null,
+          expected_amount: null,
           date: "02/10/26",
           receipt_url: "/receipt.pdf",
           receipt_filename: "comprobante.pdf",
           receipt_content_type: "application/pdf",
+          receipt_size: "63,8 KB",
         },
       ],
     } satisfies ProviderCollectionAccount
@@ -157,8 +164,8 @@ describe("CollectionAccountDetailDialog", () => {
 
     expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
-    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$176")).toBeInTheDocument()
+    expect(screen.getByText("$976")).toBeInTheDocument()
     expect(screen.getByText("Confirmado")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
@@ -166,7 +173,7 @@ describe("CollectionAccountDetailDialog", () => {
   })
 
   it.each(["consumer", "company"] as const)(
-    "does not link a %s account with one rejected partial payment to its history",
+    "does not link a %s account with one partial payment to its history",
     async (source) => {
       const user = userEvent.setup()
       const account = {
@@ -176,16 +183,19 @@ describe("CollectionAccountDetailDialog", () => {
         vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
-        status: "rejected",
+        expected_amount: null,
+        status: "partial",
         payments: [
           {
             id: 1,
-            status: "rejected",
-            rejection_reason: "El pago es parcial",
+            status: "partial",
+            rejection_reason: null,
+            expected_amount: null,
             date: "02/10/26",
             receipt_url: "/receipt.pdf",
             receipt_filename: "parcial.pdf",
             receipt_content_type: "application/pdf",
+            receipt_size: "63,8 KB",
           },
         ],
       } satisfies ProviderCollectionAccount
@@ -193,7 +203,8 @@ describe("CollectionAccountDetailDialog", () => {
       render(<CollectionAccountDetailDialog account={account} />)
       await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
-      expect(screen.getByText("Rechazado")).toBeInTheDocument()
+      expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+      expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Viandas" }))
       }
@@ -205,10 +216,11 @@ describe("CollectionAccountDetailDialog", () => {
 
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Cobro" }))
-        expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
-        expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
-        expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
-        expect(screen.getByText("Rechazado")).toBeInTheDocument()
+        expect(screen.getByText("$800")).toBeInTheDocument()
+        expect(screen.getByText("$176")).toBeInTheDocument()
+        expect(screen.getByText("$976")).toBeInTheDocument()
+        expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+        expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
       }
     },
   )
@@ -216,16 +228,18 @@ describe("CollectionAccountDetailDialog", () => {
 
 describe("Collections payment history destination", () => {
   it.each(["consumer", "company"] as const)(
-    "shows the date, rejected status and partial indicator for a %s account",
+    "shows the date and partial status for a %s account",
     (source) => {
       const payment = {
         id: 1,
-        status: "rejected",
-        rejection_reason: "El pago es parcial",
+        status: "partial",
+        rejection_reason: null,
+        expected_amount: null,
         date: "02/10/26",
         receipt_url: "/receipt.pdf",
         receipt_filename: "parcial.pdf",
         receipt_content_type: "application/pdf",
+        receipt_size: "63,8 KB",
       } satisfies ProviderCollectionAccount["payments"][number]
       const account = {
         ...baseAccount,
@@ -233,7 +247,8 @@ describe("Collections payment history destination", () => {
         vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
-        status: "rejected",
+        expected_amount: null,
+        status: "partial",
         payments: [payment],
       } satisfies ProviderCollectionAccount
 
@@ -245,9 +260,11 @@ describe("Collections payment history destination", () => {
         />,
       )
 
-      expect(screen.getByText(payment.date)).toBeInTheDocument()
-      expect(screen.getByText("Pago parcial")).toBeInTheDocument()
-      expect(screen.getAllByText("Rechazado")).toHaveLength(2)
+      expect(
+        screen.getByText(`Comprobante enviado el ${payment.date}`),
+      ).toBeInTheDocument()
+      expect(screen.getAllByText("Pago parcial")).toHaveLength(2)
+      expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
     },
   )
 })

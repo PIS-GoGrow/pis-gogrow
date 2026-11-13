@@ -43,19 +43,46 @@ describe("Admin account page", () => {
 
     expect(screen.getByRole("link", { name: /Subsidios/ })).toHaveAttribute(
       "href",
-      "/admin/benefit_configurations",
+      "/rrhh/subsidios",
     )
     expect(
       screen.getByRole("link", { name: /Notificaciones/ }),
-    ).toHaveAttribute("href", "/settings/notifications")
+    ).toHaveAttribute("href", "/configuracion/notificaciones")
+  })
+
+  it("links to invoices", () => {
+    render(<AdminAccount />)
+
+    expect(screen.getByRole("link", { name: /^Facturas/ })).toHaveAttribute(
+      "href",
+      "/rrhh/facturas",
+    )
+    expect(
+      screen.getByText("Consultá las facturas de los proveedores"),
+    ).toBeInTheDocument()
+  })
+
+  it("places invoices between subsidies and order events in navigation items", () => {
+    render(<AdminAccount />)
+
+    const links = screen.getAllByRole("link")
+    const hrefs = links.map((link) => link.getAttribute("href"))
+    const subsidiesIndex = hrefs.indexOf("/rrhh/subsidios")
+    const invoicesIndex = hrefs.indexOf("/rrhh/facturas")
+    const orderEventsIndex = hrefs.indexOf("/rrhh/auditoria")
+
+    expect(subsidiesIndex).toBeGreaterThanOrEqual(0)
+    expect(invoicesIndex).toBeGreaterThan(subsidiesIndex)
+    expect(orderEventsIndex).toBeGreaterThan(invoicesIndex)
   })
 
   it("links to profile and appearance without security options", () => {
     render(<AdminAccount />)
 
-    expect(
-      screen.getByRole("link", { name: /^Perfil y Apariencia/ }),
-    ).toHaveAttribute("href", "/admin/preferences")
+    expect(screen.getByRole("link", { name: /^Perfil/ })).toHaveAttribute(
+      "href",
+      "/configuracion/perfil",
+    )
     expect(screen.queryByText("Seguridad")).not.toBeInTheDocument()
     expect(screen.queryByText("Cambiar contraseña")).not.toBeInTheDocument()
     expect(screen.queryByText("Eliminar cuenta")).not.toBeInTheDocument()

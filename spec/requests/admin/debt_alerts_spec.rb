@@ -10,7 +10,7 @@ RSpec.describe "Admin::DebtAlerts", type: :request do
 
   before { sign_in users(:admin), role: :admin }
 
-  describe "GET /admin/benefit_configurations" do
+  describe "GET /admin/subsidios" do
     it "expone el monto de alerta de deuda de la compañía" do
       get admin_benefit_configurations_path
 
@@ -18,7 +18,7 @@ RSpec.describe "Admin::DebtAlerts", type: :request do
     end
   end
 
-  describe "PATCH /admin/debt_alert" do
+  describe "PATCH /admin/alerta-de-deuda" do
     it "actualiza el monto y vuelve a la pantalla de subsidios" do
       patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 3500 } }
 
@@ -97,7 +97,7 @@ RSpec.describe "Admin::DebtAlerts", type: :request do
       sign_out
       patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 1000 } }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
       expect(company.reload.debt_alert_threshold).to eq(2000)
     end
   end

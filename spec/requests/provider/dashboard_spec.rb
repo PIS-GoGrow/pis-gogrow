@@ -9,7 +9,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
 
-  describe "GET /provider/dashboard" do
+  describe "GET /provider/inicio" do
     context "sin sesión iniciada" do
       it "redirige al usuario a la pantalla de iniciar sesión" do
         get provider_dashboard_path
@@ -38,6 +38,17 @@ RSpec.describe "Provider::Dashboard", type: :request do
       end
     end
 
+    context "con rol de proveedor sin onboarding completado" do
+      it "redirige al asistente de onboarding" do
+        provider.update_column(:onboarding_completed_at, nil)
+        sign_in provider_user, role: :provider
+
+        get provider_dashboard_path
+
+        expect(response).to redirect_to(provider_onboarding_path)
+      end
+    end
+
     context "con rol de proveedor" do
       before do
         sign_in provider_user, role: :provider
@@ -56,10 +67,58 @@ RSpec.describe "Provider::Dashboard", type: :request do
         get provider_dashboard_path
 
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           order_deadline: "11:30",
           provider: { order_deadline: "11:30" }
         )
+      end
+
+      it "expone el progreso de completitud de la cuenta" do
+        get provider_dashboard_path
+
+        expect(inertia).to(have_props do |props|
+          props["sections_total"] == 4 &&
+            props["completed_sections_count"].is_a?(Integer)
+        end)
+      end
+
+      it "refleja exactamente 0 secciones completadas cuando ningún timestamp está configurado" do
+        provider.update_columns(
+          payment_details_configured_at: nil,
+          order_deadline_configured_at: nil,
+          deliveries_configured_at: nil,
+          notifications_configured_at: nil
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 0, sections_total: 4)
+      end
+
+      it "refleja el conteo parcial (2/4) cuando dos secciones están configuradas" do
+        provider.update_columns(
+          payment_details_configured_at: Time.current,
+          order_deadline_configured_at: nil,
+          deliveries_configured_at: Time.current,
+          notifications_configured_at: nil
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 2, sections_total: 4)
+      end
+
+      it "refleja 4 secciones completadas cuando la cuenta está 100% configurada" do
+        provider.update_columns(
+          payment_details_configured_at: Time.current,
+          order_deadline_configured_at: Time.current,
+          deliveries_configured_at: Time.current,
+          notifications_configured_at: Time.current
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 4, sections_total: 4)
       end
 
       context "con la hora de cierre configurada" do
@@ -72,7 +131,11 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
           get provider_dashboard_path
 
-          expect(inertia).to have_props(order_deadline: "12:01", order_deadline_passed_today: false)
+          expect(inertia).to have_props(
+            order_deadline: "12:01",
+            order_deadline_passed_today: false,
+            seconds_until_order_deadline: 60
+          )
         end
 
         it "indica que la recepción está cerrada al llegar a la hora de cierre" do
@@ -80,11 +143,67 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
           get provider_dashboard_path
 
-          expect(inertia).to have_props(order_deadline: "12:00", order_deadline_passed_today: true)
+          expect(inertia).to have_props(
+            order_deadline: "12:00",
+            order_deadline_passed_today: true,
+            seconds_until_order_deadline: nil
+          )
         end
       end
 
-      it "envía order_deadline como nil cuando no está configurada" do
+      context "al realizar una recarga parcial de Inertia" do
+        around do |example|
+          travel_to(Time.current.change(hour: 12)) { example.run }
+        end
+
+        it "retorna únicamente las props solicitadas para la actualización de recepción" do
+          provider.update!(order_deadline: Time.zone.parse("12:01"))
+
+          get provider_dashboard_path, headers: {
+            "X-Inertia" => "true",
+            "X-Inertia-Version" => InertiaRails.configuration.version,
+            "X-Inertia-Partial-Component" => "provider/dashboard/index",
+            "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
+          }
+
+          expect(response).to have_http_status(:success)
+          expect(inertia).to have_props(
+            order_deadline_passed_today: false,
+            seconds_until_order_deadline: 60
+          )
+        end
+
+        it "retorna el estado de cierre una vez alcanzada la hora límite mediante recarga parcial" do
+          provider.update!(order_deadline: Time.zone.parse("12:00"))
+
+          get provider_dashboard_path, headers: {
+            "X-Inertia" => "true",
+            "X-Inertia-Version" => InertiaRails.configuration.version,
+            "X-Inertia-Partial-Component" => "provider/dashboard/index",
+            "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
+          }
+
+          expect(response).to have_http_status(:success)
+          expect(inertia).to have_props(
+            order_deadline_passed_today: true,
+            seconds_until_order_deadline: nil
+          )
+        end
+
+        it "responde 409 Conflict si la petición parcial de Inertia tiene una versión desactualizada" do
+          get provider_dashboard_path, headers: {
+            "X-Inertia" => "true",
+            "X-Inertia-Version" => "#{InertiaRails.configuration.version}-outdated",
+            "X-Inertia-Partial-Component" => "provider/dashboard/index",
+            "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
+          }
+
+          expect(response).to have_http_status(:conflict)
+          expect(response.headers["X-Inertia-Location"]).to eq(provider_dashboard_url)
+        end
+      end
+
+      it "envía order_deadline y seconds_until_order_deadline como nil cuando no está configurada" do
         provider.update!(order_deadline: nil)
 
         get provider_dashboard_path
@@ -92,6 +211,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
         expect(inertia).to have_props(
           order_deadline: nil,
           order_deadline_passed_today: false,
+          seconds_until_order_deadline: nil,
           provider: { order_deadline: nil }
         )
       end
@@ -143,8 +263,9 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
         # tuviandita solo tiene el menú milanesa en fixtures (sin reseñas)
         expect(inertia).to have_props(
-          month_dishes_count: provider.menus.count,
-          average_rating: nil
+          month_dishes_count: 1,
+          average_rating: nil,
+          top_rated: []
         )
 
         # Ahora agregamos una reseña para el plato del proveedor actual
@@ -155,6 +276,51 @@ RSpec.describe "Provider::Dashboard", type: :request do
         expect(inertia).to have_props(
           average_rating: 5.0
         )
+      end
+
+      it "cuenta en los hallazgos del mes solo los platos pedidos y las reseñas escritas en el mes" do
+        Menu.create!(provider:, name: "Wok de verduras", description: "Sin pedidos", price: 300)
+        Review.create!(menu: menus(:milanesa), rating: 1, created_at: Date.current.prev_month.in_time_zone)
+        Review.create!(menu: menus(:milanesa), rating: 4, created_at: Time.current)
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(month_dishes_count: 1, average_rating: 4.0)
+      end
+
+      it "muestra en los hallazgos del mes los mismos números que Hallazgos para el mes actual" do
+        get provider_insights_path
+        insights = inertia.props.slice(:orders_count, :dishes_count, :average_rating)
+
+        get provider_dashboard_path
+
+        expect(inertia.props.slice(:month_orders_count, :month_dishes_count, :average_rating).values).to eq(insights.values)
+      end
+
+      it "expone los platos mejor valorados ordenados por promedio, sin las reseñas sin puntaje" do
+        # milanesa: promedio 4.5
+        Review.create!(menu: menus(:milanesa), rating: 4)
+        Review.create!(menu: menus(:milanesa), rating: 5)
+
+        wok = Menu.create!(provider:, name: "Wok de verduras", description: "Salteado de verduras", price: 150)
+        Review.create!(menu: wok, rating: 5)
+        # Una reseña sin puntaje no es una valoración: no cuenta para el promedio.
+        Review.create!(menu: wok, rating: nil, description: "sin puntaje")
+
+        get provider_dashboard_path
+
+        expect(inertia.props[:top_rated]).to eq([
+          { "name" => "Wok de verduras", "rating" => 5.0 },
+          { "name" => "Milanesa con papas fritas", "rating" => 4.5 }
+        ])
+      end
+
+      it "toma los mejor valorados del mismo mes que la valoración promedio" do
+        Review.create!(menu: menus(:milanesa), rating: 5, created_at: Date.current.prev_month.in_time_zone)
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(average_rating: nil, top_rated: [])
       end
     end
   end
@@ -173,8 +339,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
         event: "order_confirmation",
         requires_action: false,
         notifiable: orders(:upcoming_pending_today),
-        title: "Tu pedido fue confirmado",
-        description: "Tu pedido fue confirmado."
+        description_data: { date: "12/12", provider: "TuViandita" }
       )
 
       sign_in user, role: :provider
@@ -191,6 +356,63 @@ RSpec.describe "Provider::Dashboard", type: :request do
       get provider_dashboard_path
 
       expect(inertia.props[:notifications].pluck(:title)).to eq([ "Un pedido fue cancelado" ])
+    end
+  end
+
+  describe "cobros" do
+    it "muestra cobros pendientes del proveedor, consistentes con los valores de la pantalla de cobros" do
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      total = inertia.props[:outstanding]["total"]
+      dishes = inertia.props[:outstanding]["meals"]
+
+      get provider_dashboard_path
+
+      expect(inertia.props[:total_debt]).to eq(total)
+      expect(inertia.props[:total_dishes_count]).to eq(dishes)
+    end
+
+    it "es consistente incluso en casos borde" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+      company = Account.create!(owner: companies(:gogrow), provider: providers(:tuviandita), month: Date.current.next_month, amount: "800")
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      total = inertia.props[:outstanding]["total"]
+      dishes = inertia.props[:outstanding]["meals"]
+
+      get provider_dashboard_path
+
+      expect(inertia.props[:total_debt]).to eq(total)
+      expect(inertia.props[:total_dishes_count]).to eq(dishes)
+
+      company.payments.create!(provider: company.provider, status: :approved)
+      get provider_collections_path
+
+      total = inertia.props[:outstanding]["total"]
+      dishes = inertia.props[:outstanding]["meals"]
+
+      get provider_dashboard_path
+
+      expect(inertia.props[:total_debt]).to eq(total)
+      expect(inertia.props[:total_dishes_count]).to eq(dishes)
+    end
+
+    it "conserva los centavos y descuenta los pagos parciales, igual que la pantalla de cobros" do
+      accounts(:one_tuviandita_current).payments.create!(provider:, status: :approved, expected_amount: 100.50)
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+      total = inertia.props[:outstanding]["total"]
+
+      get provider_dashboard_path
+
+      expect(total).to eq(1101.5)
+      expect(inertia.props[:total_debt]).to eq(total)
     end
   end
 end

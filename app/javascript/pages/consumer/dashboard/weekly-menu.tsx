@@ -1,13 +1,16 @@
+import { Link } from "@inertiajs/react"
 import { UtensilsCrossed } from "lucide-react"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import ClosureBanner from "@/components/consumer/menus/closure-banner"
+import FavoritesPanel from "@/components/consumer/menus/favorites-panel"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
-import NotificationBanners from "@/components/notification-banners"
+import NotificationBanners, {
+  NotificationInbox,
+} from "@/components/notification-banners"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -16,26 +19,36 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 import useSessionStorage from "@/hooks/use-session-storage"
+import { formatLongDate } from "@/lib/dates"
+import { toggleFavorite } from "@/lib/favorites"
+import { formatMoney } from "@/lib/money"
+import { cn } from "@/lib/utils"
+import { dashboardCart } from "@/routes"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
-import { money } from "./formatters"
 
 interface Props {
   name: string
   date: string
   setDate: (value: string) => void
   benefit: ConsumerDashboardIndex["benefit"]
-  providers: string[]
+  activeProviders: Set<number>
+  setActiveProviders: (providers: Set<number>) => void
+  providers: ConsumerDashboardIndex["providers"]
   schedules: Schedule[]
   closures: ConsumerClosure[]
+  favorites: ConsumerDashboardIndex["favorites"]
+  frequent: ConsumerDashboardIndex["frequent"]
   cart: CartItem[]
   count: number
-  total: number
+  loading: boolean
+  total?: number
   openDetail: (item: Schedule) => void
-  openCart: () => void
+  todayDate?: string
 }
 
 export const today = () => {
@@ -51,16 +64,20 @@ export function WeeklyMenu({
   setDate,
   benefit,
   providers,
+  activeProviders,
+  setActiveProviders,
   schedules,
   closures,
+  favorites,
+  frequent,
   cart,
   count,
+  loading,
   total,
   openDetail,
-  openCart,
+  todayDate,
 }: Props) {
   const { t } = useTranslation()
-  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
   // Se guarda en la sesión para que el aviso no vuelva al entrar a un plato y
   // volver al menú. Cada aviso (el de antes del cierre y el de durante) se
   // cierra por separado: la clave lleva el tipo y el id del cierre.
@@ -68,17 +85,23 @@ export function WeeklyMenu({
     "dismissed-closure-notices",
     [],
   )
-  const currentDate = today()
+  const currentDate = todayDate ?? today()
+
   const filteredSchedules =
     activeProviders.size === 0
       ? schedules
       : schedules.filter((schedule) =>
-          activeProviders.has(schedule.menu.provider_name),
+          activeProviders.has(schedule.menu.provider_id),
         )
+  const favoriteMenuIds = new Set(favorites.menus.map((menu) => menu.id))
+  const favoriteProviderIds = new Set(favorites.provider_ids)
   const filterLabel =
     activeProviders.size === 0
-      ? "Todos"
-      : providers.filter((provider) => activeProviders.has(provider)).join(", ")
+      ? t("pages.consumer_dashboard.index.provider_filter.all")
+      : providers
+          .filter((provider) => activeProviders.has(provider.id))
+          .map((provider) => provider.name)
+          .join(", ")
   const soonClosures = closures.filter(
     (closure) =>
       closure.starts_on > date && !dismissed.includes(`soon-${closure.id}`),
@@ -87,8 +110,7 @@ export function WeeklyMenu({
     (closure) =>
       closure.starts_on <= date &&
       date <= closure.ends_on &&
-      (activeProviders.size === 0 ||
-        activeProviders.has(closure.provider_name)),
+      (activeProviders.size === 0 || activeProviders.has(closure.provider_id)),
   )
   const closedBanners = closedToday.filter(
     (closure) => !dismissed.includes(`now-${closure.id}`),
@@ -98,28 +120,26 @@ export function WeeklyMenu({
   return (
     <>
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-24 lg:pb-10">
-        <header className="mb-4">
-          <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
-          <p className="text-muted-foreground text-sm capitalize">
-            {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
-          </p>
+        <header className="mb-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
+            <p className="text-muted-foreground text-sm">
+              {formatLongDate(currentDate)}
+            </p>
+          </div>
+          <NotificationInbox>
+            {soonClosures.map((closure) => (
+              <ClosureBanner
+                key={closure.id}
+                closure={closure}
+                when="soon"
+                onDismiss={() => dismiss(`soon-${closure.id}`)}
+              />
+            ))}
+          </NotificationInbox>
         </header>
 
-        <div className="mb-6 flex flex-col gap-3">
-          <NotificationBanners />
-          {soonClosures.map((closure) => (
-            <ClosureBanner
-              key={closure.id}
-              closure={closure}
-              when="soon"
-              onDismiss={() => dismiss(`soon-${closure.id}`)}
-            />
-          ))}
-        </div>
+        <NotificationBanners className="mb-6" />
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
           <section className="min-w-0">
@@ -141,20 +161,33 @@ export function WeeklyMenu({
               </div>
             )}
 
+            <FavoritesPanel
+              favorites={favorites}
+              frequent={frequent}
+              providers={providers}
+              schedules={schedules}
+              activeProviders={activeProviders}
+              setActiveProviders={setActiveProviders}
+              openDetail={openDetail}
+              currentDate={currentDate}
+            />
+
             <div className="mt-6 mb-3 flex items-center">
               <span className="text-foreground min-w-0 truncate text-sm font-medium">
-                Proveedores:{" "}
+                {t("pages.consumer_dashboard.index.provider_filter.label")}{" "}
                 <span className="text-muted-foreground font-normal">
                   {filterLabel}
                 </span>
               </span>
               <ProviderFilterSheet
-                providers={providers.map((provider) => ({
-                  id: provider,
-                  name: provider,
-                }))}
+                providers={providers}
                 selectedProviders={activeProviders}
+                selectionMode="multiple"
                 onApply={setActiveProviders}
+                favoriteIds={favoriteProviderIds}
+                onToggleFavorite={(id, isFavorite) =>
+                  toggleFavorite("providers", id, isFavorite)
+                }
               />
             </div>
 
@@ -164,7 +197,9 @@ export function WeeklyMenu({
                   <EmptyMedia variant="icon">
                     <UtensilsCrossed aria-hidden="true" />
                   </EmptyMedia>
-                  <EmptyTitle>Menú no disponible</EmptyTitle>
+                  <EmptyTitle>
+                    {t("pages.consumer_dashboard.index.empty.title")}
+                  </EmptyTitle>
                   <EmptyDescription>
                     {activeProviders.size > 0 && closedToday.length > 0
                       ? closedToday
@@ -175,9 +210,9 @@ export function WeeklyMenu({
                             }),
                           )
                           .join(" ")
-                      : schedules.length === 0
-                        ? "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
-                        : "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro."}
+                      : activeProviders.size === 0
+                        ? t("pages.consumer_dashboard.index.empty.all")
+                        : t("pages.consumer_dashboard.index.empty.filtered")}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -199,7 +234,17 @@ export function WeeklyMenu({
                       ordersClosed={item.orders_closed}
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
+                      pendingQuantity={item.ordered?.pending}
+                      confirmedQuantity={item.ordered?.confirmed}
                       onSelect={() => openDetail(item)}
+                      favorite={favoriteMenuIds.has(item.menu.saved_menu_id)}
+                      onToggleFavorite={() =>
+                        toggleFavorite(
+                          "menus",
+                          item.menu.saved_menu_id,
+                          favoriteMenuIds.has(item.menu.saved_menu_id),
+                        )
+                      }
                     />
                   )
                 })}
@@ -212,18 +257,34 @@ export function WeeklyMenu({
             <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
-                {count} platos · {money(total)}
+                {count} platos ·{" "}
+                {!loading ? (
+                  formatMoney(total ?? 0)
+                ) : (
+                  <Spinner className="inline" />
+                )}
               </h3>
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.
               </p>
               <Button
                 type="button"
-                onClick={openCart}
-                disabled={count === 0}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
+                asChild
+                className={cn(
+                  "mt-8 w-full",
+                  count === 0 && "pointer-events-none opacity-50",
+                )}
               >
-                Ver carrito
+                <Link
+                  href={dashboardCart().url}
+                  aria-disabled={count === 0}
+                  tabIndex={count === 0 ? -1 : undefined}
+                  onClick={(event) => {
+                    if (count === 0) event.preventDefault()
+                  }}
+                >
+                  Ver carrito
+                </Link>
               </Button>
             </div>
           </aside>
@@ -247,11 +308,11 @@ export function WeeklyMenu({
       {count > 0 && (
         <Button
           type="button"
-          onClick={openCart}
           data-slot="floating-cart-button"
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-lg text-sm shadow-lg md:bottom-6 lg:hidden"
+          asChild
         >
-          Ver carrito
+          <Link href={dashboardCart().url}>Ver carrito</Link>
         </Button>
       )}
 

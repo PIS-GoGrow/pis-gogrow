@@ -14,7 +14,12 @@ RSpec.describe "Payments", type: :request do
     consumer_user = User.create!(email: "payment-consumer@gmail.com", name: "Consumer", password: "password123456")
     consumer = Consumer.create!(user: consumer_user, company:, address: "Ellauri 1234")
     provider_user = User.create!(email: "payment-provider@gmail.com", name: "Provider", password: "password123456")
-    provider = Provider.create!(user: provider_user)
+    provider = Provider.create!(
+      user: provider_user,
+      bank_name: "BROU",
+      bank_account_details: "Caja de ahorro 123456",
+      beneficiary: "Provider"
+    )
     account = Account.create!(owner: consumer, provider:, month: Date.current.prev_month, amount: 500)
 
     [ consumer_user, account, provider ]
@@ -28,6 +33,16 @@ RSpec.describe "Payments", type: :request do
     )
   end
 
+  def oversized_receipt
+    Tempfile.create([ "comprobante-grande", ".png" ]) do |file|
+      file.binmode
+      file.write("x" * (10.megabytes + 1))
+      file.rewind
+
+      yield Rack::Test::UploadedFile.new(file.path, "image/png", original_filename: "comprobante-grande.png")
+    end
+  end
+
   def account_page_headers
     { "HTTP_REFERER" => accounts_url }
   end
@@ -37,6 +52,17 @@ RSpec.describe "Payments", type: :request do
     payment.receipt.attach(
       io: StringIO.new("receipt"),
       filename: "receipt.png",
+      content_type: "image/png"
+    )
+    payment.save!
+    payment
+  end
+
+  def partial_payment(account:, provider:, filename: "partial.png")
+    payment = account.payments.build(provider:, status: :partial)
+    payment.receipt.attach(
+      io: StringIO.new("partial receipt"),
+      filename:,
       content_type: "image/png"
     )
     payment.save!
@@ -65,30 +91,75 @@ RSpec.describe "Payments", type: :request do
     expect(ActiveStorage::Attachment.find_by(record: payment, name: "receipt")).to be_present
   end
 
-  it "updates an existing rejected payment with a new receipt" do
+  it "does not notify the provider when a receipt is submitted while the provider is closed" do
     user, account, provider = setup_payment_account
-    payment = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
-    payment.receipt.attach(
-      io: StringIO.new("old receipt"),
-      filename: "old.png",
-      content_type: "image/png"
+    provider.update!(onboarding_completed_at: Time.current)
+    provider.closures.create!(
+      starts_on: Date.current,
+      ends_on: Date.current,
+      reason: "Cierre programado"
     )
-    original_blob_id = payment.receipt.blob_id
     sign_in(user, role: :consumer)
 
     expect {
-      patch payment_path(payment), params: {
-        payment: { receipt: receipt_upload(filename: "replacement.png") }
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Notification, :count)
+
+    expect(response).to redirect_to(accounts_path)
+
+    sign_in(provider.user, role: :provider)
+    get provider_dashboard_path
+    expect(response).to have_http_status(:ok)
+    expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).not_to include(I18n.t("notifications.payment_receipt_submitted.title"))
+  end
+
+  it "does not accept a receipt while the provider has not loaded its payment details" do
+    user, account, provider = setup_payment_account
+    provider.update!(
+      bank_name: nil,
+      bank_account_details: nil,
+      beneficiary: nil
+    )
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
       }, headers: account_page_headers
     }.not_to change(Payment, :count)
 
     expect(response).to redirect_to(accounts_path)
-    expect(payment.reload).to be_submitted
-    expect(payment.account).to eq(account)
-    expect(payment.provider).to eq(provider)
-    expect(payment.receipt).to be_attached
-    expect(payment.receipt.filename.to_s).to eq("replacement.png")
-    expect(payment.receipt.blob_id).not_to eq(original_blob_id)
+
+    follow_redirect!
+
+    expect(inertia).to have_props(
+      errors: {
+        receipt: [
+          I18n.t(
+            "activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing"
+          )
+        ]
+      }
+    )
+  end
+
+  it "notifies the provider and sets inertia props when a receipt is submitted while the provider is open" do
+    user, account, provider = setup_payment_account
+    provider.update!(onboarding_completed_at: Time.current)
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.to change { Notification.where(event: "payment_receipt_submitted", user: provider.user).count }.by(1)
+
+    sign_in(provider.user, role: :provider)
+    get provider_dashboard_path
+    expect(response).to have_http_status(:ok)
+    expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).to include(I18n.t("notifications.payment_receipt_submitted.title"))
   end
 
   # El mes en curso todavía puede sumar pedidos: no se paga hasta que cierre.
@@ -108,24 +179,6 @@ RSpec.describe "Payments", type: :request do
     expect(inertia).to have_props(
       errors: { receipt: [ I18n.t("validations.payment_current_account") ] }
     )
-  end
-
-  it "does not replace a rejected receipt of the current month" do
-    user, account, provider = setup_payment_account
-    account.update!(month: Date.current.beginning_of_month)
-    payment = account.payments.build(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
-    payment.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
-    payment.save!
-    original_blob_id = payment.receipt.blob_id
-    sign_in(user, role: :consumer)
-
-    patch payment_path(payment), params: {
-      payment: { receipt: receipt_upload(filename: "replacement.png") }
-    }, headers: account_page_headers
-
-    expect(response).to redirect_to(accounts_path)
-    expect(payment.reload).to be_rejected
-    expect(payment.receipt.blob_id).to eq(original_blob_id)
   end
 
   it "does not create a payment for an account owned by another consumer" do
@@ -163,27 +216,6 @@ RSpec.describe "Payments", type: :request do
     }.not_to change(Payment, :count)
 
     expect(response).to have_http_status(:not_found)
-  end
-
-  it "does not replace the receipt of an approved payment" do
-    user, account, provider = setup_payment_account
-    payment = account.payments.create!(provider:, status: :approved)
-    payment.receipt.attach(
-      io: StringIO.new("approved receipt"),
-      filename: "approved.png",
-      content_type: "image/png"
-    )
-    original_blob_id = payment.receipt.blob_id
-
-    sign_in(user, role: :consumer)
-
-    patch payment_path(payment), params: {
-      payment: { receipt: receipt_upload(filename: "forbidden.png") }
-    }, headers: account_page_headers
-
-    expect(response).to redirect_to(accounts_path)
-    expect(payment.reload).to be_approved
-    expect(payment.receipt.blob_id).to eq(original_blob_id)
   end
 
   it "allows the owner to remove a receipt that is still under review" do
@@ -273,7 +305,7 @@ RSpec.describe "Payments", type: :request do
       delete payment_path(payment), headers: account_page_headers
     }.not_to change(Payment, :count)
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "does not allow a provider to remove a consumer's receipt" do
@@ -318,7 +350,7 @@ RSpec.describe "Payments", type: :request do
 
     get receipt_payment_path(payment)
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "does not allow another consumer to access the receipt" do
@@ -375,6 +407,26 @@ RSpec.describe "Payments", type: :request do
     )
   end
 
+  it "sends back the errors and persists nothing when the receipt exceeds 10 MB" do
+    user, account, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    oversized_receipt do |receipt|
+      expect {
+        post payments_path, params: {
+          payment: { account_id: account.id, receipt: }
+        }, headers: account_page_headers
+      }.not_to change(Payment, :count)
+    end
+
+    expect(response).to redirect_to(accounts_path)
+    expect(account.reload.payments).to be_empty
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.too_large") ] }
+    )
+  end
+
   it "allows uploading another receipt once the previous one was reviewed and serializes both in accounts view" do
     user, account, provider = setup_payment_account
     submitted_payment(account:, provider:).reject_with("Comprobante ilegible")
@@ -401,6 +453,272 @@ RSpec.describe "Payments", type: :request do
     }
   end
 
+  describe "resending a receipt after the provider rejected the previous one" do
+    def reject_and_resend(rejection_params)
+      user, account, provider = setup_payment_account
+      provider.update!(onboarding_completed_at: Time.current)
+      rejected = submitted_payment(account:, provider:)
+
+      sign_in(provider.user, role: :provider)
+      patch provider_payment_path(rejected), params: { status: "rejected", **rejection_params }
+
+      sign_in(user, role: :consumer)
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_2.png") }
+      }, headers: account_page_headers
+
+      [ rejected.reload, account.payments.where.not(id: rejected.id).sole, account, provider ]
+    end
+
+    def payments_in_accounts_page(account)
+      get accounts_path
+
+      inertia.props.deep_symbolize_keys[:accounts].find { it[:id] == account.id }[:payments]
+    end
+
+    it "keeps the rejection reason of the rejected receipt and shows it to the employee" do
+      rejected, resent, account, = reject_and_resend(rejection_reason: "incorrect_receipt")
+
+      expect(rejected).to have_attributes(status: "rejected", rejection_reason: "El comprobante no corresponde")
+      expect(resent).to have_attributes(status: "submitted", rejection_reason: nil)
+      expect(payments_in_accounts_page(account)).to contain_exactly(
+        include(id: rejected.id, status: "rejected", rejection_reason: "El comprobante no corresponde"),
+        include(id: resent.id, status: "submitted", rejection_reason: nil)
+      )
+    end
+
+    it "keeps the historical partial payment reason of the rejected receipt and shows it to the employee" do
+      user, account, provider = setup_payment_account
+      rejected = account.payments.create!(provider:, status: :rejected, rejection_reason: "El pago es parcial")
+      rejected.receipt.attach(io: StringIO.new("receipt 1"), filename: "receipt_1.png", content_type: "image/png")
+
+      sign_in(user, role: :consumer)
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_2.png") }
+      }, headers: account_page_headers
+
+      resent = account.payments.where.not(id: rejected.id).sole
+      expect(rejected.reload).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
+      expect(resent).to have_attributes(status: "submitted", rejection_reason: nil)
+      expect(payments_in_accounts_page(account)).to contain_exactly(
+        include(id: rejected.id, status: "rejected", rejection_reason: "El pago es parcial"),
+        include(id: resent.id, status: "submitted", rejection_reason: nil)
+      )
+    end
+
+    it "keeps the description of another reason" do
+      rejected, resent, account, = reject_and_resend(
+        rejection_reason: "other", rejection_details: "Transferiste a otra cuenta"
+      )
+
+      expect(rejected).to have_attributes(status: "rejected", rejection_reason: "Transferiste a otra cuenta")
+      expect(resent).to be_submitted
+      expect(payments_in_accounts_page(account)).to include(
+        include(id: rejected.id, status: "rejected", rejection_reason: "Transferiste a otra cuenta")
+      )
+    end
+
+    it "keeps the reason in the provider's collections" do
+      rejected, resent, account, provider = reject_and_resend(rejection_reason: "incorrect_receipt")
+
+      sign_in(provider.user, role: :provider)
+      get provider_collections_path
+
+      employee = inertia.props.deep_symbolize_keys[:pending]
+        .flat_map { it[:employees] }
+        .find { it[:id] == account.id }
+      expect(employee[:status]).to eq("submitted")
+      expect(employee[:payments]).to contain_exactly(
+        include(id: resent.id, status: "submitted", rejection_reason: nil),
+        include(id: rejected.id, status: "rejected", rejection_reason: "El comprobante no corresponde")
+      )
+    end
+
+    it "ignores injected rejection_reason and status parameters on payment creation" do
+      user, account, = setup_payment_account
+      sign_in(user, role: :consumer)
+
+      expect {
+        post payments_path, params: {
+          payment: {
+            account_id: account.id,
+            receipt: receipt_upload(filename: "injected.png"),
+            rejection_reason: "Razon inyectada",
+            status: "rejected"
+          }
+        }, headers: account_page_headers
+      }.to change(Payment, :count).by(1)
+
+      payment = account.payments.sole
+      expect(payment).to be_submitted
+      expect(payment.rejection_reason).to be_nil
+    end
+
+    it "rejects PATCH on /comprobantes/:id as the route has been removed" do
+      user, account, provider = setup_payment_account
+      rejected = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
+      rejected.receipt.attach(io: StringIO.new("test"), filename: "test.png", content_type: "image/png")
+      sign_in(user, role: :consumer)
+
+      patch payment_path(rejected), params: {
+        payment: { receipt: receipt_upload(filename: "bypass.png") }
+      }, headers: account_page_headers
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  it "creates a new payment after a partial one and preserves the previous receipt" do
+    user, account, provider = setup_payment_account
+    partial = partial_payment(account:, provider:)
+    original_blob_id = partial.receipt.blob_id
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "final.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+
+    expect(response).to redirect_to(accounts_path)
+    expect(partial.reload).to be_partial
+    expect(partial.receipt.blob_id).to eq(original_blob_id)
+    expect(partial.receipt.filename.to_s).to eq("partial.png")
+    expect(account.reload.payments.map(&:status)).to contain_exactly("partial", "submitted")
+  end
+
+  it "does not remove a historical partial payment" do
+    user, account, provider = setup_payment_account
+    partial = partial_payment(account:, provider:)
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(partial), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(partial.reload).to be_partial
+    expect(partial.receipt).to be_attached
+  end
+
+  it "does not accept a new receipt for an account that is already settled" do
+    user, account, provider = setup_payment_account
+    account.payments.create!(provider:, status: :approved)
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "late.png") }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(account.reload.collection_status).to eq("approved")
+  end
+
+  it "keeps the debt generated after a receipt was sent as a separate balance that takes a new receipt" do
+    user, account, provider = setup_payment_account
+    account.update!(amount: 290.25)
+    sign_in(user, role: :consumer)
+
+    post payments_path, params: {
+      payment: { account_id: account.id, receipt: receipt_upload(filename: "first.png") }
+    }, headers: account_page_headers
+    first = account.payments.sole
+    account.update!(amount: 740.25)
+    first.approve
+
+    expect(first.reload.expected_amount).to eq(290.25.to_d)
+    expect(account.reload.collection_status).to eq("pending")
+    expect(user.consumer.total_debt).to eq(450.to_d)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "second.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+
+    expect(account.payments.submitted.sole.expected_amount).to eq(450.to_d)
+  end
+
+  it "does not accept a receipt when the account is already settled" do
+    user, account, provider = setup_payment_account
+    sign_in(user, role: :consumer)
+    payment = submitted_payment(account:, provider:)
+    payment.approve
+    expect(account.reload.settled?).to be(true)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "extra.png") }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("validations.payment_closed") ] }
+    )
+  end
+
+  it "overrides an injected expected_amount parameter with the actual outstanding debt" do
+    user, account, provider = setup_payment_account
+    account.update!(amount: 290.25)
+    sign_in(user, role: :consumer)
+
+    post payments_path, params: {
+      payment: {
+        account_id: account.id,
+        receipt: receipt_upload,
+        expected_amount: 1.00
+      }
+    }, headers: account_page_headers
+
+    payment = account.payments.sole
+    expect(payment.expected_amount).to eq(290.25.to_d)
+  end
+
+  it "redirects back with inertia validation errors when submitted without a receipt file" do
+    user, account, _provider = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: nil }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props { |props|
+      props[:errors][:receipt].present?
+    }
+  end
+
+  it "rejects payment creation for another consumer's account with 404" do
+    user, account, _provider = setup_payment_account
+    other_user = User.create!(email: "other@gmail.com", name: "Other", password: "password123456")
+    Consumer.create!(user: other_user, company: account.owner.company, address: "Dirección")
+    sign_in(other_user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "redirects a provider attempting to create a consumer payment" do
+    _user, account, provider = setup_payment_account
+    sign_in(provider.user, role: :provider)
+
+    post payments_path, params: {
+      payment: { account_id: account.id, receipt: receipt_upload }
+    }, headers: account_page_headers
+
+    expect(response).to redirect_to(root_path)
+  end
+
   it "does not accept a second receipt while one is still under review" do
     user, account, provider = setup_payment_account
     first = submitted_payment(account:, provider:)
@@ -414,26 +732,6 @@ RSpec.describe "Payments", type: :request do
 
     expect(response).to redirect_to(accounts_path)
     expect(account.reload.payments).to contain_exactly(first)
-    follow_redirect!
-    expect(inertia).to have_props(
-      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
-    )
-  end
-
-  it "does not resubmit a rejected receipt while another one is under review" do
-    user, account, provider = setup_payment_account
-    rejected = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
-    rejected.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
-    submitted_payment(account:, provider:)
-    sign_in(user, role: :consumer)
-
-    patch payment_path(rejected), params: {
-      payment: { receipt: receipt_upload(filename: "replacement.png") }
-    }, headers: account_page_headers
-
-    expect(response).to redirect_to(accounts_path)
-    expect(rejected.reload).to be_rejected
-    expect(rejected.receipt.filename.to_s).to eq("old.png")
     follow_redirect!
     expect(inertia).to have_props(
       errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
@@ -596,6 +894,6 @@ RSpec.describe "Payments", type: :request do
       }, headers: account_page_headers
     }.not_to change(Payment, :count)
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 end

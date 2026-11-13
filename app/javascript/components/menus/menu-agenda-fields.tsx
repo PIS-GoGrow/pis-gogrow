@@ -75,6 +75,26 @@ export function initialAgenda(
   }
 }
 
+// Qué falta para poder guardar la agenda, o null si está lista. Un plato sin
+// ningún día ("No repetir" sin elegir día) se guarda sin publicar, pero repetir
+// toda la semana o en un rango sin días no tiene sentido: hay que elegir uno.
+export function agendaProblem(
+  draft: AgendaDraft,
+): "weekdays_required" | "incomplete" | null {
+  if (draft.mode !== "single" && draft.weekdays.length === 0)
+    return "weekdays_required"
+  if (draft.weekdays.length === 0) return null
+
+  const complete =
+    draft.mode === "single"
+      ? draft.date !== ""
+      : draft.mode === "range"
+        ? draft.starts_on !== "" && draft.ends_on >= draft.starts_on
+        : draft.starts_on !== ""
+
+  return complete ? null : "incomplete"
+}
+
 export function agendaPayload(draft: AgendaDraft): AgendaPayload {
   if (draft.weekdays.length === 0) return { mode: "none" }
 
@@ -205,6 +225,7 @@ export default function MenuAgendaFields({
                 id="agenda-starts-on"
                 value={value.starts_on}
                 min={today}
+                weekdaysOnly
                 onChange={(starts_on) => onChange({ ...value, starts_on })}
               />
             </Field>
@@ -221,6 +242,7 @@ export default function MenuAgendaFields({
                   value={value.starts_on}
                   min={today}
                   max={value.ends_on || undefined}
+                  weekdaysOnly
                   onChange={(starts_on) => onChange({ ...value, starts_on })}
                 />
               </Field>
@@ -233,6 +255,7 @@ export default function MenuAgendaFields({
                   id="agenda-ends-on"
                   value={value.ends_on}
                   min={value.starts_on || today}
+                  weekdaysOnly
                   onChange={(ends_on) => onChange({ ...value, ends_on })}
                 />
               </Field>

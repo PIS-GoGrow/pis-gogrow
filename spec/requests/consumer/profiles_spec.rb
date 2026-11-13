@@ -5,11 +5,11 @@ require "rails_helper"
 RSpec.describe "Consumer::Profiles", type: :request do
   fixtures :users, :companies, :consumers, :providers, :benefit_configurations, :benefit_rules, :benefits
 
-  describe "GET /profile" do
+  describe "GET /cuenta" do
     it "redirects visitors to the sign in page" do
       get profile_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects a provider to the home page" do
@@ -47,7 +47,7 @@ RSpec.describe "Consumer::Profiles", type: :request do
           percentage: 50,
           monthly_limit: 20,
           max_price: 500.0,
-          due_date: I18n.l(benefits(:monthly).due_date, format: "%d/%m/%Y")
+          due_date: DateFormat.short(benefits(:monthly).due_date)
         )
       end
 
@@ -72,6 +72,36 @@ RSpec.describe "Consumer::Profiles", type: :request do
         get profile_path
 
         expect(inertia.props[:benefit_summary]).to include("total" => 100, "base" => 50)
+      end
+
+      it "lists the employee's coupons with how many meals are left" do
+        coupon = consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:gift), description: "Cupón", percentage: 30,
+          amount: 3, starts_on: Date.current, due_date: Date.current + 5.days
+        )
+        OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: coupon, benefit_used: 1)
+
+        get profile_path
+
+        expect(inertia).to have_props(
+          coupons: [ { id: coupon.id, name: "Cupón", percentage: 30, remaining: 2, period: DateFormat.short_range(Date.current, Date.current + 5.days) } ]
+        )
+      end
+
+      it "does not list expired coupons" do
+        consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:gift),
+          description: "Cupón vencido",
+          percentage: 30,
+          amount: 1,
+          starts_on: Date.current - 5.days,
+          due_date: Date.current - 1.day,
+          status: :current
+        )
+
+        get profile_path
+
+        expect(inertia.props[:coupons]).to be_empty
       end
 
       it "reports how many subsidized meals are left this month" do

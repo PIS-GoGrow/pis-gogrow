@@ -63,13 +63,13 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 const defaultProvider: ProviderOnboardingProvider = {
+  name: "Tu Viandita",
   bank_name: "BROU",
-  bank_account_type: "savings",
-  bank_account_number: "001234567-00001",
-  bank_account_holder: "Tu Vianda SRL",
-  tax_id: "212345670012",
+  bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
+  beneficiary: "Tu Vianda SRL",
   home_delivery: true,
   order_deadline: "12:00",
+  deliveries_configured: false,
 }
 
 const mockConfigurations: SettingsNotificationConfiguration[] = [
@@ -96,9 +96,13 @@ function renderPage(
   return render(
     <Onboarding
       provider={{ ...defaultProvider, ...overrides }}
+      bank_names={["BROU", "Itaú", "Santander"]}
       step={step}
       notification_configurations={mockConfigurations}
       subscribed_keys={["order_created"] as unknown as [string]}
+      closures={[]}
+      today="2026-10-20"
+      order_deadline_passed_today={false}
     />,
   )
 }
@@ -113,22 +117,37 @@ describe("Provider Onboarding Show Page", () => {
     mockProcessing = false
   })
 
+  describe("Paso 'intro': Pantalla inicial", () => {
+    it("muestra el avatar, título, descripción y botones de navegación", () => {
+      renderPage("intro")
+
+      expect(screen.getByText("¿Configuramos tu cuenta?")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Completá los datos necesarios y dejá todo listo para recibir pedidos y gestionar tu negocio.",
+        ),
+      ).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: "Comenzar" })).toHaveAttribute(
+        "href",
+        "/proveedor/primeros-pasos?step=1",
+      )
+      expect(
+        screen.getByRole("button", { name: "Configurar más tarde" }),
+      ).toBeInTheDocument()
+    })
+  })
+
   describe("Paso 1: Datos de cobro", () => {
     it("muestra los campos de cobro y el progreso del paso 1", () => {
       renderPage("1")
 
       expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument()
       expect(screen.getByText("Datos de cobro")).toBeInTheDocument()
-      expect(screen.getByLabelText("Banco")).toHaveValue("BROU")
-      expect(screen.getByLabelText("Número de cuenta")).toHaveValue(
-        "001234567-00001",
+      expect(screen.getByLabelText("Banco")).toHaveTextContent("BROU")
+      expect(screen.getByLabelText("Datos de la cuenta")).toHaveValue(
+        "Cuenta: 001234567-00001\nMoneda: UYU",
       )
-      expect(screen.getByLabelText("Titular de la cuenta")).toHaveValue(
-        "Tu Vianda SRL",
-      )
-      expect(screen.getByLabelText("RUT o CI del titular")).toHaveValue(
-        "212345670012",
-      )
+      expect(screen.getByLabelText("Beneficiario")).toHaveValue("Tu Vianda SRL")
       expect(
         screen.queryByLabelText("Volver al paso anterior"),
       ).not.toBeInTheDocument()
@@ -143,7 +162,8 @@ describe("Provider Onboarding Show Page", () => {
     it("muestra errores de validación en los campos cuando el servidor los devuelve", () => {
       mockErrors = {
         bank_name: "El banco no puede estar en blanco",
-        tax_id: "El RUT debe tener 12 dígitos",
+        bank_account_details:
+          "Los datos de la cuenta no pueden estar en blanco",
       }
 
       renderPage("1")
@@ -152,20 +172,47 @@ describe("Provider Onboarding Show Page", () => {
         screen.getByText("El banco no puede estar en blanco"),
       ).toBeInTheDocument()
       expect(
-        screen.getByText("El RUT debe tener 12 dígitos"),
+        screen.getByText("Los datos de la cuenta no pueden estar en blanco"),
       ).toBeInTheDocument()
+    })
+
+    it("deshabilita Continuar mientras falte un dato de cobro obligatorio", () => {
+      renderPage("1", { beneficiary: undefined })
+
+      expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled()
     })
   })
 
-  describe("Paso 2: Hora de cierre", () => {
-    it("muestra el campo de hora de cierre y el botón de volver", () => {
+  describe("Paso 2: Configurar pedidos", () => {
+    it("muestra las tarjetas de hora de cierre y cierres programados y el botón de volver", () => {
       renderPage("2")
 
       expect(screen.getByText("Paso 2 de 4")).toBeInTheDocument()
-      expect(screen.getByLabelText("Hora de cierre")).toHaveValue("12:00")
+      expect(screen.getByText("Configurá tus pedidos")).toBeInTheDocument()
       expect(
         screen.getByLabelText("Volver al paso anterior"),
       ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Continuar" }),
+      ).toBeInTheDocument()
+    })
+
+    it("deshabilita Continuar hasta que haya una hora de cierre configurada", () => {
+      renderPage("2", { order_deadline: undefined })
+
+      expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled()
+    })
+
+    it("avanza al paso 3 al continuar cuando ya hay hora de cierre", async () => {
+      renderPage("2")
+
+      await user.click(screen.getByRole("button", { name: "Continuar" }))
+
+      expect(patchMock).toHaveBeenCalledWith(
+        "/proveedor/primeros-pasos",
+        { step: 2, commit: "continue" },
+        expect.objectContaining({ preserveScroll: true }),
+      )
     })
 
     it("permite volver al paso anterior haciendo clic en el botón de atrás", async () => {
@@ -175,7 +222,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(backButton)
 
       expect(getMock).toHaveBeenCalledWith(
-        "/provider/onboarding",
+        "/proveedor/primeros-pasos",
         { step: 1 },
         { preserveScroll: true },
       )
@@ -183,26 +230,33 @@ describe("Provider Onboarding Show Page", () => {
   })
 
   describe("Paso 3: Entregas", () => {
-    it("muestra la opción de entregas personalizadas con su switch", () => {
-      renderPage("3", { home_delivery: true })
+    it("muestra las dos opciones sin preselección y Continuar deshabilitado", () => {
+      renderPage("3", { home_delivery: true, deliveries_configured: false })
 
       expect(screen.getByText("Paso 3 de 4")).toBeInTheDocument()
-      expect(screen.getByText("Direcciones personalizadas")).toBeInTheDocument()
-      expect(screen.getByRole("switch")).toBeChecked()
+      expect(screen.getByText("Solo Oficinas")).toBeInTheDocument()
+      expect(
+        screen.getByText("Oficinas y direcciones personalizadas"),
+      ).toBeInTheDocument()
+
+      const radios = screen.getAllByRole("radio")
+      expect(radios[0]).not.toBeChecked()
+      expect(radios[1]).not.toBeChecked()
+      expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled()
     })
 
-    it("envía el cambio de modalidad de entrega al continuar", async () => {
-      renderPage("3", { home_delivery: true })
+    it("habilita Continuar y envía la opción elegida", async () => {
+      renderPage("3", { home_delivery: true, deliveries_configured: false })
 
-      const toggle = screen.getByRole("switch")
-      await user.click(toggle)
-      expect(toggle).not.toBeChecked()
+      const radios = screen.getAllByRole("radio")
+      await user.click(radios[0]) // Solo Oficinas
 
       const continueBtn = screen.getByRole("button", { name: "Continuar" })
+      expect(continueBtn).toBeEnabled()
       await user.click(continueBtn)
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/onboarding",
+        "/proveedor/primeros-pasos",
         { step: 3, commit: "continue", home_delivery: false },
         expect.objectContaining({ preserveScroll: true }),
       )
@@ -236,7 +290,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(finishBtn)
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/onboarding",
+        "/proveedor/primeros-pasos",
         { step: 4, commit: "continue", subscribed_ids: [10, 20] },
         expect.objectContaining({ preserveScroll: true }),
       )
@@ -256,7 +310,7 @@ describe("Provider Onboarding Show Page", () => {
 
       const ctaLink = screen.getByRole("link", { name: "Ir al Inicio" })
       expect(ctaLink).toBeInTheDocument()
-      expect(ctaLink).toHaveAttribute("href", "/provider/dashboard")
+      expect(ctaLink).toHaveAttribute("href", "/proveedor/inicio")
     })
   })
 
@@ -270,7 +324,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(skipButtons[1]) // footer button
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/onboarding",
+        "/proveedor/primeros-pasos",
         { step: 1, commit: "skip" },
         { preserveScroll: true },
       )

@@ -7,14 +7,14 @@ RSpec.describe "Settings::Emails", type: :request do
 
   before { sign_in users(:one) }
 
-  describe "GET /settings/email" do
+  describe "GET /configuracion/correo-electronico" do
     it "renders the email settings page" do
       get settings_email_path
       expect(response).to have_http_status(:success)
     end
   end
 
-  describe "PATCH /settings/email" do
+  describe "PATCH /configuracion/correo-electronico" do
     context "with valid password challenge" do
       it "updates the email" do
         patch settings_email_path, params: {

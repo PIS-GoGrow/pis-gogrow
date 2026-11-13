@@ -31,6 +31,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
   end
 
   before do
+    provider.update!(bank_name: "Banco Itaú", bank_account_details: "1951234", beneficiary: "Noelia Patricia Pinheiro")
     Notification::Configuration.find_or_create_by!(key: "company_payments") do |configuration|
       configuration.roles = %w[admin]
     end
@@ -47,18 +48,17 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
   # RR.HH. sube el comprobante del pago de la empresa desde Pagos.
   def hr_uploads_receipt
     sign_in admin_user, role: :admin
-    visit admin_payments_path
+    visit_hydrated admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
+      attach_file("payment-receipt-#{account.id}", receipt_file, make_visible: true)
+      expect(page).to have_button("Subir comprobante de pago", disabled: false)
       click_on "Subir comprobante de pago"
     end
 
-    within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
-      click_on "Subir comprobante de pago"
+    using_wait_time(90) do
+      expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     end
-
-    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     click_on I18n.t("pages.accounts.show.receipt_success_action")
   end
 
@@ -100,10 +100,11 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     sign_out
 
     open_admin_home
+    open_notifications
 
     expect(page).to have_content(approved_title)
     expect(page).to have_content(
-      "#{provider_user.name} confirmó el pago de GoGrow por " \
+      "#{provider_user.name} aprobó el pago de GoGrow por " \
         "#{I18n.l(account.month, format: :month_name_year).downcase} (#{account.formatted_amount})."
     )
   end

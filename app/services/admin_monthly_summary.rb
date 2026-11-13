@@ -39,9 +39,10 @@ class AdminMonthlySummary
   def pending = amount_of(accounts.reject { it.collection_status == "approved" })
 
   # Lo que se sumaría al gasto si el proveedor confirma los pedidos que todavía
-  # no confirmó, con el IVA de la cuenta a la que van.
+  # no confirmó y se entregan los ya confirmados, con el IVA de la cuenta a la
+  # que van.
   def projected
-    subsidies = Order.pending
+    subsidies = Order.pending.or(Order.confirmed.where(delivery_date: Date.current.tomorrow..))
                      .joins(:order_accounts)
                      .where(order_accounts: { account_id: accounts.map(&:id) })
                      .group("order_accounts.account_id")
@@ -66,11 +67,12 @@ class AdminMonthlySummary
             .sort_by(&:name)
   end
 
-  # Los mismos empleados que Empleados > Pendientes: los que no saldaron el mes.
+  # Los mismos importes que Empleados: la deuda de todos los períodos, sin
+  # importar el mes elegido.
   def debtors(limit: 3)
-    AdminConsumerSummary.rows_for(@company, month: @month)
-                        .select { it.status.in?(%w[pending rejected submitted]) }
-                        .sort_by { [ -it.amount, it.name ] }
+    AdminConsumerSummary.debt_rows_for(@company)
+                        .select { it.debt.positive? }
+                        .sort_by { [ -it.debt, it.name ] }
                         .first(limit)
   end
 
@@ -95,7 +97,7 @@ class AdminMonthlySummary
   end
 
   def confirmed_orders
-    Order.confirmed.joins(:order_accounts).where(order_accounts: { account_id: accounts.map(&:id) })
+    Order.consumed.joins(:order_accounts).where(order_accounts: { account_id: accounts.map(&:id) })
   end
 
   def consumers_count

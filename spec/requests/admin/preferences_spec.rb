@@ -6,11 +6,11 @@ require "inertia_rails/rspec"
 RSpec.describe "Admin::Preferences", type: :request do
   fixtures :users
 
-  describe "GET /admin/preferences" do
+  describe "GET /admin/preferencias" do
     it "redirects visitors without a session to sign in" do
       get admin_preferences_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "rejects sessions from another role" do

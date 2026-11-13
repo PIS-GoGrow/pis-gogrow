@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import MenuAgendaFields, {
   type AgendaDraft,
   agendaPayload,
+  agendaProblem,
   cwday,
   initialAgenda,
 } from "./menu-agenda-fields"
@@ -28,7 +29,6 @@ describe("MenuAgendaFields helpers", () => {
       date: null,
       starts_on: null,
       ends_on: null,
-      amount: null,
     })
 
     expect(draftFromNone.mode).toBe("single")
@@ -40,12 +40,58 @@ describe("MenuAgendaFields helpers", () => {
       date: null,
       starts_on: "2030-01-09",
       ends_on: null,
-      amount: 10,
     })
 
     expect(draftFromWeekly.mode).toBe("weekly")
     expect(draftFromWeekly.weekdays).toEqual([1, 5])
-    expect(draftFromWeekly).not.toHaveProperty("amount")
+  })
+
+  describe("agendaProblem", () => {
+    const draft = (overrides: Partial<AgendaDraft>): AgendaDraft => ({
+      mode: "single",
+      weekdays: [],
+      date: "",
+      starts_on: "2030-01-09",
+      ends_on: "",
+      ...overrides,
+    })
+
+    it("pide al menos un día al repetir todas las semanas", () => {
+      expect(agendaProblem(draft({ mode: "weekly" }))).toBe("weekdays_required")
+    })
+
+    it("pide al menos un día al repetir en un rango", () => {
+      expect(
+        agendaProblem(draft({ mode: "range", ends_on: "2030-01-15" })),
+      ).toBe("weekdays_required")
+    })
+
+    it("deja guardar sin días cuando no se repite", () => {
+      expect(agendaProblem(draft({ mode: "single" }))).toBeNull()
+    })
+
+    it("acepta repetir todas las semanas con un día elegido", () => {
+      expect(agendaProblem(draft({ mode: "weekly", weekdays: [3] }))).toBeNull()
+    })
+
+    it("pide las fechas cuando faltan teniendo días", () => {
+      expect(
+        agendaProblem(draft({ mode: "weekly", weekdays: [3], starts_on: "" })),
+      ).toBe("incomplete")
+      expect(
+        agendaProblem(draft({ mode: "single", weekdays: [3], date: "" })),
+      ).toBe("incomplete")
+      expect(
+        agendaProblem(
+          draft({
+            mode: "range",
+            weekdays: [3],
+            starts_on: "2030-01-15",
+            ends_on: "2030-01-10",
+          }),
+        ),
+      ).toBe("incomplete")
+    })
   })
 
   it("returns mode none in agendaPayload when weekdays is empty", () => {
@@ -122,8 +168,12 @@ describe("MenuAgendaFields component", () => {
       />,
     )
 
-    expect(screen.getByLabelText("Desde")).toHaveTextContent("Enero 10, 2030")
-    expect(screen.getByLabelText("Hasta")).toHaveTextContent("Enero 15, 2030")
+    expect(screen.getByLabelText("Desde")).toHaveTextContent(
+      "Jueves 10 de enero",
+    )
+    expect(screen.getByLabelText("Hasta")).toHaveTextContent(
+      "Martes 15 de enero",
+    )
   })
 
   it("renders error message when error prop is provided", () => {
@@ -173,6 +223,39 @@ describe("MenuAgendaFields component", () => {
       expect.objectContaining({
         mode: "single",
       }),
+    )
+  })
+
+  it("deshabilita sábados y domingos en los selectores de fecha de la agenda", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <MenuAgendaFields
+        value={{
+          ...defaultDraft,
+          mode: "range",
+          starts_on: "2030-01-10",
+          ends_on: "2030-01-15",
+        }}
+        onChange={vi.fn()}
+        today="2030-01-09"
+        maximumPublishDate="2030-01-18"
+      />,
+    )
+
+    const fromButton = screen.getByLabelText("Desde")
+    await user.click(fromButton)
+
+    for (const weekend of screen.getAllByRole("button", {
+      name: /^(sábado|domingo),/,
+    })) {
+      expect(weekend).toBeDisabled()
+    }
+    const weekdays = screen.getAllByRole("button", {
+      name: /^(lunes|martes|miércoles|jueves|viernes),/,
+    })
+    expect(weekdays.some((weekday) => !weekday.hasAttribute("disabled"))).toBe(
+      true,
     )
   })
 })

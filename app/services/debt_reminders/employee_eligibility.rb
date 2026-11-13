@@ -30,7 +30,14 @@ module DebtReminders
       @overdue_accounts ||= consumer.accounts.select { Eligibility.new(account: it).debt_reason.nil? }
     end
 
-    def amount = overdue_accounts.sum { it.amount || 0 }
+    def amount = overdue_accounts.sum { it.outstanding_amount || 0 }
+
+    # Los proveedores a los que les debe, con el nombre que el empleado conoce.
+    # Un mismo proveedor puede tener varias cuentas vencidas, una por mes, así
+    # que se nombra una sola vez.
+    def provider_names
+      overdue_accounts.map { it.provider.user&.name.presence || unknown_provider }.uniq.sort
+    end
 
     def sent_count = history.length
 
@@ -41,6 +48,10 @@ module DebtReminders
     end
 
     private
+
+    # Un proveedor puede quedarse sin usuario (la baja del usuario lo desvincula):
+    # el recordatorio igual tiene que poder nombrarlo en la frase.
+    def unknown_provider = I18n.t("notifications.#{EVENT}.unknown_provider")
 
     def history
       @history ||= @notifications ||

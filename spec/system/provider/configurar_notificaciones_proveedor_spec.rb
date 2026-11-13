@@ -16,7 +16,7 @@ RSpec.describe "Configurar las notificaciones del proveedor" do
   fixtures :users, :providers, :consumers, :companies, :admins
 
   let(:provider_user) { users(:provider_user) }
-  let(:orders_title) { "Pedidos nuevos" }
+  let(:orders_title) { "Nuevos pedidos" }
   let(:payments_title) { "Comprobantes de pago" }
   let(:provider_orders) { Notification::Configuration.find_by!(key: "provider_orders") }
 

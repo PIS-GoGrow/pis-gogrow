@@ -1,0 +1,57 @@
+# frozen_string_literal: true
+
+class Consumer::OrderPricingSerializer
+  def initialize(items, pricings)
+    @items = items
+    @pricings = pricings
+  end
+
+  def as_json(*)
+    {
+      subtotal: lines.sum { |l| l[:subtotal] },
+      discount: lines.sum { |l| l[:discount] },
+      total: lines.sum { |l| l[:total] },
+      lines: lines,
+      subsidizedQuantity: subsidized_quantities.sum,
+      fullPriceQuantity: @items.zip(subsidized_quantities).sum { |item, subsidized| item[:quantity] - subsidized },
+      baseSubsidizedQuantity: @pricings.sum { |pricing| pricing[1].base_subsidized_quantity },
+      withoutBaseSubsidyQuantity: @items.sum { |item| item[:quantity] } - @pricings.sum { |pricing| pricing[1].base_subsidized_quantity },
+      weeklyLimitQuantity: @pricings.sum { |pricing| pricing[1].weekly_limit_quantity }
+    }
+  end
+
+  private
+
+  def lines
+    @lines ||= @items.zip(@pricings).map { |item, pricing| line_for(item, pricing[1]) }
+  end
+
+  def subsidized_quantities
+    @subsidized_quantities ||= @pricings.map { |pricing| pricing[1].subsidized_quantity }
+  end
+
+  def line_for(item, result)
+    quantity = item[:quantity]
+    price = result.price.to_f
+    discount = price - result.discounted_price.to_f
+
+    {
+      subtotal: price,
+      discount: discount,
+      total: price - discount,
+      tiers: tiers_for(result, price, quantity)
+    }
+  end
+
+  def tiers_for(result, price, quantity)
+    result.benefits.map do |benefit, benefit_used|
+      {
+        id: benefit.id,
+        name: benefit.benefit_configuration.name,
+        percentage: benefit.percentage,
+        quantity: benefit_used.units_used,
+        discount: benefit_used.discount
+      }
+    end
+  end
+end

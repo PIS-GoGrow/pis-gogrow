@@ -1,24 +1,17 @@
+import { WhatsappIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Head, Link } from "@inertiajs/react"
-import {
-  ArrowLeft,
-  ChevronRight,
-  CircleCheck,
-  TriangleAlert,
-  Users,
-} from "lucide-react"
-import { useState } from "react"
+import { ArrowLeft, CircleCheck, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import ConsumerMonthSheet from "@/components/admin/consumer-month-sheet"
+import ConsumerYearHistory from "@/components/admin/consumer-year-history"
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import BenefitSummaryCard from "@/components/benefit-summary-card"
 import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
-import HeadingSmall from "@/components/heading-small"
-import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -26,26 +19,11 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
 import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
-import { cn } from "@/lib/utils"
 import { adminConsumers, adminDebtReminders } from "@/routes"
 import type { AdminConsumersShow, BreadcrumbItem } from "@/types"
 
@@ -61,14 +39,6 @@ export default function Show({
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
   const getInitials = useInitials()
-
-  const years = [...new Set(months.map((month) => month.year))]
-  const [year, setYear] = useState(String(years[0] ?? ""))
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const [sheetOpen, setSheetOpen] = useState(false)
-
-  const visibleMonths = months.filter((month) => String(month.year) === year)
-  const selectedMonth = months.find((month) => month.key === selectedKey)
 
   const progress =
     summary.meals_limit > 0
@@ -96,21 +66,18 @@ export default function Show({
 
       <PageContainer
         title={t(`${page}.title`)}
+        titleVariant="prominent"
+        mobileCentered
         back={
-          <Link
-            href={adminConsumers.index()}
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "-ml-2.5",
-            )}
-          >
-            <ArrowLeft aria-hidden="true" />
-            {t(`${page}.back`)}
-          </Link>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={adminConsumers.index()} aria-label={t(`${page}.back`)}>
+              <ArrowLeft aria-hidden="true" />
+            </Link>
+          </Button>
         }
       >
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="gap-4 py-4">
+          <Card className="gap-4 py-4 lg:col-span-2">
             <CardContent className="grid gap-4 px-4">
               <div className="flex items-center gap-3">
                 <Avatar size="lg">
@@ -120,7 +87,7 @@ export default function Show({
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{consumer.name}</p>
-                  <p className="text-muted-foreground truncate text-sm">
+                  <p className="text-muted-foreground hidden truncate text-sm md:block">
                     {consumer.email}
                   </p>
                 </div>
@@ -135,6 +102,14 @@ export default function Show({
                     employeeName={consumer.name}
                     amount={debt_reminder.amount}
                     translationKey={`${page}.reminder`}
+                    icon={
+                      <HugeiconsIcon
+                        icon={WhatsappIcon}
+                        size={16}
+                        strokeWidth={1.8}
+                        aria-hidden="true"
+                      />
+                    }
                   />
 
                   {debt_reminder.blocked_reason === "cooldown" && (
@@ -156,8 +131,6 @@ export default function Show({
               )}
             </CardContent>
           </Card>
-
-          <div></div>
 
           <Card className="bg-muted/50 gap-3 py-4">
             <CardHeader className="px-4">
@@ -218,75 +191,10 @@ export default function Show({
           />
         </div>
 
-        <div className="flex items-center justify-between gap-4">
-          <HeadingSmall title={t(`${page}.history`)} />
-
-          {years.length > 1 && (
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger size="sm" aria-label={t(`${page}.year_label`)}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((option) => (
-                  <SelectItem key={option} value={String(option)}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-
-        {months.length === 0 ? (
-          <Empty className="border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Users aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyTitle>{t(`${page}.history_empty_title`)}</EmptyTitle>
-              <EmptyDescription>
-                {t(`${page}.history_empty_description`)}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {visibleMonths.map((month) => (
-              <ListItemCard
-                key={month.key}
-                className="hover:bg-accent/40 focus-within:ring-ring/50 relative transition-colors focus-within:ring-[3px]"
-              >
-                <CardContent>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedKey(month.key)
-                      setSheetOpen(true)
-                    }}
-                    aria-label={t(`${page}.view_month`, { month: month.label })}
-                    className="flex w-full items-center gap-3 text-left outline-none after:absolute after:inset-0"
-                  >
-                    <span className="flex-1 font-medium">{month.label}</span>
-                    <span className="font-semibold">
-                      {formatMoney(month.amount)}
-                    </span>
-                    <ConsumptionStatusBadge status={month.status} />
-                    <ChevronRight
-                      className="text-muted-foreground size-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </CardContent>
-              </ListItemCard>
-            ))}
-          </div>
-        )}
-
-        <ConsumerMonthSheet
-          month={selectedMonth}
+        <ConsumerYearHistory
+          key={consumer.id}
+          months={months}
           companyName={consumer.company_name}
-          open={sheetOpen}
-          onClose={() => setSheetOpen(false)}
         />
       </PageContainer>
     </AppLayout>

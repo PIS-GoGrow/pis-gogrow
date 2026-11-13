@@ -30,7 +30,7 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
     end
   end
 
-  describe "GET /admin/benefit_configurations" do
+  describe "GET /admin/subsidios" do
     it "expone los subsidios especiales activos y los empleados de la compañía" do
       special = create_special_subsidy
       deactivated = create_special_subsidy.tap { it.deactivate!(by: admin_user) }
@@ -51,7 +51,7 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
     end
   end
 
-  describe "POST /admin/special_subsidies" do
+  describe "POST /admin/subsidios-especiales" do
     it "crea el subsidio especial para los empleados elegidos" do
       expect { post admin_special_subsidies_path, params: }.to change(BenefitConfiguration, :count).by(1)
 
@@ -70,6 +70,15 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
 
       follow_redirect!
       expect(inertia.props[:errors].keys).to include("name", "consumer_ids", "limit", "validity_amount")
+    end
+
+    it "explica en días el tope de validez del cumpleaños" do
+      params[:special_subsidy].merge!(condition: { type: "birthday", limit: 1, validity_amount: 30, validity_unit: "weeks" })
+
+      post(admin_special_subsidies_path, params:)
+
+      follow_redirect!
+      expect(inertia.props[:errors]["validity_amount"]).to eq([ "La validez no puede superar los 100 días." ])
     end
 
     it "no acepta empleados de otra compañía" do
@@ -104,11 +113,11 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
 
       post admin_special_subsidies_path, params: params
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
   end
 
-  describe "PATCH /admin/special_subsidies/:id" do
+  describe "PATCH /admin/subsidios-especiales/:id" do
     it "modifica el subsidio y audita el cambio" do
       special = create_special_subsidy
 
@@ -117,7 +126,7 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
       expect(response).to redirect_to(admin_benefit_configurations_path)
       expect(special.reload).to have_attributes(name: "2 años", subsidy_percentage: 25, applies_to_all: false)
       expect(special.benefit_rules.sole).to be_a(SeniorityBenefit)
-      expect(special.benefit_configuration_changes.map(&:action)).to eq(%w[created updated])
+      expect(special.benefit_configuration_changes.order(:id).map(&:action)).to eq(%w[created updated])
     end
 
     it "no permite editar el subsidio base" do
@@ -137,7 +146,7 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
     end
   end
 
-  describe "DELETE /admin/special_subsidies/:id" do
+  describe "DELETE /admin/subsidios-especiales/:id" do
     it "desactiva el subsidio en lugar de borrarlo" do
       special = create_special_subsidy
 

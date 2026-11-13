@@ -5,7 +5,7 @@ class Admin::DashboardController < Admin::InertiaController
     company = Current.user.admin.company
     summary = AdminMonthlySummary.new(company, selected_month)
 
-    @today = I18n.l(Date.current, format: "%A %-d de %B").capitalize
+    @today = DateFormat.long(Date.current)
     @month = summary.month.strftime("%Y-%m")
     @current_month = Date.current.strftime("%Y-%m")
     @months = month_options(summary.months)

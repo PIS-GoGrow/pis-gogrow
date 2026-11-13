@@ -9,10 +9,15 @@ class Admin::ConsumerMonthSerializer < ApplicationSerializer
     I18n.l(row.month, format: :month_name_year)
   end
 
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | null"
+  typelize :string
+  attribute :name do |row|
+    I18n.l(row.month, format: "%B").upcase_first
+  end
+
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial' | null"
   attribute :status, &:status
 
-  typelize "Array<{ name: string; amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' }>"
+  typelize "Array<{ id: number; name: string; amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' | 'partial'; receipt_url: string | null }>"
   attribute :providers do |row|
     row.providers.map(&:to_h)
   end

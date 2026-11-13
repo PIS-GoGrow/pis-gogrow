@@ -126,16 +126,16 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(build_base_subsidy(limit: nil)).not_to be_valid
     end
 
-    it "accepts a positive decimal max_voucher_price" do
+    it "rejects a positive decimal max_voucher_price" do
       benefit_configurations(:monthly).destroy
 
-      expect(build_base_subsidy(max_price: 150.75)).to be_valid
+      expect(build_base_subsidy(max_price: 150.75)).not_to be_valid
     end
 
-    it "accepts the minimum positive max_voucher_price" do
+    it "accepts the minimum positive integer max_voucher_price" do
       benefit_configurations(:monthly).destroy
 
-      expect(build_base_subsidy(max_price: 0.01)).to be_valid
+      expect(build_base_subsidy(max_price: 1)).to be_valid
     end
 
     it "rejects a missing company" do
@@ -214,7 +214,30 @@ RSpec.describe BenefitConfiguration, type: :model do
     end
   end
 
+  describe "apply_to_all_consumers on the monthly assignment day" do
+    around { |example| travel_to(Calendar.new.monthly_benefit_assignment.noon) { example.run } }
+
+    before do
+      BenefitConfiguration.destroy_all
+      Benefit.destroy_all
+    end
+
+    it "assigns next month's benefit too" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save
+      benefit_configuration.consumers = [ consumers(:one) ]
+
+      benefit_configuration.apply_to_all_consumers
+
+      expect(consumers(:one).benefits.future.sole).to have_attributes(
+        percentage: 50, amount: 20, max_price: 300, due_date: Date.current.next_month.end_of_month
+      )
+    end
+  end
+
   describe "apply_to_all_consumers" do
+    around { |example| travel_to(Date.current.beginning_of_month.noon) { example.run } }
+
     before do
       BenefitConfiguration.destroy_all
       Benefit.destroy_all
@@ -230,6 +253,7 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(consumers(:one).benefits.count).to eq(1)
       expect(consumers(:one).benefits.first.percentage).to eq(50)
       expect(consumers(:one).benefits.first.amount).to eq(20)
+      expect(consumers(:one).benefits.first.max_price).to eq(300)
       expect(consumers(:one).benefits.first.due_date).to eq(Date.current.end_of_month)
     end
 
@@ -262,7 +286,7 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(consumers(:one).benefits.first.due_date).to eq(Date.current + 1)
     end
 
-    it "does not apply gift benefits to associated consumers when out of date" do
+    it "applies gift benefits that start later, usable from their start date" do
       benefit_configuration = build_configuration
       benefit_configuration.benefit_rules.new(
         type: GiftBenefit.name,
@@ -274,8 +298,10 @@ RSpec.describe BenefitConfiguration, type: :model do
       benefit_configuration.consumers = [ consumers(:one) ]
 
       benefit_configuration.apply_to_all_consumers
-      expect(consumers(:one).benefits.count).to eq(0)
+      expect(consumers(:one).benefits.sole).to have_attributes(starts_on: Date.current + 1, due_date: Date.current + 1)
+    end
 
+    it "does not apply gift benefits to associated consumers when out of date" do
       benefit_configuration = build_configuration
       benefit_configuration.benefit_rules.new(
         type: GiftBenefit.name,
@@ -288,6 +314,20 @@ RSpec.describe BenefitConfiguration, type: :model do
 
       benefit_configuration.apply_to_all_consumers
       expect(consumers(:one).benefits.count).to eq(0)
+    end
+  end
+
+  describe "#benefit_max_price" do
+    it "devuelve el max_price mínimo entre las reglas que lo definen" do
+      benefit_configurations(:monthly).destroy
+      config = build_base_subsidy(max_price: 350)
+
+      expect(config.send(:benefit_max_price)).to eq(350)
+    end
+
+    it "devuelve nil cuando ninguna regla define un precio máximo" do
+      config = build_configuration
+      expect(config.send(:benefit_max_price)).to be_nil
     end
   end
 end

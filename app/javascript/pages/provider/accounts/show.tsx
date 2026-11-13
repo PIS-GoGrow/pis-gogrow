@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from "@inertiajs/react"
-import { ChevronRight, LogOut } from "lucide-react"
+import { ChevronRight, CircleAlert, LogOut } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import PageContainer from "@/components/page-container"
@@ -17,8 +17,11 @@ import {
   settingsProfiles,
 } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
+import type { ProviderAccountsShow } from "@/types/serializers/ProviderAccountsShow"
 
-export default function ProviderAccount() {
+export default function ProviderAccount({
+  incomplete_sections,
+}: ProviderAccountsShow) {
   const { t } = useTranslation()
   const { auth } = usePage().props
   const getInitials = useInitials()
@@ -29,26 +32,31 @@ export default function ProviderAccount() {
   ]
   const settings = [
     {
+      section: "profile",
       title: t(`${account}.profile`),
       description: t(`${account}.profile_description`),
       href: settingsProfiles.show().url,
     },
     {
+      section: "payment_details",
       title: t(`${account}.payment_details`),
       description: t(`${account}.payment_details_description`),
       href: providerPaymentDetails.show().url,
     },
     {
+      section: "operational_settings",
       title: t(`${account}.operational_settings`),
       description: t(`${account}.operational_settings_description`),
       href: providerOperationalSettings.show().url,
     },
     {
+      section: "deliveries",
       title: t(`${account}.deliveries`),
       description: t(`${account}.deliveries_description`),
       href: providerDeliveries.show().url,
     },
     {
+      section: "notifications",
       title: t(`${account}.notifications`),
       description: t(`${account}.notifications_description`),
       href: settingsNotifications.index().url,
@@ -97,7 +105,8 @@ export default function ProviderAccount() {
             {t(`${account}.settings`)}
           </h3>
           <div className="border-t">
-            {settings.map(({ title, description, href }) => {
+            {settings.map(({ section, title, description, href }) => {
+              const incomplete = incomplete_sections.includes(section)
               const content = (
                 <>
                   <span className="min-w-0 flex-1 text-left">
@@ -106,6 +115,12 @@ export default function ProviderAccount() {
                       {description}
                     </span>
                   </span>
+                  {incomplete && (
+                    <CircleAlert
+                      className="size-5 shrink-0 text-amber-500"
+                      aria-label={t(`${account}.incomplete`)}
+                    />
+                  )}
                   <ChevronRight
                     className="text-muted-foreground size-5 shrink-0"
                     aria-hidden="true"

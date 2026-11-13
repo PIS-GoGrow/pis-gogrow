@@ -4,11 +4,10 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
-import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -76,6 +75,7 @@ export default function Index({
 
       <PageContainer
         title={t(`${page}.title`)}
+        titleVariant="prominent"
         badge={
           <Badge variant="secondary">
             <span aria-hidden="true">{inTab.length}</span>
@@ -103,7 +103,7 @@ export default function Index({
 
         <div className="relative">
           <Search
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 md:right-auto md:left-3"
             aria-hidden="true"
           />
           <Input
@@ -112,12 +112,12 @@ export default function Index({
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t(`${page}.search_placeholder`)}
             aria-label={t(`${page}.search_label`)}
-            className="pl-9"
+            className="pr-9 md:pr-3 md:pl-9"
           />
         </div>
 
         {shown.length === 0 ? (
-          <Empty className="border">
+          <Empty className="min-h-[50svh] border-0 md:min-h-0 md:border">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <Users aria-hidden="true" />
@@ -129,43 +129,38 @@ export default function Index({
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <Card className="gap-0 divide-y overflow-hidden rounded-xl py-0 shadow-sm">
             {shown.map((consumer) => (
-              <ListItemCard
+              <div
                 key={consumer.id}
-                className="hover:bg-accent/40 focus-within:ring-ring/50 relative transition-colors focus-within:ring-[3px]"
+                className="hover:bg-accent/40 focus-within:ring-ring/50 relative flex items-center gap-3 px-4 py-3.5 transition-colors focus-within:ring-[3px]"
               >
-                <CardContent className="flex items-center gap-3">
-                  <Avatar size="lg">
-                    <AvatarFallback className="text-foreground text-xs font-semibold">
-                      {getInitials(consumer.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                <Avatar size="lg">
+                  <AvatarImage
+                    src={consumer.avatar_url ?? undefined}
+                    alt={consumer.name}
+                  />
+                  <AvatarFallback className="text-foreground text-xs font-semibold">
+                    {getInitials(consumer.name)}
+                  </AvatarFallback>
+                </Avatar>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">
-                      <Link
-                        href={adminConsumers.show(consumer.id).url}
-                        className="after:absolute after:inset-0 hover:underline"
-                      >
-                        {consumer.name}
-                      </Link>
-                    </p>
-                    <p className="text-muted-foreground truncate text-sm">
-                      {consumer.email}
-                    </p>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={adminConsumers.show(consumer.id).url}
+                    className="block truncate font-medium after:absolute after:inset-0 hover:underline"
+                  >
+                    {consumer.name}
+                  </Link>
+                </div>
 
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-semibold">
-                      {formatMoney(consumer.amount)}
-                    </span>
-                    <ConsumptionStatusBadge status={consumer.status} />
-                  </div>
-                </CardContent>
-              </ListItemCard>
+                <span className="shrink-0 font-semibold">
+                  {formatMoney(consumer.amount)}
+                </span>
+                <ConsumptionStatusBadge status={consumer.status} />
+              </div>
             ))}
-          </div>
+          </Card>
         )}
       </PageContainer>
     </AppLayout>

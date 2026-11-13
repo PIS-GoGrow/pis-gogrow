@@ -6,7 +6,7 @@ require "inertia_rails/rspec"
 RSpec.describe "Provider::OperationalSettings", type: :request do
   fixtures :users, :providers
 
-  describe "GET /provider/operational_settings" do
+  describe "GET /provider/configuracion-operativa" do
     it "redirects visitors without a session to the sign in page" do
       get provider_operational_settings_path
 
@@ -73,8 +73,8 @@ RSpec.describe "Provider::OperationalSettings", type: :request do
         get provider_operational_settings_path
 
         expect(inertia.props[:closures]).to match([
-          a_hash_including(reason: "Vacaciones", starts_on: "2026-10-19", ends_on: "2026-10-21", period: "19 al 21 de octubre de 2026"),
-          a_hash_including(reason: "Obra", starts_on: "2026-11-21", ends_on: "2026-11-22", period: "21 al 22 de noviembre de 2026")
+          a_hash_including(reason: "Vacaciones", starts_on: "2026-10-19", ends_on: "2026-10-21", period: "19/10/26 al 21/10/26"),
+          a_hash_including(reason: "Obra", starts_on: "2026-11-21", ends_on: "2026-11-22", period: "21/11/26 al 22/11/26")
         ])
       end
 
@@ -99,10 +99,10 @@ RSpec.describe "Provider::OperationalSettings", type: :request do
       end
 
       {
-        "a single day" => [ Date.new(2027, 6, 9), Date.new(2027, 6, 9), "9 de junio de 2027" ],
-        "a range within a month" => [ Date.new(2027, 6, 9), Date.new(2027, 6, 27), "9 al 27 de junio de 2027" ],
-        "a range across months" => [ Date.new(2027, 6, 28), Date.new(2027, 7, 3), "28 de junio al 3 de julio de 2027" ],
-        "a range across years" => [ Date.new(2026, 12, 28), Date.new(2027, 1, 3), "28 de diciembre de 2026 al 3 de enero de 2027" ]
+        "a single day" => [ Date.new(2027, 6, 9), Date.new(2027, 6, 9), "09/06/27" ],
+        "a range within a month" => [ Date.new(2027, 6, 9), Date.new(2027, 6, 27), "09/06/27 al 27/06/27" ],
+        "a range across months" => [ Date.new(2027, 6, 28), Date.new(2027, 7, 3), "28/06/27 al 03/07/27" ],
+        "a range across years" => [ Date.new(2026, 12, 28), Date.new(2027, 1, 3), "28/12/26 al 03/01/27" ]
       }.each do |description, (from, to, period)|
         it "writes #{description} as #{period.inspect}" do
           close(providers(:tuviandita), from, to, "Cierre")

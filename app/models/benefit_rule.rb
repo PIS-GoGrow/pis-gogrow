@@ -49,7 +49,23 @@ class BenefitRule < ApplicationRecord
   # Igual a la anterior, indica cuándo debería caducar un beneficio futuro si se crea
   # hoy.
   def future_benefit_deadline(consumer, date: Date.current)
-    benefit_deadline consumer, date
+    benefit_deadline consumer, date:
+  end
+
+  # Devuelve desde qué día de entrega se puede usar el beneficio. nil significa que
+  # se puede usar desde que se asigna.
+  def benefit_start
+    nil
+  end
+
+  # Devuelve cuál es el precio máximo que acepta la regla
+  def benefit_max_price(consumer, date: Date.current)
+    raise NotImplementedError, "#{self.class} debe implementar benefit_max_price"
+  end
+
+  # Devuelve cuál es el precio máximo que acepta la regla
+  def benefit_max_price(consumer, date: Date.current)
+    raise NotImplementedError, "#{self.class} debe implementar benefit_max_price"
   end
 
   private

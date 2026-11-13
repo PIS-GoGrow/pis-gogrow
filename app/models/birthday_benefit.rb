@@ -19,6 +19,10 @@ class BirthdayBenefit < BenefitRule
     window_start(consumer, date)&.+(deadline_days)
   end
 
+  def benefit_max_price
+    nil
+  end
+
   private
 
   def window_start(consumer, date)

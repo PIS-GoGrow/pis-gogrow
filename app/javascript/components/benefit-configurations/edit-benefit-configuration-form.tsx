@@ -13,12 +13,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { formatLongDateInline } from "@/lib/dates"
 import { adminBenefitConfigurations } from "@/routes"
 
-interface EditBenefitConfigurationFormProps {
+export interface EditBenefitConfigurationFormProps {
   defaultValues: {
     subsidy_percentage: number | ""
-    max_voucher_price: number | ""
+    max_voucher_price: number | string
     monthly_voucher_limit: number | ""
   }
   pendingBenefitConfiguration?: {
@@ -42,6 +43,13 @@ interface BenefitConfigurationErrors {
   }[]
 }
 
+function normalizeInteger(value: number | string): number | "" {
+  if (value === "") return ""
+
+  const number = Number(String(value).replace(",", "."))
+  return Number.isFinite(number) ? Math.trunc(number) : ""
+}
+
 export default function EditBenefitConfigurationForm({
   defaultValues,
   pendingBenefitConfiguration,
@@ -54,7 +62,7 @@ export default function EditBenefitConfigurationForm({
 
   const form = useForm({
     subsidy_percentage: defaultValues.subsidy_percentage,
-    max_voucher_price: defaultValues.max_voucher_price,
+    max_voucher_price: normalizeInteger(defaultValues.max_voucher_price),
     monthly_voucher_limit: defaultValues.monthly_voucher_limit,
   })
 
@@ -105,10 +113,11 @@ export default function EditBenefitConfigurationForm({
   const efectiveFromErrors = errors.benefit_rules?.at(0)?.effective_from
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field
           orientation="horizontal"
+          className="max-[376px]:flex-col max-[376px]:items-start max-[376px]:[&>[data-slot=field-label]]:flex-none"
           data-invalid={!!errors.benefit_configuration?.subsidy_percentage}
         >
           <FieldLabel htmlFor="subsidy_percentage" className="font-normal">
@@ -116,7 +125,7 @@ export default function EditBenefitConfigurationForm({
               "pages.admin.benefit_configurations.index.current.subsidy_percentage",
             )}
           </FieldLabel>
-          <FieldContent className="flex-none">
+          <FieldContent className="flex-none max-[376px]:w-full">
             <div className="flex items-center gap-2">
               <Input
                 id="subsidy_percentage"
@@ -124,7 +133,7 @@ export default function EditBenefitConfigurationForm({
                 type="number"
                 min="0"
                 max="100"
-                className="w-24 text-base"
+                className="w-24 text-base max-md:w-20 max-md:text-center"
                 value={data.subsidy_percentage}
                 aria-invalid={
                   !!errors.benefit_configuration?.subsidy_percentage
@@ -151,6 +160,7 @@ export default function EditBenefitConfigurationForm({
 
         <Field
           orientation="horizontal"
+          className="max-[376px]:flex-col max-[376px]:items-start max-[376px]:[&>[data-slot=field-label]]:flex-none"
           data-invalid={!!errors.benefit_rules?.at(0)?.max_price}
         >
           <FieldLabel htmlFor="max_voucher_price" className="font-normal">
@@ -158,19 +168,29 @@ export default function EditBenefitConfigurationForm({
               "pages.admin.benefit_configurations.index.current.max_voucher_price",
             )}
           </FieldLabel>
-          <FieldContent className="flex-none">
+          <FieldContent className="flex-none max-[376px]:w-full">
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">≤$</span>
               <Input
                 id="max_voucher_price"
                 name="max_voucher_price"
                 type="number"
-                min="0.01"
-                step="0.01"
-                className="w-24 text-base"
+                min="1"
+                step="1"
+                inputMode="numeric"
+                className="w-24 text-base max-md:w-20 max-md:text-center"
                 value={data.max_voucher_price}
                 aria-invalid={!!errors.benefit_rules?.at(0)?.max_price}
+                onKeyDown={(event) => {
+                  if ([".", ",", "e", "E", "+", "-"].includes(event.key)) {
+                    event.preventDefault()
+                  }
+                }}
                 onChange={(e) => {
+                  if (e.target.value !== "" && !/^\d+$/.test(e.target.value)) {
+                    return
+                  }
+
                   setData(
                     "max_voucher_price",
                     e.target.value === "" ? "" : Number(e.target.value),
@@ -191,6 +211,7 @@ export default function EditBenefitConfigurationForm({
 
         <Field
           orientation="horizontal"
+          className="max-[376px]:flex-col max-[376px]:items-start max-[376px]:[&>[data-slot=field-label]]:flex-none"
           data-invalid={!!errors.benefit_rules?.at(0)?.limit}
         >
           <FieldLabel htmlFor="monthly_voucher_limit" className="font-normal">
@@ -198,14 +219,14 @@ export default function EditBenefitConfigurationForm({
               "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
             )}
           </FieldLabel>
-          <FieldContent className="flex-none">
+          <FieldContent className="flex-none max-[376px]:w-full">
             <div className="flex items-center gap-2">
               <Input
                 id="monthly_voucher_limit"
                 name="monthly_voucher_limit"
                 type="number"
                 min="0"
-                className="w-24 text-base"
+                className="w-24 text-base max-md:w-20 max-md:text-center"
                 value={data.monthly_voucher_limit}
                 aria-invalid={!!errors.benefit_rules?.at(0)?.limit}
                 onChange={(e) => {
@@ -216,7 +237,7 @@ export default function EditBenefitConfigurationForm({
                   clearErrors("monthly_voucher_limit")
                 }}
               />
-              <span className="text-muted-foreground">
+              <span>
                 {t(
                   "pages.admin.benefit_configurations.index.current.monthly_voucher_limit_unit",
                 )}
@@ -249,7 +270,7 @@ export default function EditBenefitConfigurationForm({
               <AlertTitle className="font-bold">
                 {t(
                   "pages.admin.benefit_configurations.index.current.pending_conflict.title",
-                  { date: configurableMonth },
+                  { date: formatLongDateInline(configurableMonth) },
                 )}
               </AlertTitle>
               <AlertDescription>
@@ -267,7 +288,7 @@ export default function EditBenefitConfigurationForm({
               </AlertDescription>
             </Alert>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 max-[376px]:flex-col">
               <Button
                 type="button"
                 variant="outline"
@@ -293,17 +314,25 @@ export default function EditBenefitConfigurationForm({
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
               <TriangleAlert className="size-4 shrink-0" />
               <span>
-                {t("pages.admin.benefit_configurations.index.current.notice", {
-                  date: configurableMonth,
-                })}
+                {t("pages.admin.benefit_configurations.index.current.notice")}
               </span>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onCancel}>
+            <div className="grid grid-cols-2 gap-3 pt-2 max-[376px]:grid-cols-1 sm:flex sm:justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                className="text-foreground h-12 rounded-[10px] bg-[#F5F5F5] text-base font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                onClick={onCancel}
+              >
                 {t("pages.admin.benefit_configurations.index.current.cancel")}
               </Button>
-              <Button type="submit" disabled={processing}>
+              <Button
+                type="submit"
+                className="h-12 rounded-[10px] text-base font-medium"
+                disabled={processing}
+                aria-label="Programar Subsidio"
+              >
                 {t("pages.admin.benefit_configurations.index.current.submit")}
               </Button>
             </div>

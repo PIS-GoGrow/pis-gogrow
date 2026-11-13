@@ -41,16 +41,12 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
   after { Capybara.default_max_wait_time = 2 }
 
+  # Formato único de importes de la app: "$19.500", y "$950,75" con centésimos.
   def money(amount)
-    whole, cents = format("%.2f", amount).split(".")
-    "#{whole.reverse.scan(/\d{1,3}/).join('.').reverse},#{cents} UYU"
-  end
-
-  # El total de Pagos pendientes va como en el diseño: "$19.500".
-  def short_money(amount)
     whole, cents = format("%.2f", amount).split(".")
     "$#{whole.reverse.scan(/\d{1,3}/).join('.').reverse}#{",#{cents}" unless cents == "00"}"
   end
+  alias_method :short_money, :money
 
   def month_label(date)
     I18n.l(date, format: :month_year)
@@ -62,7 +58,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
   def sign_in_as_hr
     sign_in users(:admin), role: :admin
-    visit admin_payments_path
+    visit_hydrated admin_payments_path
   end
 
   # El detalle del período se pide por fetch y se pinta en un panel, así que
@@ -130,10 +126,10 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       within(:css, "[role='dialog']") do
         click_on "Viandas"
-        # Los tres pedidos confirmados caen en dos días: el más nuevo abre solo.
-        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 2)
+        # Con la regla de entregas, solo se muestra el día con pedidos ya entregados.
+        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 1)
         all("button", text: "Día:").reject { it[:"aria-expanded"] == "true" }.each(&:click)
-        expect(page).to have_selector("tbody tr", count: 3)
+        expect(page).to have_selector("tbody tr", count: 1)
       end
     end
 
@@ -144,9 +140,9 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       within(:css, "[role='dialog']") do
         expect(page).to have_content("Subtotal sin IVA")
-        expect(page).to have_content("#{short_money(current_period.amount)} | 4 viandas")
+        expect(page).to have_content("#{short_money(current_period.amount)} | 1 vianda")
         expect(page).to have_content("IVA (0%)")
-        expect(page).to have_content("Total pagado")
+        expect(page).to have_content("Total a pagar")
       end
     end
   end
@@ -155,7 +151,8 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     it "shows a period nobody paid as pending, with the day it falls due" do
       sign_in_as_hr
 
-      within(:css, "[data-status='pending']") { expect(page).to have_content("Pendiente") }
+      expect(page).to have_css("[role='tab'][aria-selected='true']", text: "Pendientes")
+      expect(page).to have_content(month_label(current_period.month))
       expect(page).to have_content(due_label(current_period))
     end
 
@@ -185,6 +182,65 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
       within(:css, "[data-status='approved']") { expect(page).to have_content("Confirmado") }
       expect(page).to have_content(money(settled_period.amount))
       expect(page).to have_no_content("Vence:")
+    end
+
+    it "shows confirmed period details and download links in history without upload button" do
+      payment = payments(:gogrow_previous_approved)
+      payment.receipt.attach(
+        io: StringIO.new("fake receipt"),
+        filename: "comprobante.png",
+        content_type: "image/png"
+      )
+      settled_period.invoices.create!(
+        issued_on: Date.current,
+        total_amount: 900,
+        status: :approved,
+        file: {
+          io: StringIO.new("fake invoice"),
+          filename: "factura.png",
+          content_type: "image/png"
+        }
+      )
+
+      sign_in_as_hr
+
+      click_on "Historial"
+
+      within(:css, "[data-status='approved']") { expect(page).to have_content("Confirmado") }
+      expect(page).to have_content("Total pagado")
+      expect(page).to have_content(money(settled_period.amount))
+      expect(page).to have_content("Ver detalle")
+      expect(page).to have_no_content("Subir comprobante de pago")
+      expect(page).to have_link("Descargar factura")
+      expect(page).to have_link("Descargar comprobante de pago")
+    end
+
+    it "filters history by provider" do
+      other_account = Account.create!(
+        owner: companies(:gogrow),
+        provider: providers(:endulzate),
+        month: 2.months.ago.beginning_of_month,
+        amount: 300.0
+      )
+      other_account.payments.create!(
+        provider: providers(:endulzate),
+        status: :approved
+      )
+
+      sign_in_as_hr
+
+      click_on "Historial"
+
+      expect(page).to have_content("Proveedores: Todos")
+      expect(page).to have_content("Provider User:")
+      expect(page).to have_content("Other Provider User:")
+
+      find("button[aria-label='Filtrar por proveedor']").click
+      find("[role='menuitemradio']", text: "Provider User", exact_text: true).click
+
+      expect(page).to have_content("Proveedores: Provider User")
+      expect(page).to have_content("Provider User:")
+      expect(page).to have_no_content("Other Provider User:")
     end
   end
 
@@ -218,7 +274,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     it "turns away a visitor with no session" do
       visit admin_payments_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "turns away a role that is not HR" do

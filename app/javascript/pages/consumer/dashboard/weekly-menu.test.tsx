@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
+import { fireEvent, render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
+import { dashboardCart } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule } from "./consumer-types"
@@ -13,25 +13,28 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     usePage: () => ({
-      url: "/dashboard",
+      url: "/menu-semanal",
       props: {
         locale: "es",
         notifications: [],
       },
     }),
-    Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
-      <a href={href}>{children}</a>
+    Link: ({ href, children, ...props }: React.ComponentProps<"a">) => (
+      <a href={href} {...props}>
+        {children}
+      </a>
     ),
   }
 })
 
 const defaultBenefit: ConsumerDashboardIndex["benefit"] = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,
   monthly_remaining: 20,
+  weekly_limit: 5,
+  weekly_used: 0,
+  weekly_remaining: 5,
   specials: [],
 }
 
@@ -46,9 +49,13 @@ const sampleSchedule: Schedule = {
     name: "Milanesa con papas fritas",
     description: "Clásica milanesa de carne",
     price: 350,
+    provider_id: 1,
+    saved_menu_id: 1,
     option_groups: [],
     provider_name: "Tu Viandita",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 }
@@ -63,6 +70,7 @@ const sampleCartItem: CartItem = {
   quantity: 1,
   notes: "",
   selections: {},
+  benefits: [],
   menu: sampleSchedule.menu,
 }
 
@@ -75,14 +83,19 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       date: "2026-10-12",
       setDate: vi.fn(),
       benefit: defaultBenefit,
-      providers: ["Tu Viandita"],
+      activeProviders: new Set<number>(),
+      setActiveProviders: vi.fn(),
+      providers: [{ id: 1, name: "Tu Viandita", order_deadline: null }],
       schedules: [sampleSchedule],
       closures: [],
+      favorites: { menus: [], provider_ids: [] },
+      frequent: { menus: [], provider_ids: [] },
       cart: [],
       count: 0,
       total: 0,
       openDetail: vi.fn(),
       openCart: vi.fn(),
+      loading: false,
       ...props,
     }
 
@@ -100,8 +113,8 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     )
     expect(floatingButton).toBeNull()
 
-    const asideCartButton = screen.getByRole("button", { name: "Ver carrito" })
-    expect(asideCartButton).toBeDisabled()
+    const asideCartButton = screen.getByRole("link", { name: "Ver carrito" })
+    expect(asideCartButton).toBeVisible()
   })
 
   it("renderiza el botón flotante con data-slot y clases responsive para mobile y tablet cuando count > 0", () => {
@@ -120,26 +133,21 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(floatingButton?.className).toContain("lg:hidden")
   })
 
-  it("llama a openCart al presionar el botón flotante", async () => {
-    const user = userEvent.setup()
-    const openCart = vi.fn()
-    renderComponent({ count: 2, total: 700, cart: [sampleCartItem], openCart })
+  it("navega al carrito al presionar el botón flotante", () => {
+    renderComponent({ count: 2, total: 700, cart: [sampleCartItem] })
 
     const floatingButton = document.querySelector(
       '[data-slot="floating-cart-button"]',
     )
     expect(floatingButton).not.toBeNull()
 
-    await user.click(floatingButton!)
-    expect(openCart).toHaveBeenCalledTimes(1)
+    expect(floatingButton).toHaveAttribute("href", dashboardCart().url)
   })
 
-  it("permite abrir el carrito desde el aside de escritorio cuando count > 0", async () => {
-    const user = userEvent.setup()
-    const openCart = vi.fn()
-    renderComponent({ count: 1, total: 350, cart: [sampleCartItem], openCart })
+  it("permite abrir el carrito desde el aside de escritorio cuando count > 0", () => {
+    renderComponent({ count: 1, total: 350, cart: [sampleCartItem] })
 
-    const cartButtons = screen.getAllByRole("button", { name: "Ver carrito" })
+    const cartButtons = screen.getAllByRole("link", { name: "Ver carrito" })
     // El segundo botón es el del aside en desktop
     const asideButton = cartButtons.find(
       (btn) => btn.getAttribute("data-slot") !== "floating-cart-button",
@@ -147,8 +155,16 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(asideButton).toBeDefined()
     expect(asideButton).toBeEnabled()
 
-    await user.click(asideButton!)
-    expect(openCart).toHaveBeenCalledTimes(1)
+    expect(asideButton).toHaveAttribute("href", dashboardCart().url)
+  })
+
+  it("deshabilita el acceso al carrito desde el aside cuando está vacío", () => {
+    renderComponent({ count: 0, total: 0, cart: [] })
+
+    const asideButton = screen.getByRole("link", { name: "Ver carrito" })
+    expect(asideButton).toHaveAttribute("aria-disabled", "true")
+    expect(asideButton).toHaveAttribute("tabindex", "-1")
+    expect(fireEvent.click(asideButton)).toBe(false)
   })
 
   it("muestra el resumen de viandas y monto en la tarjeta de carrito", () => {

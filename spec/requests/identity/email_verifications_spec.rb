@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Identity::EmailVerifications", type: :request do
   fixtures :users
 
-  describe "GET /identity/email_verification" do
+  describe "GET /identidad/verificacion-de-correo" do
     context "with valid token" do
       it "verifies the email" do
         user = users(:one)
@@ -41,7 +41,7 @@ RSpec.describe "Identity::EmailVerifications", type: :request do
     end
   end
 
-  describe "POST /identity/email_verification" do
+  describe "POST /identidad/verificacion-de-correo" do
     it "resends the verification email" do
       user = users(:one)
       user.update!(verified: false)

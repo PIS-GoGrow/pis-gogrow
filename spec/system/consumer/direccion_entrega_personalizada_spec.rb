@@ -23,8 +23,8 @@ RSpec.describe "Dirección de entrega personalizada" do
     Order.delete_all
     Schedule.delete_all
     Provider.update_all(order_deadline: nil)
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Plato de prueba", price: 300))
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:office_provider), name: "Ensalada de quinoa", description: "Plato de prueba", price: 250))
+    Schedule.create!(date: monday, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Plato de prueba", price: 300))
+    Schedule.create!(date: monday, menu: Menu.create!(provider: providers(:office_provider), name: "Ensalada de quinoa", description: "Plato de prueba", price: 250))
   end
 
   def open_cart_with(*dishes, as: users(:one))
@@ -41,7 +41,7 @@ RSpec.describe "Dirección de entrega personalizada" do
       expect(page).to have_content("Notas para este plato")
       click_button "Agregar"
     end
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 
@@ -141,7 +141,8 @@ RSpec.describe "Dirección de entrega personalizada" do
       click_button "Agregar"
       within("[role=dialog]", text: "Agregar una dirección") do
         { "Nombre" => 40, "Dirección" => 120, "Piso / Apartamento (opcional)" => 40 }.each do |field, max|
-          fill_in field, with: "Calle 1#{"a" * max}"
+          # rapid escribe el tramo del medio por JS y saltea el maxLength real.
+          fill_in field, with: "Calle 1#{"a" * max}", fill_options: { rapid: false }
           expect(find_field(field).value.length).to eq(max)
         end
       end
@@ -232,7 +233,7 @@ RSpec.describe "Dirección de entrega personalizada" do
     it "no la ve un visitante sin sesión" do
       visit order_path(order)
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(consumer_welcome_path)
       expect(page).to have_no_content("Colonia 1370")
     end
 

@@ -30,7 +30,7 @@ vi.mock("@inertiajs/react", async () => {
 describe("OrderError Component", () => {
   const defaultProps = {
     retry: vi.fn(),
-    homeUrl: "/dashboard",
+    homeUrl: "/menu-semanal",
   }
 
   it("renderiza el título de error y el icono dentro de la tarjeta", () => {
@@ -66,8 +66,10 @@ describe("OrderError Component", () => {
   it("aplica flex-1 en ambos botones para que compartan el ancho sin desbordar el contenedor", () => {
     render(<OrderError {...defaultProps} />)
 
-    const retryButton = screen.getByRole("button", { name: "Reintentar" })
-    const homeLinkButton = screen.getByRole("link", { name: "Volver a Menú" })
+    const retryButton = screen.getByRole("button", { name: /reintentar/i })
+    const homeLinkButton = screen.getByRole("link", {
+      name: /volver a[l]? men/i,
+    })
 
     // Ambos botones deben tener flex-1 y no w-full
     expect(retryButton).toHaveClass("flex-1")
@@ -89,10 +91,10 @@ describe("OrderError Component", () => {
   })
 
   it("renderiza el enlace Volver a Menú apuntando a la URL configurada", () => {
-    render(<OrderError {...defaultProps} homeUrl="/custom-dashboard" />)
+    render(<OrderError {...defaultProps} />)
 
-    const homeLink = screen.getByRole("link", { name: "Volver a Menú" })
+    const homeLink = screen.getByRole("link", { name: /volver a[l]? men/i })
     expect(homeLink).toBeInTheDocument()
-    expect(homeLink).toHaveAttribute("href", "/custom-dashboard")
+    expect(homeLink).toHaveAttribute("href", defaultProps.homeUrl)
   })
 })

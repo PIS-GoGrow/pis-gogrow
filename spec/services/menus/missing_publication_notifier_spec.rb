@@ -28,12 +28,12 @@ RSpec.describe Menus::MissingPublicationNotifier do
       role: "provider",
       requires_action: true,
       title: "Publicá el menú del día",
-      description: "Todavía no publicaste un menú para el 9/1/2030."
+      description: "Todavía no publicaste un menú para el miércoles 9 de enero."
     )
   end
 
   it "does not notify a provider with a published menu" do
-    menu.schedules.create!(date:, amount: 10)
+    menu.schedules.create!(date:)
 
     expect { call_notifier }.not_to change(Notification, :count)
   end
@@ -75,7 +75,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
     call_notifier
     notification = provider_notifications.active.sole
 
-    menu.schedules.create!(date:, amount: 0, available: false)
+    menu.schedules.create!(date:, available: false)
 
     expect(notification.reload.closed_at).to eq(Time.current)
   end
@@ -85,7 +85,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
     notification = provider_notifications.active.sole
     menu.update!(archived_at: Time.current)
 
-    menu.schedules.create!(date:, amount: 10)
+    menu.schedules.create!(date:)
 
     expect(notification.reload.closed_at).to be_nil
   end
@@ -112,7 +112,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
       event_key: :provider_menu_unpublished,
       user: provider.user,
       notifiable: provider,
-      description_data: { date: "9/1/2030" }
+      description_data: { date: "miércoles 9 de enero" }
     )
   end
 

@@ -8,23 +8,7 @@ class ProviderClosureSerializer < ApplicationSerializer
   # Formateado en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string
   attribute :period do |closure|
-    from = closure.starts_on
-    to = closure.ends_on
-    day_month = ->(date) { I18n.l(date, format: :day_month).downcase }
-    day_month_year = ->(date) { I18n.l(date, format: :day_month_year).downcase }
-
-    key, values =
-      if from == to
-        [ :single, { date: day_month_year.(from) } ]
-      elsif from.year == to.year && from.month == to.month
-        [ :same_month, { from_day: from.day, to_day_month: day_month.(to), year: to.year } ]
-      elsif from.year == to.year
-        [ :same_year, { from_day_month: day_month.(from), to_day_month: day_month.(to), year: to.year } ]
-      else
-        [ :other_year, { from: day_month_year.(from), to: day_month_year.(to) } ]
-      end
-
-    I18n.t("pages.provider_operational_settings.show.closures.period.#{key}", **values)
+    DateFormat.short_range(closure.starts_on, closure.ends_on)
   end
 end
 

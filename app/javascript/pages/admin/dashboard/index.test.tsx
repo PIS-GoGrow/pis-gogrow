@@ -18,7 +18,7 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     usePage: () => ({
-      url: "/admin/dashboard",
+      url: "/rrhh/inicio",
       props: { locale: "es", auth: { user: { name: "Juan Pérez" } } },
     }),
   }
@@ -73,6 +73,33 @@ const props: AdminDashboardIndex = {
 // con información del beneficio, participación, consumos, gasto y presupuesto,
 // para conocer el estado global del programa."
 describe("Admin Dashboard Page", () => {
+  it("links the analysis with the selected month", () => {
+    render(<AdminDashboard {...props} month="2026-09" />)
+
+    const analysisLink = screen.getByRole("link", {
+      name: "Ver análisis del beneficio",
+    })
+
+    expect(analysisLink).toHaveAttribute(
+      "href",
+      "/rrhh/analisis-beneficio?month=2026-09",
+    )
+    expect(analysisLink).toHaveClass("md:hidden")
+
+    expect(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    ).toBeInTheDocument()
+  })
+
+  it("links the reports", () => {
+    render(<AdminDashboard {...props} />)
+
+    expect(screen.getByRole("link", { name: "Ver reportes" })).toHaveAttribute(
+      "href",
+      "/rrhh/reportes",
+    )
+  })
+
   it("greets HR by first name with today's date", () => {
     render(<AdminDashboard {...props} />)
 
@@ -91,8 +118,8 @@ describe("Admin Dashboard Page", () => {
     expect(screen.getByText("72%")).toBeInTheDocument()
     expect(screen.getByText("$5.425")).toBeInTheDocument()
     expect(screen.getByRole("progressbar")).toBeInTheDocument()
-    expect(screen.getByText(/Pagado/)).toBeInTheDocument()
-    expect(screen.queryByText(/Proyectado/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Pagado /)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Proyectado /)).not.toBeInTheDocument()
     expect(
       screen.getByRole("combobox", { name: "Mes del resumen" }),
     ).toHaveTextContent("Este mes")
@@ -117,6 +144,7 @@ describe("Admin Dashboard Page", () => {
               vat_rate: 0,
               vat_amount: 0,
               payable_amount: 5425,
+              paid: false,
               days: [],
             },
           ],
@@ -156,27 +184,27 @@ describe("Admin Dashboard Page", () => {
       name: "Tus pagos de septiembre",
     })
     expect(within(payments).getByText("Endulzate by Noe")).toBeInTheDocument()
-    expect(within(payments).getByText("Confirmado")).toBeInTheDocument()
+    expect(within(payments).getByText("Aprobado")).toBeInTheDocument()
     expect(within(payments).getByText("Pendiente")).toBeInTheDocument()
     expect(
       within(payments).getByRole("link", { name: "Ver pagos a proveedores" }),
-    ).toHaveAttribute("href", "/admin/payments")
+    ).toHaveAttribute("href", "/rrhh/pagos")
   })
 
   it("links the debt ranking to each employee and to the pending ones", () => {
     render(<AdminDashboard {...props} />)
 
     const debts = screen.getByRole("region", {
-      name: "Ranking deuda de empleados",
+      name: "Saldos pendientes por empleado",
     })
     expect(
       within(debts).getByRole("link", { name: "Martín Bonnet" }),
-    ).toHaveAttribute("href", "/admin/consumers/7")
+    ).toHaveAttribute("href", "/rrhh/empleados/7")
     expect(
       within(debts).getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/consumers?filter=pending")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending")
   })
 
   it("keeps the selected month when it opens the pending employees", () => {
@@ -186,7 +214,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/consumers?filter=pending&month=2026-09")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending&month=2026-09")
   })
 
   describe("photos in the debt ranking", () => {
@@ -254,7 +282,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByText("No hay pagos a proveedores de septiembre."),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Ningún empleado tiene saldos pendientes en este mes."),
+      screen.getByText("Ningún empleado tiene saldos pendientes."),
     ).toBeInTheDocument()
   })
 })

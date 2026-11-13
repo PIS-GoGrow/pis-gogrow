@@ -10,9 +10,11 @@ import AppLayout from "@/layouts/app-layout"
 import {
   adminAccount,
   adminBenefitConfigurations,
-  adminPreferences,
+  adminInvoices,
+  adminOrderEvents,
   sessions,
   settingsNotifications,
+  settingsProfiles,
 } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
@@ -27,9 +29,24 @@ export default function AdminAccount() {
   ]
   const primarySettings = [
     {
+      title: t(`${account}.profile`),
+      description: t(`${account}.profile_description`),
+      href: settingsProfiles.show().url,
+    },
+    {
       title: t(`${account}.subsidies`),
       description: t(`${account}.subsidies_description`),
       href: adminBenefitConfigurations.index().url,
+    },
+    {
+      title: t(`${account}.invoices`),
+      description: t(`${account}.invoices_description`),
+      href: adminInvoices.index().url,
+    },
+    {
+      title: t(`${account}.order_events`),
+      description: t(`${account}.order_events_description`),
+      href: adminOrderEvents.index().url,
     },
     {
       title: t(`${account}.notifications`),
@@ -88,22 +105,6 @@ export default function AdminAccount() {
                 href={href}
               />
             ))}
-          </div>
-        </section>
-
-        <section aria-labelledby="admin-more-settings-title" className="mt-4">
-          <h3
-            id="admin-more-settings-title"
-            className="mb-3 text-base font-semibold"
-          >
-            {t(`${account}.more_options`)}
-          </h3>
-          <div className="border-t">
-            <AccountLink
-              title={t(`${account}.preferences`)}
-              description={t(`${account}.preferences_description`)}
-              href={adminPreferences.show().url}
-            />
           </div>
         </section>
       </PageContainer>

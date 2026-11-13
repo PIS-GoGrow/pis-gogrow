@@ -3,8 +3,8 @@ import { ArrowLeft, Pencil, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
-import EditOrderSheet from "@/components/orders/edit-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,15 +31,16 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({
-  order,
-  delivery_addresses,
-  max_quantity,
-  option_groups,
-  editing,
-}: ConsumerOrdersShow) {
+export default function Show({ order, historical }: ConsumerOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoney, formatDeliveryDate } = useFormatters()
+  const { formatMoney, formatLongDate } = useFormatters()
+
+  const unitPrice =
+    order.price != null && order.amount != null && order.amount > 0
+      ? order.price / order.amount
+      : null
+  const showCancelAction = !historical || order.cancellable
+  const showEditAction = !historical || order.modifiable
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -56,7 +57,8 @@ export default function Show({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.orders.show.title")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-4 p-5">
+      {/* La navegación mobile es fija; este espacio evita que cubra el contenido. */}
+      <div className="mx-auto grid w-full max-w-128 gap-4 p-5 pb-24 md:pb-5">
         <Button
           variant="ghost"
           size="sm"
@@ -101,7 +103,7 @@ export default function Show({
 
               <Row label={t("pages.orders.show.date")}>
                 {order.date
-                  ? formatDeliveryDate(order.date)
+                  ? formatLongDate(order.date)
                   : t("pages.orders.index.no_date")}
               </Row>
 
@@ -120,8 +122,8 @@ export default function Show({
               </Row>
 
               <Row label={t("pages.orders.show.base_price")}>
-                {order.price != null
-                  ? formatMoney(order.price)
+                {unitPrice != null
+                  ? formatMoney(unitPrice)
                   : t("pages.orders.index.no_price")}
               </Row>
 
@@ -150,62 +152,87 @@ export default function Show({
             </div>
           </CardContent>
 
-          <CardFooter className="grid grid-cols-2 items-start gap-2">
-            {order.cancellable ? (
-              <CancelOrderSheet order={order} />
-            ) : (
-              <div className="flex flex-col gap-1">
+          {/* En el historial no se reserva espacio para acciones no disponibles. */}
+          {(showCancelAction || showEditAction) && (
+            <CardFooter
+              className={
+                showCancelAction && showEditAction
+                  ? "grid grid-cols-2 items-start gap-2"
+                  : "grid grid-cols-1 items-start gap-2"
+              }
+            >
+              {order.cancellable ? (
+                <CancelOrderSheet order={order} />
+              ) : (
+                showCancelAction && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled
+                  >
+                    <X aria-hidden="true" />
+                    {t("pages.orders.index.cancel")}
+                  </Button>
+                )
+              )}
+              {order.modifiable ? (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  disabled
+                  asChild
                 >
-                  <X aria-hidden="true" />
-                  {t("pages.orders.index.cancel")}
+                  <Link href={consumerOrders.edit(order.id)}>
+                    <Pencil aria-hidden="true" />
+                    {t("pages.orders.show.edit")}
+                  </Link>
                 </Button>
-                {order.status !== "confirmed" && (
-                  <p className="text-muted-foreground text-xs">
+              ) : (
+                showEditAction && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled
+                  >
+                    <Pencil aria-hidden="true" />
+                    {t("pages.orders.show.edit")}
+                  </Button>
+                )
+              )}
+              {!order.cancellable &&
+                showCancelAction &&
+                order.status !== "confirmed" &&
+                order.cancellation_block_reason && (
+                  <p className="text-muted-foreground col-span-full text-xs">
                     {t(
                       `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
                     )}
                   </p>
                 )}
-              </div>
-            )}
-            {order.modifiable ? (
-              <EditOrderSheet
-                order={order}
-                addresses={delivery_addresses}
-                optionGroups={option_groups}
-                maxQuantity={max_quantity}
-                editing={editing}
-              />
-            ) : (
-              <div className="flex flex-col gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  disabled
-                >
-                  <Pencil aria-hidden="true" />
-                  {t("pages.orders.show.edit")}
-                </Button>
-                {order.status !== "confirmed" && (
-                  <p className="text-muted-foreground text-xs">
+              {!order.modifiable &&
+                showEditAction &&
+                order.status !== "confirmed" &&
+                order.modification_block_reason &&
+                order.modification_block_reason !==
+                  order.cancellation_block_reason && (
+                  <p className="text-muted-foreground col-span-full text-xs">
                     {t(
                       `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
                     )}
                   </p>
                 )}
-              </div>
-            )}
-          </CardFooter>
+            </CardFooter>
+          )}
         </Card>
       </div>
+
+      {/* Mantiene en el detalle la misma navegación mobile del listado. */}
+      <ConsumerMobileNav />
     </AppLayout>
   )
 }

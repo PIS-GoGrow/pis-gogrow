@@ -15,9 +15,14 @@ class Provider::OrderSerializer < ApplicationSerializer
     order.delivery_date&.iso8601
   end
 
+  typelize :boolean
+  attribute :rejectable do |order|
+    order.rejectable?
+  end
+
   typelize :string
   attribute :time do |order|
-    order.created_at.strftime("%H:%M")
+    order.created_at.strftime("%-I:%M %p")
   end
 
   typelize :string

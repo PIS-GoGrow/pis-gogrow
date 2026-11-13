@@ -9,7 +9,16 @@ RSpec.describe "Pedidos del consumidor" do
     sign_in users(:one), role: :consumer
   end
 
-  it "permite consultar pedidos próximos e historial de los últimos 3 meses" do
+  def open_provider_filter
+    expect(page).to have_no_selector("[role=dialog]")
+    find("button[aria-label='Filtrar por proveedores']").click
+    return if page.has_selector?("[role=dialog]", wait: 2)
+
+    find("button[aria-label='Filtrar por proveedores']").click
+    expect(page).to have_selector("[role=dialog]")
+  end
+
+  it "permite consultar pedidos próximos e historial" do
     visit orders_path
 
     expect(page).to have_content("Mis pedidos")
@@ -25,23 +34,204 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Cancelado")
   end
 
-  it "permite filtrar pedidos por proveedor en tiempo real" do
+  it "carga al hacer scroll los pedidos entregados hace más de 3 meses" do
+    old_order = orders(:history_confirmed_past)
+    old_order.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months, menu_name: "Guiso de lentejas")
+
     visit orders_path
+    find("[role=tab]", text: "Historial").click
+
+    expect(page).to have_content("Rechazado")
+    expect(page).to have_content("Guiso de lentejas")
+  end
+
+  it "filtra el historial por proveedor sin conservar el filtro al recargar" do
+    filtered_order = orders(:history_pending_past)
+    filtered_order.update_columns(
+      provider_id: providers(:office_provider).id,
+      provider_name: providers(:office_provider).user.name,
+      menu_name: "Ensalada de quinoa"
+    )
+    orders(:upcoming_pending_future).update_columns(
+      provider_id: providers(:endulzate).id,
+      provider_name: providers(:endulzate).user.name
+    )
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
 
     expect(page).to have_content("Proveedores: Todos")
 
-    find("button[aria-label='Filtrar por proveedores']").click
-    unless page.has_selector?("[role=dialog]", wait: 2)
-      find("button[aria-label='Filtrar por proveedores']").click
-    end
+    open_provider_filter
 
     within("[role=dialog]") do
       expect(page).to have_content("Filtrar por proveedores")
-      find("label", text: "Provider User").click
+      expect(page).to have_content("Todos")
+      expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
+      find("#dashboard-filter-#{providers(:office_provider).id}").click
       click_button "Aplicar"
     end
 
-    expect(page).to have_content("Proveedores: Provider User")
+    expect(page).to have_current_path(orders_path)
+    expect(page).to have_content("Proveedores: Office Provider User")
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).not_to have_content("Milanesa con papas fritas")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{providers(:endulzate).id}").click
+      expect(page).to have_selector("#dashboard-filter-#{providers(:office_provider).id}[data-state='unchecked']")
+      expect(page).to have_selector("#dashboard-filter-#{providers(:endulzate).id}[data-state='checked']")
+      find("#dashboard-filter-#{providers(:endulzate).id}").click
+      expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Proveedores: Todos")
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).to have_content("Milanesa con papas fritas")
+
+    refresh
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("Proveedores: Todos")
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).to have_content("Milanesa con papas fritas")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{providers(:office_provider).id}").click
+      click_button "Aplicar"
+    end
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-all").click
+      expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Milanesa con papas fritas")
+  end
+
+  it "filtra el historial con varios proveedores sin mezclar pedidos y respetando el orden por fecha de entrega" do
+    office = providers(:office_provider)
+    endulzate = providers(:endulzate)
+    # Sin schedule para que la fecha de entrega la ponga el test y no la fixture.
+    {
+      history_confirmed_past: [ office, "Ensalada de quinoa", 30 ],
+      history_pending_past: [ office, "Tarta de verduras", 2 ],
+      history_without_schedule: [ endulzate, "Budín de limón", 10 ]
+    }.each do |fixture, (provider, menu_name, days_ago)|
+      orders(fixture).update_columns(
+        schedule_id: nil,
+        delivery_date: Date.current - days_ago,
+        provider_id: provider.id,
+        provider_name: provider.user.name,
+        menu_name: menu_name
+      )
+    end
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+    history = find("[role=tabpanel]:not([hidden])")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{office.id}").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Proveedores: Office Provider User")
+    expect(history).to have_content("Tarta de verduras")
+    expect(history).to have_content("Ensalada de quinoa")
+    expect(history).to have_no_content("Budín de limón")
+    expect(history).to have_no_content("Milanesa con papas fritas")
+    expect(history).to have_no_content("No hay pedidos de este proveedor")
+    expect(history.text.index("Tarta de verduras")).to be < history.text.index("Ensalada de quinoa")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-all").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Proveedores: Todos")
+    expect(history).to have_content("Budín de limón")
+    expect(history).to have_content("Milanesa con papas fritas")
+    positions = [ "Tarta de verduras", "Budín de limón", "Ensalada de quinoa" ].map { |name| history.text.index(name) }
+    expect(positions).to eq(positions.sort)
+  end
+
+  it "ubica el filtro arriba de las pestañas y filtra también los pedidos próximos" do
+    office = providers(:office_provider)
+    endulzate = providers(:endulzate)
+
+    orders(:upcoming_pending_future).update_columns(
+      provider_id: endulzate.id,
+      provider_name: endulzate.user.name,
+      menu_name: "Budín de limón"
+    )
+    orders(:history_pending_past).update_columns(
+      provider_id: office.id,
+      provider_name: office.user.name,
+      menu_name: "Ensalada de quinoa"
+    )
+
+    visit orders_path
+
+    expect(page).to have_content("Proveedores: Todos")
+    label_top = page.evaluate_script(
+      "Array.from(document.querySelectorAll('span')).find((el) => el.textContent.startsWith('Proveedores:')).getBoundingClientRect().top"
+    )
+    tabs_top = page.evaluate_script(
+      "document.querySelector('[role=tablist]').getBoundingClientRect().top"
+    )
+    expect(label_top).to be < tabs_top
+
+    # El filtro está fuera de las pestañas, así que también recorta Próximos.
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{office.id}").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("No hay pedidos de este proveedor")
+    expect(page).to have_content("No tenés pedidos próximos con este proveedor.")
+
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).not_to have_content("Budín de limón")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{endulzate.id}").click
+      click_button "Aplicar"
+    end
+
+    find("[role=tab]", text: "Próximos").click
+    expect(page).to have_content("Budín de limón")
+    expect(page).to have_no_content("No hay pedidos de este proveedor")
+
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("No hay pedidos de este proveedor")
+    expect(page).to have_content("No tenés pedidos anteriores realizados a este proveedor.")
+  end
+
+  it "muestra el estado vacío del historial para un proveedor sin pedidos anteriores" do
+    selected = providers(:endulzate)
+    orders(:upcoming_pending_future).update_columns(provider_id: selected.id, provider_name: selected.user.name)
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+    open_provider_filter
+
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{selected.id}").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("No hay pedidos de este proveedor")
+    expect(page).to have_content("No tenés pedidos anteriores realizados a este proveedor.")
   end
 
 
@@ -69,15 +259,65 @@ RSpec.describe "Pedidos del consumidor" do
       click_link "Editar"
     end
 
-    expect(page).to have_current_path(/edit=1/)
-    within("[role=dialog]") do
-      expect(page).to have_content("Modificar pedido")
-      fill_in "notes", with: "Sin cebolla por favor"
-      click_button "Guardar cambios"
+    expect(page).to have_current_path(/editar/)
+    fill_in "notes", with: "Sin cebolla por favor"
+    click_button "Modificar"
+
+    confirm_order_modified
+    click_link "Milanesa con papas fritas", match: :first
+    expect(page).to have_content("Sin cebolla por favor")
+  end
+
+  it "vuelve a la lista de órdenes al salir de una edición abierta desde ahí" do
+    visit orders_path
+
+    within(find("[data-slot=card]", text: "Milanesa con papas fritas", match: :first)) do
+      click_link "Editar"
     end
 
-    expect(page).to have_content("Pedido actualizado")
-    expect(page).to have_content("Sin cebolla por favor")
+    click_button "Volver"
+
+    expect(page).to have_current_path(orders_path)
+  end
+
+  it "pide un complementario al agregar unidades a un pedido confirmado" do
+    confirmed = orders(:upcoming_confirmed_future)
+
+    visit order_path(confirmed)
+
+    click_link "Editar"
+    click_button "Agregar uno"
+    click_button "Modificar"
+
+    within("[role=dialog]", text: "¿Agregar más unidades?") do
+      click_button "Aumentar pedido"
+    end
+
+    confirm_order_modified
+
+    complementary = confirmed.consumer.orders.order(:id).last
+    expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+    expect(complementary).to have_attributes(status: "pending", amount: 1)
+  end
+
+  it "cancela y vuelve a pedir un pedido confirmado al cambiarle otros datos" do
+    confirmed = orders(:upcoming_confirmed_future)
+
+    visit order_path(confirmed)
+
+    click_link "Editar"
+    fill_in "notes", with: "Sin sal"
+    click_button "Modificar"
+
+    within("[role=dialog]", text: "¿Modificar el pedido?") do
+      click_button "Modificar pedido"
+    end
+
+    confirm_order_modified
+
+    replacement = confirmed.consumer.orders.order(:id).last
+    expect(replacement).to have_attributes(status: "pending", notes: "Sin sal")
+    expect(confirmed.reload.status).to eq("cancelled")
   end
 
   it "permite modificar y cancelar desde la pantalla de detalle de la orden" do
@@ -86,13 +326,12 @@ RSpec.describe "Pedidos del consumidor" do
     visit order_path(order)
 
     # Modificar desde el detalle
-    click_button "Editar"
-    within("[role=dialog]") do
-      fill_in "notes", with: "Con servilletas extras"
-      click_button "Guardar cambios"
-    end
+    click_link "Editar"
+    fill_in "notes", with: "Con servilletas extras"
+    click_button "Modificar"
 
-    expect(page).to have_content("Pedido actualizado")
+    confirm_order_modified
+    visit_hydrated order_path(order)
     expect(page).to have_content("Con servilletas extras")
 
     # Cancelar desde el detalle
@@ -113,7 +352,7 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_button("Cancelar", disabled: true)
     expect(page).to have_button("Editar", disabled: true)
     expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede cancelar.")
-    expect(page).not_to have_content("El proveedor ya confirmó este pedido, así que no se puede modificar.")
+    expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede modificar.")
   end
 
 
@@ -141,5 +380,28 @@ RSpec.describe "Pedidos del consumidor" do
 
     expect(page).to have_content("Motivo de rechazo")
     expect(page).to have_content("La cocina cerró por corte de agua")
+  end
+
+  it "muestra el precio unitario de la vianda en el detalle para pedidos de múltiples unidades" do
+    order = orders(:upcoming_confirmed_future)
+
+    visit order_path(order)
+
+    within(find("dt", text: "Cantidad").find(:xpath, "..")) do
+      expect(page).to have_content("2")
+    end
+
+    within(find("dt", text: "Precio base").find(:xpath, "..")) do
+      expect(page).to have_content("$300,50")
+      expect(page).not_to have_content("$601")
+    end
+
+    within(find("dt", text: "Beneficio aplicado").find(:xpath, "..")) do
+      expect(page).to have_content("$300,50")
+    end
+
+    within(find("dt", text: "Importe final").find(:xpath, "..")) do
+      expect(page).to have_content("$300,50")
+    end
   end
 end

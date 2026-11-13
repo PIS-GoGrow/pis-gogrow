@@ -31,7 +31,14 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
 
   let(:monday) { Date.current.beginning_of_week(:monday) }
   let(:office_address) { companies(:gogrow).address }
-  let(:home_address) { consumers(:one).address }
+  let!(:home_delivery_address) do
+    consumers(:one).saved_addresses.create!(
+      name: "Casa",
+      street: consumers(:one).address
+    )
+  end
+
+  let(:home_address) { home_delivery_address.full_address }
 
   before do
     OrderBenefit.delete_all
@@ -40,8 +47,8 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
     Schedule.delete_all
   end
 
-  def publish(menu, date = monday, amount: 5)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date = monday)
+    Schedule.create!(menu:, date:)
   end
 
   # El dashboard se sirve por SSR y React hidrata después. Un click que cae antes
@@ -68,7 +75,7 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
     find_button("Agregar", exact: true).click
     # "Ver carrito" recién se habilita cuando el estado de React corrió, así que
     # se espera a que esté habilitado antes de clickearlo.
-    find_button("Ver carrito", exact: true, wait: Capybara.default_max_wait_time).click
+    click_link "Ver carrito"
     expect(page).to have_content("Dirección de entrega")
   end
 

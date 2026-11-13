@@ -27,8 +27,8 @@ RSpec.describe "Notifications", type: :request do
     end
   end
 
-  def sign_in(user)
-    session = user.sessions.create!(role: :consumer)
+  def sign_in(user, role: :consumer)
+    session = user.sessions.create!(role: role)
     cookies[:session_token] =
       AuthenticationHelpers.signed_cookie(:session_token, session.id)
   end
@@ -41,12 +41,12 @@ RSpec.describe "Notifications", type: :request do
       event: "order_confirmation",
       requires_action: false,
       notifiable:,
-      title: "Tu pedido fue confirmado",
-      description: "Tu pedido fue confirmado."
+      title_data: {},
+      description_data: { date: "12/12", provider: "TuViandita" }
     )
   end
 
-  describe "PATCH /notifications/:id/close" do
+  describe "PATCH /notificaciones/:id/cerrar" do
     it "closes an active dismissable notification belonging to the current user" do
       notification = create_notification(user:)
       sign_in(user)
@@ -101,6 +101,184 @@ RSpec.describe "Notifications", type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(notification.reload.closed_at).to be_nil
+    end
+
+    context "cuando el usuario no está autenticado" do
+      it "redirecciona al inicio de sesión" do
+        notification = create_notification(user:)
+
+        patch close_notification_path(notification)
+
+        expect(response).to have_http_status(:redirect)
+        expect(notification.reload.closed_at).to be_nil
+      end
+    end
+
+    context "con bypass de interfaz o parámetros inválidos" do
+      before { sign_in(user) }
+
+      it "devuelve 404 para un id inexistente" do
+        patch close_notification_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "devuelve 404 para un id no numérico o inválido" do
+        patch "/notificaciones/invalido/cerrar"
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "devuelve 404 al intentar cerrar una notificación que ya fue cerrada" do
+        notification = create_notification(user:)
+        notification.close!
+
+        patch close_notification_path(notification)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "ignora parámetros adicionales en el body y cierra la notificación de forma segura" do
+        notification = create_notification(user:)
+
+        patch close_notification_path(notification), params: {
+          notification: { requires_action: true, role: "admin", closed_at: nil }
+        }
+
+        expect(response).to have_http_status(:see_other)
+        expect(notification.reload.closed_at).to be_present
+        expect(notification.requires_action).to be(false)
+        expect(notification.role).to eq("consumer")
+      end
+    end
+
+    context "con rol de administrador" do
+      let(:admin_user) do
+        User.create!(
+          email: "admin-close-test@gmail.com",
+          name: "Admin User",
+          password: "password123456"
+        ).tap do |u|
+          Admin.create!(user: u, company:)
+          u.reload
+        end
+      end
+
+      let(:admin_config) do
+        Notification::Configuration.find_or_create_by!(key: "company_payments") do |c|
+          c.roles = %w[admin]
+        end
+      end
+
+      let(:admin_notification) do
+        Notification.create!(
+          notification_configuration: admin_config,
+          user: admin_user,
+          role: "admin",
+          event: "company_payment_approved",
+          requires_action: false,
+          notifiable: admin_user,
+          title_data: {},
+          description_data: {
+            provider: "TuViandita",
+            company: "GoGrow",
+            period: "octubre 2026",
+            amount: "$5.000"
+          }
+        )
+      end
+
+      it "permite al admin cerrar su notificación cerrable" do
+        sign_in(admin_user, role: :admin)
+
+        patch close_notification_path(admin_notification)
+
+        expect(response).to have_http_status(:see_other)
+        expect(admin_notification.reload.closed_at).to be_present
+      end
+
+      it "no permite al admin cerrar una notificación de un consumidor" do
+        consumer_notification = create_notification(user:)
+        sign_in(admin_user, role: :admin)
+
+        patch close_notification_path(consumer_notification)
+
+        expect(response).to have_http_status(:not_found)
+        expect(consumer_notification.reload.closed_at).to be_nil
+      end
+    end
+  end
+
+  describe "Inertia shared props :notifications" do
+    it "envía las notificaciones activas del rol de la sesión con la estructura esperada" do
+      closed_notification = create_notification(user:)
+      closed_notification.close!
+      active_notification = create_notification(user:)
+      sign_in(user)
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      notifications_prop = inertia.props[:notifications]
+      expect(notifications_prop).to be_an(Array)
+      expect(notifications_prop.size).to eq(1)
+      expect(notifications_prop.first).to match(
+        a_hash_including(
+          id: active_notification.id,
+          requires_action: false
+        )
+      )
+      expect(notifications_prop.map { |n| n[:id] }).not_to include(closed_notification.id)
+    end
+
+    it "envía la notificación de pedido rechazado con el título y la descripción corregidos y sin términos de cancelación" do
+      rejected_notification = Notification.create!(
+        notification_configuration: notification_configuration,
+        user:,
+        role: "consumer",
+        event: "order_rejection",
+        requires_action: false,
+        notifiable: user,
+        description_data: {
+          date: "10 de octubre",
+          dish: "Milanesa",
+          provider: "Tu Viandita",
+          reason: "porque no había stock disponible"
+        }
+      )
+      sign_in(user)
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      notifications_prop = inertia.props[:notifications]
+      item = notifications_prop.find { |n| n[:id] == rejected_notification.id }
+
+      expect(item).to be_present
+      expect(item[:title]).to eq("Tu pedido fue rechazado")
+      expect(item[:title]).not_to include("cancelado")
+      expect(item[:description]).to include("fue rechazado por")
+      expect(item[:description]).to include("porque no había stock disponible")
+      expect(item[:description]).not_to include("cancelado")
+    end
+
+    it "no expone la notificación del consumidor si la sesión activa es de rol proveedor" do
+      Notification.create!(
+        notification_configuration: notification_configuration,
+        user:,
+        role: "consumer",
+        event: "order_rejection",
+        requires_action: false,
+        notifiable: user
+      )
+      Provider.create!(user:, onboarding_completed_at: Time.current)
+      session = user.sessions.create!(role: :provider)
+      cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
+
+      get provider_orders_path
+
+      notifications_prop = inertia.props[:notifications]
+      expect(notifications_prop).to be_empty
     end
   end
 end

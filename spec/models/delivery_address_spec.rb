@@ -72,6 +72,13 @@ RSpec.describe DeliveryAddress, type: :model do
       expect(described_class.valid_full_address?("Calle #{"a" * 157} 1")).to be(false)
     end
   end
+
+  it "is deleted when its consumer is destroyed" do
+    consumer = consumers(:one)
+    address = consumer.saved_addresses.create!(name: "Casa", street: "Ellauri 1234")
+
+    expect { consumer.destroy }.to change { DeliveryAddress.exists?(address.id) }.from(true).to(false)
+  end
 end
 
 # == Schema Information

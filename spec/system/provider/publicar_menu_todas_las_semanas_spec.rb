@@ -14,7 +14,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
   end
 
   it "permite configurar un plato para repetir todas las semanas y persiste la agenda semanal sin errores" do
-    visit edit_provider_menu_path(milanesa)
+    visit_hydrated edit_provider_menu_path(milanesa)
 
     expect(page).to have_field("name", with: milanesa.name)
 
@@ -39,7 +39,6 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
     agenda = milanesa.reload.current_agenda
     expect(agenda).to be_present
     expect(agenda.weekdays).to include(1, 3)
-    expect(agenda.amount).to be_nil
 
     # Al acceder a editar un día programado generado por la agenda, se mantiene el modo weekly
     future_schedule = Schedule.where(menu_id: milanesa.family_ids, date: Date.current..).first
@@ -49,5 +48,49 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
 
     expect(page).to have_field("name", with: milanesa.name)
     expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
+  end
+
+  it "exige elegir al menos un día para repetir todas las semanas" do
+    visit_hydrated edit_provider_menu_path(milanesa)
+
+    expect(page).to have_field("name", with: milanesa.name)
+
+    find("label", text: "Repetir todas las semanas").click
+    expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
+    click_button "Modificar"
+
+    expect(page).to have_content("Elegí al menos un día de lunes a viernes.")
+    expect(page).to have_no_content("¿Aplicar cambios desde esta fecha?")
+
+    find("button[aria-label='Lunes']").click
+    expect(page).to have_no_content("Elegí al menos un día de lunes a viernes.")
+  end
+
+  it "exige elegir al menos un día al crear un plato nuevo con repetición semanal y lo publica al elegirlo" do
+    visit_hydrated new_provider_menu_path
+
+    fill_in "name", with: "Wok de verduras"
+    fill_in "description", with: "Salteado con salsa de soja"
+    fill_in "price", with: "320"
+
+    clear_weekdays
+    find("label", text: "Repetir todas las semanas").click
+    expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
+
+    click_submit_agregar = -> { find("button[type='submit']", text: "Agregar").click }
+
+    click_submit_agregar.call
+    expect(page).to have_content("Elegí al menos un día de lunes a viernes.")
+
+    find("button[aria-label='Lunes']").click
+    expect(page).to have_no_content("Elegí al menos un día de lunes a viernes.")
+
+    click_submit_agregar.call
+    expect(page).to have_content("¡Plato agregado!")
+
+    created = provider.menus.find_by(name: "Wok de verduras")
+    expect(created).to be_present
+    expect(created.current_agenda).to be_present
+    expect(created.current_agenda.weekdays).to eq([ 1 ])
   end
 end

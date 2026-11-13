@@ -15,11 +15,11 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
   end
 
   before do
-    # Los fixtures gift y seniority son subsidios especiales sin nombre que la
-    # pantalla de RRHH mostraría vacíos.
-    benefit_configurations(:gift, :seniority).each(&:destroy)
+    # Los fixtures gift, gift2 y seniority son subsidios especiales sin nombre que
+    # la pantalla de RRHH mostraría vacíos.
+    benefit_configurations(:gift, :gift2, :seniority).each(&:destroy)
     benefits(:monthly).update!(percentage: 50, amount: 20, due_date: Date.current.end_of_month, status: :current)
-    Schedule.create!(menu:, date: Date.current, amount: 10)
+    Schedule.create!(menu:, date: Date.current)
   end
 
   def choose_option(label, option)
@@ -66,7 +66,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$75")
     click_button "Agregar"
 
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(find("span", text: "Beneficio GoGrow (50%)", exact_text: true).sibling("span")).to have_text("- $150")
     expect(find("span", text: "Antigüedad (25%)", exact_text: true).sibling("span")).to have_text("- $75")
@@ -80,7 +80,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     expect(order.benefits.map(&:description)).to contain_exactly("Antigüedad", benefits(:monthly).description)
 
     visit order_path(order)
-    expect(find("dt", text: "Subsidio aplicado").find(:xpath, "following-sibling::dd")).to have_text("225")
+    expect(find("dt", text: "Beneficio aplicado").find(:xpath, "following-sibling::dd")).to have_text("225")
     expect(find("dt", text: "Importe final").find(:xpath, "following-sibling::dd")).to have_text("75")
 
     visit profile_path

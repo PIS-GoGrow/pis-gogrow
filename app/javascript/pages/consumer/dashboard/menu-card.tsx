@@ -1,10 +1,10 @@
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
 import type { CartItem, Schedule } from "./consumer-types"
-import { money } from "./formatters"
 
 interface Props {
   item: Schedule
@@ -33,7 +33,7 @@ export function MenuCard({ item, added, openDetail }: Props) {
       </p>
       <h3 className="mt-1 text-sm font-bold md:text-base md:font-medium">
         {item.menu.name}{" "}
-        <span className="font-normal">| {money(item.menu.price)}</span>
+        <span className="font-normal">| {formatMoney(item.menu.price)}</span>
       </h3>
       <p className="text-muted-foreground mt-1 line-clamp-2 text-[11px] leading-4 md:text-sm md:leading-5">
         {item.menu.description}

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Consumer < ApplicationRecord
+  WEEKLY_BENEFIT_LIMIT = 5
+
   include SyncsUserRoles
 
   belongs_to :company
@@ -10,12 +12,26 @@ class Consumer < ApplicationRecord
   has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
+  has_many :favorites, dependent: :destroy
 
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
 
+  # Platos y proveedores que el empleado pide seguido, calculados con sus pedidos
+  # vigentes. Dos pedidos alcanzan para considerarlo frecuente; los más pedidos
+  # van primero.
+  def frequent(kind, limit: 5)
+    scope = orders.where(status: %i[pending confirmed]).joins(schedule: :menu)
+    scope = kind == :menu ? scope.group("COALESCE(menus.base_menu_id, menus.id)") : scope.group("menus.provider_id")
+    scope.having("COUNT(*) >= 2").order(Arel.sql("COUNT(*) DESC")).limit(limit).count.keys
+  end
+
+  def favorite_ids(type)
+    favorites.where(favoritable_type: type).pluck(:favoritable_id)
+  end
+
   def total_debt
-    accounts.pending.sum :amount
+    accounts.pending.includes(:payments).sum(&:outstanding_amount)
   end
 
   # La alerta requiere acción, así que solo se cierra acá, cuando la deuda vuelve
@@ -25,12 +41,12 @@ class Consumer < ApplicationRecord
     debt = total_debt
     threshold = company.debt_alert_threshold
     alert = user.notifications.active.find_by(event: "debt_threshold_exceeded", notifiable: self)
-    data = { debt: format_amount(debt), threshold: format_amount(threshold) }
+    data = { debt: Account.format_amount(debt), threshold: Account.format_amount(threshold) }
 
     if debt <= threshold
       alert&.close!
     elsif alert
-      alert.update!(description: I18n.t!("notifications.debt_threshold_exceeded.description", **data))
+      alert.update!(description_data: data)
     else
       Notifier.call(event_key: :debt_threshold_exceeded, user:, notifiable: self, description_data: data)
     end
@@ -42,65 +58,93 @@ class Consumer < ApplicationRecord
 
   # Devuelve todos los beneficios mensuales del cliente
   def monthly_benefits
-    benefits.joins(benefit_configuration: :benefit_rules)
-            .where(benefit_rules: { type: MonthlyBenefit.name })
+    benefits.monthly
   end
 
   def current_monthly_benefit
-    benefits.current.monthly.first
+    monthly_benefit_on(Date.current)
   end
 
-  def monthly_benefit_available
-    current_monthly_benefit&.amount || 0
+  def monthly_benefit_on(date)
+    candidates = monthly_benefits
+      .where.not(status: :expired)
+      .where(due_date: date..)
+      .order(due_date: :asc)
+    candidates = candidates.current if date <= Date.current
+
+    candidates.find { it.valid_on?(date) }
   end
 
-  # Devuelve la cantidad de beneficios mensuales usados en total en un determinado
-  # rango de fechas y especificando si contar órdenes pendientes.
-  # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
-  # por dos.
-  def monthly_benefit_used_in(date_range, count_pending: false)
-    valid_status = [ :rejected, :cancelled ]
-    valid_status << :pending if count_pending
+  # Devuelve el porcentaje del beneficio mensual actual
+  def monthly_benefit_percentage(date: Date.current)
+    monthly_benefit_on(date)&.percentage || 0
+  end
 
+  def special_benefits
+    benefits.current
+      .where(benefit_configuration: BenefitConfiguration.special.active)
+  end
+
+  # Devuelve la cantidad del beneficio mensual actual.
+  # No tiene en cuenta las órdenes que ya se hicieron: para eso consultar
+  # remaining_monthly_benefit
+  def monthly_benefit_available(date: Date.current)
+    monthly_benefit_on(date)&.amount || 0
+  end
+
+  # Los usos del cupo mensual en pedidos activos (pendientes y confirmados) con
+  # entrega este mes; una orden de dos viandas subsidiadas cuenta por dos. Es el
+  # único conteo del cupo: RR. HH., Pagos, Cuenta e Inicio lo leen de acá.
+  def monthly_benefit_usages(date: Date.current)
     OrderBenefit
       .joins(order: :schedule)
-      .where(schedules: { date: date_range })
-      .where.not(orders: { status:  valid_status })
+      .where(schedules: { date: date.all_month })
+      .where.not(orders: { status: [ :rejected, :cancelled ] })
       .where(benefit_id: monthly_benefits)
-      .sum(:benefit_used)
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
-  # las que se usó un beneficio mensual
-  def monthly_benefit_used_this_month
-    monthly_benefit_used_in Date.current.all_month
+  def monthly_benefit_used_this_month(date: Date.current)
+    monthly_benefit_usages(date:).sum(:benefit_used)
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
-  def monthly_benefit_used_this_week
-    monthly_benefit_used_in Date.current.all_week
+  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes
+  def remaining_monthly_benefit(date: Date.current)
+    [ monthly_benefit_available(date:) - monthly_benefit_used_this_month(date:), 0 ].max
   end
 
-  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
-  # contando solo las órdenes confirmadas
-  def remaining_monthly_benefit
-    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
+  def weekly_benefit_usages(date: Date.current)
+    OrderBenefit
+      .joins(order: :schedule)
+      .where(schedules: { date: Calendar.week_range(date) })
+      .where.not(orders: { status: [ :rejected, :cancelled ] })
+      .where(benefit_id: monthly_benefits)
+  end
+
+  def weekly_benefit_used(date: Date.current)
+    weekly_benefit_usages(date:).sum(:benefit_used)
+  end
+
+  def weekly_benefit_limit(date: Date.current)
+    monthly_benefit_on(date) ? WEEKLY_BENEFIT_LIMIT : 0
+  end
+
+  def remaining_weekly_benefit(date: Date.current)
+    [ weekly_benefit_limit(date:) - weekly_benefit_used(date:), 0 ].max
   end
 
   # Devuelve el beneficio mensual que puede ser aplicado en un schedule.
   # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
   # o el siguiente si no.
   def monthly_benefit_for(schedule)
-    monthly_benefits
-      .where.not(status: :expired)
-      .where(due_date: schedule.date..)
-      .order(due_date: :asc) # Debería haber a lo sumo 2: uno current y uno future
-      .first # Obtenemos el que debería ser el current
+    monthly_benefit_on(schedule.date)
   end
 
   # Se espera que no se incluyan direcciones blank acá
   def delivery_addresses
-    [ address, company.address ].compact_blank
+    [
+      company.address,
+      *saved_addresses.map(&:full_address)
+    ].compact_blank
   end
 
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
@@ -118,27 +162,32 @@ class Consumer < ApplicationRecord
   # pidió, que es la que el carrito muestra junto a la oficina.
   def delivery_address_options
     last_used = orders.home.order(created_at: :desc).pick(:address)
+
     saved = saved_addresses.order(created_at: :desc).map do |delivery_address|
-      { id: "address-#{delivery_address.id}", label: delivery_address.name, address: delivery_address.full_address }
+      {
+        id: "address-#{delivery_address.id}",
+        label: delivery_address.name,
+        address: delivery_address.full_address
+      }
     end
+
     custom = [
-      { id: "home", label: I18n.t("pages.orders.addresses.home"), address: },
       *saved,
-      { id: "last_used", label: I18n.t("pages.orders.addresses.last_used"), address: last_used }
+      {
+        id: "last_used",
+        label: I18n.t("pages.orders.addresses.last_used"),
+        address: last_used
+      }
     ]
 
     [
-      { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
+      {
+        id: "office",
+        label: I18n.t("pages.orders.addresses.office"),
+        address: company.address
+      },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
-  end
-
-  private
-
-  def format_amount(amount)
-    ActiveSupport::NumberHelper.number_to_rounded(
-      amount, precision: 2, strip_insignificant_zeros: true, delimiter: ".", separator: ","
-    )
   end
 end
 

@@ -1,13 +1,13 @@
 import { useForm } from "@inertiajs/react"
-import { XIcon } from "lucide-react"
+import { SearchIcon, XIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { DatePicker } from "@/components/date-picker"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -55,6 +55,9 @@ function toNumber(value: string): number | "" {
   return value === "" ? "" : Number(value)
 }
 
+const MAX_VALIDITY_DAYS = 100
+const DAYS_PER_UNIT = { days: 1, weeks: 7, months: 30 }
+
 function isPositiveInteger(value: number | ""): value is number {
   return value !== "" && Number.isInteger(value) && value > 0
 }
@@ -82,10 +85,10 @@ export default function SpecialSubsidyForm({
     consumer_ids: subsidy?.consumer_ids ?? [],
     condition: {
       type: subsidy?.condition?.type ?? "",
-      min_years: subsidy?.condition?.min_years ?? "",
-      limit: subsidy?.condition?.limit ?? "",
-      validity_amount: subsidy?.condition?.validity_amount ?? "",
-      validity_unit: subsidy?.condition?.validity_unit ?? "days",
+      min_years: subsidy?.condition?.min_years ?? 1,
+      limit: subsidy?.condition?.limit ?? 1,
+      validity_amount: subsidy?.condition?.validity_amount ?? 2,
+      validity_unit: subsidy?.condition?.validity_unit ?? "weeks",
       effective_from: subsidy?.condition?.effective_from ?? "",
     },
   })
@@ -110,12 +113,23 @@ export default function SpecialSubsidyForm({
     setData("condition", { ...condition, ...changes })
   }
 
+  // Cumpleaños y onboarding guardan la validez en días, con el tope del modelo.
+  const maxValidity =
+    condition.type === "birthday" || condition.type === "onboarding"
+      ? Math.floor(MAX_VALIDITY_DAYS / DAYS_PER_UNIT[condition.validity_unit])
+      : undefined
+  const validityTooLong =
+    maxValidity !== undefined &&
+    condition.validity_amount !== "" &&
+    condition.validity_amount > maxValidity
+
   const conditionIsValid =
     condition.type === "seniority"
       ? isPositiveInteger(condition.min_years)
       : condition.type !== "" &&
         isPositiveInteger(condition.limit) &&
         isPositiveInteger(condition.validity_amount) &&
+        !validityTooLong &&
         (condition.type !== "gift" ||
           (condition.effective_from !== "" &&
             (condition.effective_from >= today ||
@@ -154,87 +168,124 @@ export default function SpecialSubsidyForm({
   }
 
   const limitAndValidity = (
-    <>
-      <Field orientation="horizontal" data-invalid={!!errors.limit}>
-        <FieldLabel htmlFor="condition_limit" className="font-normal">
-          {t(
-            "pages.admin.benefit_configurations.index.special.form.limit_prefix",
-          )}
-        </FieldLabel>
-        <Input
-          id="condition_limit"
-          name="limit"
-          type="number"
-          min="1"
-          className="w-20"
-          value={condition.limit}
-          aria-invalid={!!errors.limit}
-          onChange={(event) =>
-            setCondition({ limit: toNumber(event.target.value) })
-          }
-        />
-        <span className="text-muted-foreground text-sm">
-          {t(
-            "pages.admin.benefit_configurations.index.special.form.limit_suffix",
-          )}
-        </span>
-      </Field>
-      <FieldError errors={fieldErrors("limit")} />
-
-      <Field orientation="horizontal" data-invalid={!!errors.validity_amount}>
-        <FieldLabel htmlFor="condition_validity_amount" className="font-normal">
-          {t("pages.admin.benefit_configurations.index.special.form.validity")}
-        </FieldLabel>
-        <Input
-          id="condition_validity_amount"
-          name="validity_amount"
-          type="number"
-          min="1"
-          className="w-20"
-          value={condition.validity_amount}
-          aria-invalid={!!errors.validity_amount}
-          onChange={(event) =>
-            setCondition({ validity_amount: toNumber(event.target.value) })
-          }
-        />
-        <Select
-          name="validity_unit"
-          value={condition.validity_unit}
-          onValueChange={(value) =>
-            setCondition({
-              validity_unit: value as typeof condition.validity_unit,
-            })
-          }
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <Field
+          orientation="horizontal"
+          className="w-fit max-w-full flex-wrap items-center gap-3 [&>[data-slot=field-label]]:flex-none"
+          data-invalid={!!errors.limit}
         >
-          <SelectTrigger
-            className="w-32"
-            aria-label={t(
-              "pages.admin.benefit_configurations.index.special.form.validity_unit",
-            )}
+          <FieldLabel
+            htmlFor="condition_limit"
+            className="text-foreground text-sm font-medium"
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(["days", "weeks", "months"] as const).map((unit) => (
-              <SelectItem key={unit} value={unit}>
-                {t(
-                  `pages.admin.benefit_configurations.index.special.form.validity_units.${unit}`,
-                )}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <FieldError errors={fieldErrors("validity_amount")} />
-    </>
+            {t(
+              "pages.admin.benefit_configurations.index.special.form.limit_prefix",
+            )}
+          </FieldLabel>
+          <Input
+            id="condition_limit"
+            name="limit"
+            type="number"
+            min="1"
+            className="bg-background h-10 w-16 rounded-lg border border-[#E5E5E5] text-center text-sm font-medium shadow-xs dark:border-neutral-700"
+            value={condition.limit}
+            aria-invalid={!!errors.limit}
+            onChange={(event) =>
+              setCondition({ limit: toNumber(event.target.value) })
+            }
+          />
+          <span className="text-foreground text-sm font-medium">
+            {t(
+              "pages.admin.benefit_configurations.index.special.form.limit_suffix",
+            )}
+          </span>
+        </Field>
+        <FieldError errors={fieldErrors("limit")} />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Field
+          orientation="horizontal"
+          className="items-center gap-3 [&>[data-slot=field-label]]:flex-none"
+          data-invalid={!!errors.validity_amount || validityTooLong}
+        >
+          <FieldLabel
+            htmlFor="condition_validity_amount"
+            className="text-foreground text-sm font-medium"
+          >
+            {t(
+              "pages.admin.benefit_configurations.index.special.form.validity",
+            )}
+          </FieldLabel>
+          <Input
+            id="condition_validity_amount"
+            name="validity_amount"
+            type="number"
+            min="1"
+            max={maxValidity}
+            className="bg-background h-10 w-16 rounded-lg border border-[#E5E5E5] text-center text-sm font-medium shadow-xs dark:border-neutral-700"
+            value={condition.validity_amount}
+            aria-invalid={!!errors.validity_amount || validityTooLong}
+            onChange={(event) =>
+              setCondition({ validity_amount: toNumber(event.target.value) })
+            }
+          />
+          <Select
+            name="validity_unit"
+            value={condition.validity_unit}
+            onValueChange={(value) =>
+              setCondition({
+                validity_unit: value as typeof condition.validity_unit,
+              })
+            }
+          >
+            <SelectTrigger
+              className="bg-background h-10 min-w-0 flex-1 rounded-lg border border-[#E5E5E5] text-sm font-medium shadow-xs dark:border-neutral-700"
+              aria-label={t(
+                "pages.admin.benefit_configurations.index.special.form.validity_unit",
+              )}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["days", "weeks", "months"] as const).map((unit) => (
+                <SelectItem key={unit} value={unit}>
+                  {t(
+                    `pages.admin.benefit_configurations.index.special.form.validity_units.${unit}`,
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <FieldError
+          errors={
+            validityTooLong
+              ? [
+                  {
+                    message: t(
+                      "pages.admin.benefit_configurations.index.special.form.validity_max",
+                      { count: MAX_VALIDITY_DAYS },
+                    ),
+                  },
+                ]
+              : fieldErrors("validity_amount")
+          }
+        />
+      </div>
+    </div>
   )
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <FieldGroup className="gap-5">
-        <div className="grid grid-cols-[1fr_auto] gap-3">
+        <div className="grid grid-cols-2 gap-4">
           <Field data-invalid={!!errors.name}>
-            <FieldLabel htmlFor="special_subsidy_name">
+            <FieldLabel
+              htmlFor="special_subsidy_name"
+              className="text-[#737373] dark:text-neutral-400"
+            >
               {t("pages.admin.benefit_configurations.index.special.form.name")}
             </FieldLabel>
             <Input
@@ -250,8 +301,11 @@ export default function SpecialSubsidyForm({
             <FieldError errors={fieldErrors("name")} />
           </Field>
 
-          <Field data-invalid={!!errors.subsidy_percentage} className="w-28">
-            <FieldLabel htmlFor="special_subsidy_percentage">
+          <Field data-invalid={!!errors.subsidy_percentage}>
+            <FieldLabel
+              htmlFor="special_subsidy_percentage"
+              className="text-[#737373] dark:text-neutral-400"
+            >
               {t(
                 "pages.admin.benefit_configurations.index.special.form.subsidy_percentage",
               )}
@@ -263,6 +317,9 @@ export default function SpecialSubsidyForm({
               min="1"
               max="100"
               value={data.subsidy_percentage}
+              placeholder={t(
+                "pages.admin.benefit_configurations.index.special.form.subsidy_percentage_placeholder",
+              )}
               aria-invalid={!!errors.subsidy_percentage}
               onChange={(event) =>
                 setData("subsidy_percentage", toNumber(event.target.value))
@@ -273,7 +330,10 @@ export default function SpecialSubsidyForm({
         </div>
 
         <FieldSet data-invalid={!!errors.consumer_ids}>
-          <FieldLegend variant="label">
+          <FieldLegend
+            variant="label"
+            className="text-sm font-medium text-[#737373] dark:text-neutral-400"
+          >
             {t(
               "pages.admin.benefit_configurations.index.special.form.applies_to",
             )}
@@ -308,18 +368,25 @@ export default function SpecialSubsidyForm({
 
           {!data.applies_to_all && (
             <div className="flex flex-col gap-2">
-              <Input
-                type="search"
-                name="employee_search"
-                aria-label={t(
-                  "pages.admin.benefit_configurations.index.special.form.search_employee",
-                )}
-                placeholder={t(
-                  "pages.admin.benefit_configurations.index.special.form.search_employee",
-                )}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  type="search"
+                  name="employee_search"
+                  aria-label={t(
+                    "pages.admin.benefit_configurations.index.special.form.search_employee",
+                  )}
+                  placeholder={t(
+                    "pages.admin.benefit_configurations.index.special.form.search_employee",
+                  )}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  className="pr-9 [&::-webkit-search-cancel-button]:appearance-none"
+                />
+                <SearchIcon
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
+                  aria-hidden="true"
+                />
+              </div>
 
               {query.trim() !== "" && (
                 <div className="flex flex-col rounded-md border p-1">
@@ -393,137 +460,160 @@ export default function SpecialSubsidyForm({
           <FieldError errors={fieldErrors("consumer_ids")} />
         </FieldSet>
 
-        <FieldSet data-invalid={!!errors.condition_type}>
-          <FieldLegend variant="label">
+        <FieldSet data-invalid={!!errors.condition_type} className="gap-2">
+          <FieldLegend
+            variant="label"
+            className="text-sm font-medium text-[#737373] dark:text-neutral-400"
+          >
             {t(
               "pages.admin.benefit_configurations.index.special.form.condition",
             )}
           </FieldLegend>
-          <Select
-            name="condition_type"
-            value={condition.type}
-            onValueChange={(value) =>
-              setCondition({ type: value as typeof condition.type })
-            }
-          >
-            <SelectTrigger
-              className="w-full"
-              aria-label={t(
-                "pages.admin.benefit_configurations.index.special.condition",
-              )}
-              aria-invalid={!!errors.condition_type}
-            >
-              <SelectValue
-                placeholder={t(
-                  "pages.admin.benefit_configurations.index.special.form.condition_placeholder",
-                )}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {(["seniority", "birthday", "onboarding", "gift"] as const).map(
-                (type) => (
-                  <SelectItem key={type} value={type}>
-                    {t(
-                      `pages.admin.benefit_configurations.index.special.conditions.${type}`,
-                    )}
-                  </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
-          <FieldError errors={fieldErrors("condition_type")} />
 
-          {condition.type === "seniority" && (
-            <>
-              <Field orientation="horizontal" data-invalid={!!errors.min_years}>
-                <FieldLabel
-                  htmlFor="condition_min_years"
-                  className="font-normal"
-                >
-                  {t(
-                    "pages.admin.benefit_configurations.index.special.form.min_years_prefix",
-                  )}
-                </FieldLabel>
-                <Input
-                  id="condition_min_years"
-                  name="min_years"
-                  type="number"
-                  min="1"
-                  className="w-20"
-                  value={condition.min_years}
-                  aria-invalid={!!errors.min_years}
-                  onChange={(event) =>
-                    setCondition({ min_years: toNumber(event.target.value) })
-                  }
-                />
-                <span className="text-muted-foreground text-sm">
-                  {t(
-                    "pages.admin.benefit_configurations.index.special.form.min_years_suffix",
-                  )}
-                </span>
-              </Field>
-              <FieldError errors={fieldErrors("min_years")} />
-            </>
-          )}
-
-          {(condition.type === "birthday" ||
-            condition.type === "onboarding") && (
-            <>
-              <FieldDescription>
-                {t(
-                  `pages.admin.benefit_configurations.index.special.form.${condition.type}_help`,
-                )}
-              </FieldDescription>
-              {limitAndValidity}
-            </>
-          )}
-
-          {condition.type === "gift" && (
-            <>
-              <Field
-                orientation="horizontal"
-                data-invalid={!!errors.effective_from}
+          <div className="flex flex-col gap-3 rounded-[10px] border border-[#E5E5E5] bg-[#F5F5F5] p-4 dark:border-neutral-800 dark:bg-neutral-900">
+            <div className="flex flex-col gap-1.5">
+              <Select
+                name="condition_type"
+                value={condition.type}
+                onValueChange={(value) =>
+                  setCondition({ type: value as typeof condition.type })
+                }
               >
-                <FieldLabel
-                  htmlFor="condition_effective_from"
-                  className="font-normal"
-                >
-                  {t(
-                    "pages.admin.benefit_configurations.index.special.form.effective_from",
+                <SelectTrigger
+                  className="bg-background h-10 w-full rounded-lg border border-[#E5E5E5] text-sm font-medium shadow-xs dark:border-neutral-700"
+                  aria-label={t(
+                    "pages.admin.benefit_configurations.index.special.condition",
                   )}
-                </FieldLabel>
-                <Input
-                  id="condition_effective_from"
-                  name="effective_from"
-                  type="date"
-                  min={today}
-                  className="w-44"
-                  value={condition.effective_from}
-                  aria-invalid={!!errors.effective_from}
-                  onChange={(event) =>
-                    setCondition({ effective_from: event.target.value })
-                  }
-                />
-              </Field>
-              <FieldError errors={fieldErrors("effective_from")} />
-              {limitAndValidity}
-            </>
-          )}
+                  aria-invalid={!!errors.condition_type}
+                >
+                  <SelectValue
+                    placeholder={t(
+                      "pages.admin.benefit_configurations.index.special.form.condition_placeholder",
+                    )}
+                  />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  align="start"
+                  sideOffset={4}
+                  collisionPadding={16}
+                  className="max-h-[min(16rem,var(--radix-select-content-available-height))] w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+                >
+                  {(
+                    ["seniority", "birthday", "onboarding", "gift"] as const
+                  ).map((type) => (
+                    <SelectItem
+                      key={type}
+                      value={type}
+                      className="whitespace-normal"
+                    >
+                      {t(
+                        `pages.admin.benefit_configurations.index.special.conditions.${type}`,
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError errors={fieldErrors("condition_type")} />
+
+              {(condition.type === "birthday" ||
+                condition.type === "onboarding") && (
+                <p className="text-[11px] leading-tight text-[#737373] dark:text-neutral-400">
+                  {t(
+                    `pages.admin.benefit_configurations.index.special.form.${condition.type}_help`,
+                  )}
+                </p>
+              )}
+            </div>
+
+            {condition.type === "seniority" && (
+              <div className="flex flex-col gap-1">
+                <Field
+                  orientation="horizontal"
+                  className="w-fit max-w-full flex-wrap items-center gap-3 [&>[data-slot=field-label]]:flex-none"
+                  data-invalid={!!errors.min_years}
+                >
+                  <FieldLabel
+                    htmlFor="condition_min_years"
+                    className="text-foreground text-sm font-medium"
+                  >
+                    {t(
+                      "pages.admin.benefit_configurations.index.special.form.min_years_prefix",
+                    )}
+                  </FieldLabel>
+                  <Input
+                    id="condition_min_years"
+                    name="min_years"
+                    type="number"
+                    min="1"
+                    className="bg-background h-10 w-16 rounded-lg border border-[#E5E5E5] text-center text-sm font-medium shadow-xs dark:border-neutral-700"
+                    value={condition.min_years}
+                    aria-invalid={!!errors.min_years}
+                    onChange={(event) =>
+                      setCondition({ min_years: toNumber(event.target.value) })
+                    }
+                  />
+                  <span className="text-foreground text-sm font-medium">
+                    {t(
+                      "pages.admin.benefit_configurations.index.special.form.min_years_suffix",
+                    )}
+                  </span>
+                </Field>
+                <FieldError errors={fieldErrors("min_years")} />
+              </div>
+            )}
+
+            {(condition.type === "birthday" ||
+              condition.type === "onboarding") &&
+              limitAndValidity}
+
+            {condition.type === "gift" && (
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <Field
+                    orientation="horizontal"
+                    className="items-center gap-3 [&>[data-slot=field-label]]:flex-none"
+                    data-invalid={!!errors.effective_from}
+                  >
+                    <FieldLabel
+                      htmlFor="condition_effective_from"
+                      className="text-foreground text-sm font-medium"
+                    >
+                      {t(
+                        "pages.admin.benefit_configurations.index.special.form.effective_from",
+                      )}
+                    </FieldLabel>
+                    <DatePicker
+                      id="condition_effective_from"
+                      min={today}
+                      className="min-w-0 flex-1 [&>button]:w-full"
+                      value={condition.effective_from}
+                      onChange={(effective_from) =>
+                        setCondition({ effective_from })
+                      }
+                    />
+                  </Field>
+                  <FieldError errors={fieldErrors("effective_from")} />
+                </div>
+                {limitAndValidity}
+              </div>
+            )}
+          </div>
         </FieldSet>
       </FieldGroup>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 pt-2">
         <Button
           type="button"
-          variant="outline"
-          className="h-12 rounded-lg text-base font-medium"
+          variant="secondary"
+          className="text-foreground h-12 rounded-[10px] bg-[#F5F5F5] text-base font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           onClick={onCancel}
         >
           {t("pages.admin.benefit_configurations.index.special.form.cancel")}
         </Button>
         <Button
           type="submit"
-          className="h-12 rounded-lg text-base font-medium"
+          className="h-12 rounded-[10px] text-base font-medium"
           disabled={!isValid || processing}
         >
           {processing && <Spinner />}

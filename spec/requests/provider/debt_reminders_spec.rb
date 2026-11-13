@@ -20,7 +20,7 @@ RSpec.describe "Provider::DebtReminders", type: :request do
     consumer_account.update!(amount: 150)
   end
 
-  describe "POST /provider/collections/:collection_id/debt_reminders" do
+  describe "POST /provider/cobros/:collection_id/recordatorios-de-deuda" do
     context "Control de acceso por rol y autenticación" do
       it "redirige al inicio de sesión cuando no hay sesión activa" do
         post provider_collection_debt_reminders_path(consumer_account)

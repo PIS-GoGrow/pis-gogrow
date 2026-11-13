@@ -22,10 +22,10 @@ RSpec.describe "Cierre programado visto por el empleado", type: :system do
     endulzate.closures.destroy_all
 
     milanesa = Menu.create!(provider: tuviandita, name: "Milanesa de carne", description: "Con papas", price: 320)
-    Schedule.create!(date: monday, amount: 10, menu: milanesa)
+    Schedule.create!(date: monday, menu: milanesa)
 
     sorrentinos = Menu.create!(provider: endulzate, name: "Sorrentinos de jamón y queso", description: "Con salsa", price: 300)
-    Schedule.create!(date: monday, amount: 10, menu: sorrentinos)
+    Schedule.create!(date: monday, menu: sorrentinos)
   end
 
   it "muestra el aviso de cierre, oculta los platos del proveedor cerrado y mantiene disponibles los del otro proveedor" do
@@ -52,7 +52,7 @@ RSpec.describe "Cierre programado visto por el empleado", type: :system do
     expect(page).to have_no_content("#{provider_name} no está disponible")
   end
 
-  it "muestra el estado vacío específico al filtrar por el proveedor cerrado" do
+  it "conserva el proveedor y el período del cierre después de descartar el aviso" do
     tuviandita.closures.create!(starts_on: monday, ends_on: monday + 2.days, reason: "Obras en cocina")
 
     sign_in consumer_user, role: :consumer
@@ -62,11 +62,14 @@ RSpec.describe "Cierre programado visto por el empleado", type: :system do
 
     find("button[aria-label='Filtrar por proveedores']").click
     within("[data-provider-filter-sheet]") do
-      find("label", exact_text: provider_name).click
+      find("#dashboard-filter-#{tuviandita.id}").click
       click_button "Aplicar"
     end
 
-    expect(page).to have_content("#{provider_name} no recibirá pedidos")
+    click_button "Cerrar aviso"
+
+    expect(page).to have_no_content("#{provider_name} no está disponible")
+    expect(page).to have_content("#{provider_name} no recibirá pedidos del #{I18n.l(monday, format: :short)} al #{I18n.l(monday + 2.days, format: :short)}")
     expect(page).to have_no_content("Milanesa de carne")
   end
 end

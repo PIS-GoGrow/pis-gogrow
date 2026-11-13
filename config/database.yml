@@ -15,6 +15,10 @@ development:
 test:
   <<: *default
   database: rails_inertia_base_test<%= ENV["DATABASE_SUFFIX"] %>
+  host: <%= ENV["DB_HOST"] if ENV["DB_HOST"] %>
+  port: <%= ENV["DB_PORT"] if ENV["DB_PORT"] %>
+  username: <%= ENV["DB_USERNAME"] if ENV["DB_USERNAME"] %>
+  password: <%= ENV["DB_PASSWORD"] if ENV["DB_PASSWORD"] %>
 
 production:
   <<: *default

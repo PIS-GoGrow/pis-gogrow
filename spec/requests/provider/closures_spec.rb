@@ -20,7 +20,7 @@ RSpec.describe "Provider::Closures", type: :request do
     I18n.t("activerecord.errors.models.provider_closure.attributes.#{attribute}.#{key}", **options)
   end
 
-  describe "POST /provider/closures" do
+  describe "POST /provider/cierres" do
     it "redirects to sign in without a session" do
       expect { post provider_closures_path, params: }.not_to change(ProviderClosure, :count)
 
@@ -154,10 +154,36 @@ RSpec.describe "Provider::Closures", type: :request do
         follow_redirect!
         expect(inertia).to have_props(errors: { base: [ error_message(:base, :overlaps) ] })
       end
+
+      it "accepts a closure planned for 2027 and returns it in Inertia props" do
+        starts_on = Date.new(2027, 3, 1)
+        ends_on = Date.new(2027, 3, 5)
+
+        expect do
+          post provider_closures_path, params: { starts_on: starts_on.iso8601, ends_on: ends_on.iso8601, reason: "Cierre 2027" }
+        end.to change { provider.closures.count }.by(1)
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        follow_redirect!
+        expect(inertia).to render_component("provider/operational_settings/show")
+        expect(inertia.props[:closures].pluck(:reason)).to include("Cierre 2027")
+      end
+
+      it "accepts a range starting on Friday and ending on Monday spanning the weekend" do
+        friday = Date.new(2026, 10, 16)
+        monday = Date.new(2026, 10, 19)
+
+        post provider_closures_path, params: { starts_on: friday.iso8601, ends_on: monday.iso8601, reason: "Fin de semana largo" }
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        closure = provider.closures.last
+        expect(closure.covers?(friday + 1.day)).to be true
+        expect(closure.covers?(friday + 2.days)).to be true
+      end
     end
   end
 
-  describe "PATCH /provider/closures/:id" do
+  describe "PATCH /provider/cierres/:id" do
     let!(:closure) { create_closure }
 
     it "redirects an admin to the home page and keeps the closure" do
@@ -252,6 +278,13 @@ RSpec.describe "Provider::Closures", type: :request do
         expect(response).to have_http_status(:not_found)
         expect(foreign.reload.reason).to eq("Vacaciones")
       end
+
+      it "allows updating a closure to dates in 2027" do
+        patch provider_closure_path(closure), params: { starts_on: "2027-04-05", ends_on: "2027-04-09", reason: "Mantenimiento 2027" }
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        expect(closure.reload).to have_attributes(starts_on: Date.new(2027, 4, 5), ends_on: Date.new(2027, 4, 9), reason: "Mantenimiento 2027")
+      end
     end
 
     it "redirects to sign in without a session" do
@@ -262,7 +295,7 @@ RSpec.describe "Provider::Closures", type: :request do
     end
   end
 
-  describe "DELETE /provider/closures/:id" do
+  describe "DELETE /provider/cierres/:id" do
     let!(:closure) { create_closure }
 
     it "redirects an admin to the home page and keeps the closure" do
@@ -312,6 +345,70 @@ RSpec.describe "Provider::Closures", type: :request do
       expect { delete provider_closure_path(closure) }.not_to change(ProviderClosure, :count)
 
       expect(response).to redirect_to(root_path)
+    end
+  end
+
+  describe "durante el onboarding" do
+    before do
+      provider.update!(onboarding_completed_at: nil)
+      sign_in users(:provider_user), role: :provider
+    end
+
+    it "crea el cierre sin ser desviado por el guard y vuelve al paso 2 del onboarding" do
+      expect do
+        post provider_closures_path, params: params.merge(onboarding: true)
+      end.to change { provider.closures.count }.by(1)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+    end
+
+    it "redirecciona al paso 2 con errores de validación sin crear el cierre si las fechas son inválidas" do
+      expect do
+        post provider_closures_path, params: params.merge(ends_on: (today + 5).iso8601, onboarding: true)
+      end.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      follow_redirect!
+      expect(inertia).to have_props(errors: { ends_on: [ error_message(:ends_on, :greater_than_or_equal_to) ] })
+    end
+
+    it "redirecciona al paso 2 con errores de validación sin crear el cierre si el motivo está vacío" do
+      expect do
+        post provider_closures_path, params: params.merge(reason: "", onboarding: true)
+      end.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      follow_redirect!
+      expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :blank) ] })
+    end
+
+    it "redirecciona al paso 2 con errores si la fecha de inicio es anterior a hoy" do
+      expect do
+        post provider_closures_path, params: params.merge(starts_on: (today - 1).iso8601, onboarding: true)
+      end.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      follow_redirect!
+      expect(inertia).to have_props(errors: { starts_on: [ error_message(:starts_on, :greater_than_or_equal_to) ] })
+    end
+
+    it "redirecciona al paso 2 con errores al intentar actualizar con fechas inválidas" do
+      closure = create_closure
+
+      patch provider_closure_path(closure), params: { ends_on: (closure.starts_on - 1.day).iso8601, onboarding: true }
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      expect(closure.reload.ends_on).to eq(today + 9)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { ends_on: [ error_message(:ends_on, :greater_than_or_equal_to) ] })
+    end
+
+    it "elimina un cierre y vuelve al paso 2 del onboarding" do
+      closure = create_closure
+
+      delete provider_closure_path(closure, onboarding: true)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
     end
   end
 end

@@ -32,15 +32,23 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments" do
+  describe "GET /admin/pagos" do
     it "redirects to sign in without a session" do
       get admin_payments_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the home page" do
       sign_in users(:one), role: :consumer
+
+      get admin_payments_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects a provider to the home page" do
+      sign_in users(:provider_user), role: :provider
 
       get admin_payments_path
 
@@ -57,7 +65,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
         get admin_payments_path
 
-        expect(inertia).to have_props(total_debt: 1577.0, summary: { amount: 1577.0, meals: 4, limit: 40 })
+        expect(inertia).to have_props(total_debt: 1577.0, summary: { amount: 1577.0, meals: 1, limit: 40 })
         expect(inertia).to have_props { |page|
           page[:accounts].any? { it[:id] == account.id && it[:amount] == 800.0 && it[:vat_amount] == 176.0 && it[:payable_amount] == 976.0 }
         }
@@ -78,6 +86,84 @@ RSpec.describe "Admin::Payments", type: :request do
         get admin_payments_path
 
         expect(inertia.props[:history].pluck(:id)).to contain_exactly(accounts(:gogrow_tuviandita_previous).id)
+      end
+
+      it "lets HR download the invoice and the receipt of a confirmed period" do
+        account = accounts(:gogrow_tuviandita_previous)
+        payment = payments(:gogrow_previous_approved)
+        payment.receipt.attach(receipt_upload)
+        invoice = account.invoices.create!(issued_on: Date.current, total_amount: 900, file: receipt_upload(filename: "factura.png"))
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole).to include(
+          paid_on: DateFormat.short(payment.created_at),
+          receipt_download_url: receipt_admin_payment_path(payment),
+          invoice_download_url: file_admin_invoice_path(invoice, download: 1)
+        )
+      end
+
+      # Mientras GoGrow no pagó, la factura del proveedor sigue sin revisar: igual
+      # se tiene que poder bajar desde Pendientes.
+      it "lets HR download the invoice of a pending period before paying it" do
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: 1.month.ago.beginning_of_month, amount: 500)
+        invoice = account.invoices.create!(issued_on: Date.current, total_amount: 500, file: receipt_upload(filename: "factura.png"))
+
+        get admin_payments_path
+
+        expect(invoice.reload).to be_pending
+        expect(inertia.props[:accounts].find { it[:id] == account.id }).to include(
+          current: false,
+          invoice_download_url: file_admin_invoice_path(invoice, download: 1)
+        )
+      end
+
+      it "sends no invoice for a pending period the provider has not invoiced" do
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: 1.month.ago.beginning_of_month, amount: 500)
+
+        get admin_payments_path
+
+        expect(inertia.props[:accounts].find { it[:id] == account.id }[:invoice_download_url]).to be_nil
+      end
+
+      it "offers no invoice to download until the provider sends it" do
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil
+      end
+
+      it "uses the newest approved payment when an account has multiple approved payments" do
+        account = accounts(:gogrow_tuviandita_previous)
+        payment = payments(:gogrow_previous_approved)
+        payment.receipt.attach(receipt_upload(filename: "comprobante_1.png"))
+
+        newer_payment = account.payments.create!(
+          provider: account.provider,
+          status: :approved,
+          created_at: payment.created_at + 1.day
+        )
+        newer_payment.receipt.attach(receipt_upload(filename: "comprobante_2.png"))
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole).to include(
+          paid_on: DateFormat.short(newer_payment.created_at),
+          receipt_download_url: receipt_admin_payment_path(newer_payment)
+        )
+      end
+
+      it "does not offer invoice download when invoice is rejected" do
+        account = accounts(:gogrow_tuviandita_previous)
+        account.invoices.create!(
+          issued_on: Date.current,
+          total_amount: 900,
+          status: :rejected,
+          file: receipt_upload(filename: "factura_rechazada.png")
+        )
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil
       end
 
       # Con un comprobante viejo sin revisar, el período sigue en revisión
@@ -102,33 +188,34 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:history].pluck(:id)).not_to include(account.id)
       end
 
-      it "counts the subsidy and the meals of the current month" do
+      it "counts the subsidy and the meals of the current month already delivered" do
         get admin_payments_path
 
-        expect(inertia.props[:summary]).to eq("amount" => 601.0, "meals" => 4, "limit" => 40)
+        expect(inertia.props[:summary]).to eq("amount" => 601.0, "meals" => 1, "limit" => 40)
       end
 
       it "counts the meals of what the company still owes" do
         get admin_payments_path
 
-        expect(inertia).to have_props(total_debt: 601.0, total_meals: 4)
+        expect(inertia).to have_props(total_debt: 601.0, total_meals: 1)
       end
 
       it "sends the payment details each provider loaded, without its tax id" do
         providers(:endulzate).update!(
-          bank_name: "Banco Itaú", bank_account_type: :checking, bank_account_number: "1951234",
-          bank_account_holder: "Noelia Patricia Pinheiro", tax_id: "211234560019"
+          bank_name: "Banco Itaú", bank_account_details: "1951234",
+          beneficiary: "Noelia Patricia Pinheiro", tax_id: "211234560019"
         )
 
         get admin_payments_path
 
         endulzate = inertia.props[:providers].find { it[:id] == providers(:endulzate).id }
         expect(endulzate).to include(
-          bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro"
+          bank_name: "Banco Itaú", bank_account_details: "1951234", beneficiary: "Noelia Patricia Pinheiro",
+          payment_details_complete: true
         )
         expect(endulzate).not_to have_key(:tax_id)
         expect(inertia.props[:providers].find { it[:id] == providers(:tuviandita).id })
-          .to include(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
+          .to include(bank_name: nil, bank_account_details: nil, beneficiary: nil, payment_details_complete: false)
       end
 
       it "lists every provider so the ones without debt also show up" do
@@ -147,20 +234,29 @@ RSpec.describe "Admin::Payments", type: :request do
           "month" => I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first
         )
         expect(period["providers"].sole).to include(
-          "id" => providers(:tuviandita).id, "name" => "Provider User", "meals" => 4,
-          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0
+          "id" => providers(:tuviandita).id, "name" => "Provider User", "meals" => 1,
+          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0, "paid" => false
         )
-        expect(period["providers"].sole["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
-          orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
-        )
+        expect(period["providers"].sole["days"].flat_map { it["orders"] }.pluck("id")).to eq([ orders(:history_confirmed_past).id ])
+      end
+
+      # IBP-032 CA3: el detalle rotula el total como pagado solo con el pago aprobado.
+      it "marks the detail as paid only once the payment is approved" do
+        account = accounts(:gogrow_tuviandita_current)
+        payment = account.payments.build(provider: account.provider, status: :approved)
+        payment.save!(validate: false)
+
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumption]["providers"].sole).to include("paid" => true)
       end
 
       it "splits what the employee pays from what GoGrow pays in each order" do
         get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
 
         rows = inertia.props[:consumption]["providers"].sole["days"].flat_map { it["orders"] }
-        expect(rows.find { it["id"] == orders(:upcoming_confirmed_future).id }).to include(
-          "consumer_name" => users(:one).name, "meals" => 2, "employee_amount" => 300.5, "company_amount" => 300.5
+        expect(rows.find { it["id"] == orders(:history_confirmed_past).id }).to include(
+          "consumer_name" => users(:one).name, "meals" => 1, "employee_amount" => 150.25, "company_amount" => 150.25
         )
       end
 
@@ -230,11 +326,11 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments/:id" do
+  describe "GET /admin/pagos/:id" do
     it "redirects to sign in without a session" do
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "answers with the detail of every provider of the period's month" do
@@ -247,11 +343,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
       expect(body["month"]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first)
       expect(body["providers"].pluck("name", "subtotal")).to eq([ [ "Other Provider User", 200.0 ], [ "Provider User", 601.0 ] ])
-      expect(body["providers"].last["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
-        orders(:upcoming_confirmed_future).id,
-        orders(:history_confirmed_past).id,
-        orders(:other_consumer_upcoming).id
-      )
+      expect(body["providers"].last["days"].flat_map { it["orders"] }.pluck("id")).to eq([ orders(:history_confirmed_past).id ])
     end
 
     it "responds with not found for an account of another company" do
@@ -263,8 +355,21 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "POST /admin/payments" do
+  describe "POST /admin/pagos" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
+
+    def payment_with_receipt_for(account, status:, filename: "comprobante.png")
+      payment = account.payments.build(provider: account.provider, status:)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename:, content_type: "image/png")
+      payment.save!
+      payment
+    end
+
+    before do
+      providers(:tuviandita).update!(
+        bank_name: "Santander", bank_account_details: "1150260", beneficiary: "Tu Viandita S.A."
+      )
+    end
 
     it "creates a submitted payment with a receipt for the company account" do
       sign_in users(:admin), role: :admin
@@ -301,6 +406,53 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response).to redirect_to(admin_payments_path)
       expect(account.payments.reload.submitted.count).to eq(1)
       expect(account.payments.submitted.sole.receipt.filename.to_s).to eq("comprobante_1.png")
+    end
+
+    it "creates a new payment after a partial one and preserves the historical receipt" do
+      partial = payment_with_receipt_for(account, status: :partial, filename: "parcial.png")
+      original_blob_id = partial.receipt.blob_id
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "final.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.to change(Payment, :count).by(1)
+
+      expect(partial.reload).to be_partial
+      expect(partial.receipt.blob_id).to eq(original_blob_id)
+      expect(partial.receipt.filename.to_s).to eq("parcial.png")
+      expect(account.reload.payments.map(&:status)).to contain_exactly("partial", "submitted")
+    end
+
+    it "does not accept a new receipt for a settled company account" do
+      account.payments.create!(provider: account.provider, status: :approved)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "late.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(account.reload.collection_status).to eq("approved")
+    end
+
+    it "accepts a new receipt for a company account that has an approved receipt but owes new debt" do
+      account.payments.create!(
+        provider: account.provider, status: :approved, expected_amount: account.payable_amount
+      )
+      account.update!(amount: account.amount + 500)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "second.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.to change(Payment, :count).by(1)
+
+      second = account.payments.submitted.sole
+      expect(second.expected_amount).to eq(account.outstanding_amount)
     end
 
     it "resolves the pending payment alert of the account" do
@@ -418,7 +570,7 @@ RSpec.describe "Admin::Payments", type: :request do
         }
       }.not_to change(Payment, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "rescues ActiveRecord::RecordNotUnique and redirects with already_under_review error prop" do
@@ -437,6 +589,69 @@ RSpec.describe "Admin::Payments", type: :request do
       )
     end
 
+    it "does not accept a receipt while the provider has not loaded its payment details" do
+      providers(:tuviandita).update!(bank_account_details: nil)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
+    it "rejects direct POST when provider bank_name is blank or whitespace" do
+      providers(:tuviandita).update!(bank_name: "   ")
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
+    it "rejects direct POST when provider beneficiary is nil" do
+      providers(:tuviandita).update!(beneficiary: nil)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
     it "returns not found when account_id is invalid or does not exist" do
       sign_in users(:admin), role: :admin
 
@@ -450,7 +665,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments/:id/receipt" do
+  describe "GET /admin/pagos/:id/archivo" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     it "allows HR to access a receipt from its company account" do
@@ -463,6 +678,35 @@ RSpec.describe "Admin::Payments", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to eq("company receipt")
+    end
+
+    # Desde el historial de Empleados, RR. HH. descarga lo que cada empleado le
+    # mandó al proveedor.
+    it "allows HR to access the receipt of one of its employees" do
+      employee_account = accounts(:one_tuviandita_current)
+      payment = employee_account.payments.build(provider: employee_account.provider, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("employee receipt"), filename: "receipt.png", content_type: "image/png")
+      payment.save!
+      sign_in users(:admin), role: :admin
+
+      get receipt_admin_payment_path(payment)
+
+      expect(response.body).to eq("employee receipt")
+    end
+
+    it "does not expose the receipt of another company's employee" do
+      company = Company.create!(name: "Otra", address: "Rivera 2000")
+      user = User.create!(email: "outsider@gmail.com", name: "Zoe Outsider", password: "password123456")
+      outsider = Consumer.create!(user:, company:, address: "Rivera 2001")
+      outsider_account = Account.create!(owner: outsider, provider: providers(:tuviandita), month: Date.current, amount: 100)
+      payment = outsider_account.payments.build(provider: providers(:tuviandita), status: :submitted)
+      payment.receipt.attach(io: StringIO.new("private"), filename: "private.png", content_type: "image/png")
+      payment.save!
+      sign_in users(:admin), role: :admin
+
+      get receipt_admin_payment_path(payment)
+
+      expect(response).to have_http_status(:not_found)
     end
 
     it "does not expose receipts from another company" do
@@ -486,7 +730,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
       get receipt_admin_payment_path(payment)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "does not allow a consumer to access a company receipt" do
@@ -501,7 +745,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "DELETE /admin/payments/:id" do
+  describe "DELETE /admin/pagos/:id" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     def payment_with_receipt(status:, rejection_reason: nil)
@@ -543,6 +787,18 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(payment.reload).to be_approved
     end
 
+    it "does not remove a historical partial receipt" do
+      payment = payment_with_receipt(status: :partial)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        delete admin_payment_path(payment), headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(payment.reload).to be_partial
+      expect(payment.receipt).to be_attached
+    end
+
     it "does not remove a receipt from another company" do
       payment = other_company_account.payments.build(
         provider: other_company_account.provider,
@@ -566,7 +822,7 @@ RSpec.describe "Admin::Payments", type: :request do
         delete admin_payment_path(payment)
       }.not_to change(Payment, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "does not allow a consumer to remove a company receipt" do

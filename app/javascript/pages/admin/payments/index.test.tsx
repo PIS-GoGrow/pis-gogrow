@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import type { Account, AdminPaymentsIndex } from "@/types"
+import type { AdminAccount, AdminPaymentsIndex } from "@/types"
 
 import Index from "./index"
 
@@ -11,7 +12,7 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ url: "/admin/payments", props: { locale: "es" } }),
+    usePage: () => ({ url: "/rrhh/pagos", props: { locale: "es" } }),
   }
 })
 
@@ -45,6 +46,8 @@ const provider = (id: number, name: string) => ({
   vat_rate: 22,
   vat_amount: 3564,
   payable_amount: 19764,
+  outstanding_amount: 19764,
+  paid: false,
   days: [],
 })
 
@@ -53,12 +56,13 @@ const period: NonNullable<AdminPaymentsIndex["consumption"]> = {
   providers: [provider(1, "Endulzate by Noe"), provider(2, "Tu Viandita")],
 }
 
-const account: Account = {
+const account: AdminAccount = {
   id: 7,
   provider_id: 2,
   amount: 15000,
   vat_amount: 0,
   payable_amount: 15000,
+  outstanding_amount: 15000,
   current: false,
   month: "agosto de 2026",
   due_date: "10/09/26",
@@ -104,9 +108,9 @@ describe("Admin Payments Page", () => {
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     )
 
-    expect(screen.getByRole("dialog")).toHaveTextContent(
-      "Endulzate by Noe: Consumo Agosto 2026",
-    )
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Endulzate by Noe: Consumos Agosto 2026")
+    expect(screen.queryByRole("tab", { name: "Pago" })).not.toBeInTheDocument()
   })
 
   it("starts closed on the pending tab without a period", () => {
@@ -137,8 +141,9 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
+            payment_details_complete: false,
           },
         ]}
       />,
@@ -151,9 +156,82 @@ describe("Admin Payments Page", () => {
         "Tu Viandita: Consumo Agosto 2026",
       ),
     )
-    expect(fetch).toHaveBeenCalledWith("/admin/payments/7", expect.anything())
+    expect(fetch).toHaveBeenCalledWith("/rrhh/pagos/7", expect.anything())
 
     vi.unstubAllGlobals()
+  })
+
+  it("filters the history by provider", async () => {
+    const user = userEvent.setup()
+    const paid = { ...account, collection_status: "approved" as const }
+    const bankless = {
+      home_delivery: true,
+      bank_name: null,
+      bank_account_details: null,
+      beneficiary: null,
+      payment_details_complete: false,
+    }
+
+    render(
+      <Index
+        {...props}
+        history={[
+          { ...paid, id: 1, provider_id: 1 },
+          { ...paid, id: 2, provider_id: 2 },
+        ]}
+        providers={[
+          { id: 1, name: "Endulzate by Noe", ...bankless },
+          { id: 2, name: "Tu Viandita", ...bankless },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+    expect(screen.getByText("Proveedores:")).toHaveTextContent("Todos")
+    expect(screen.getByText(/Endulzate by Noe: agosto/)).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedor" }),
+    )
+    await user.click(screen.getByRole("menuitemradio", { name: "Tu Viandita" }))
+
+    expect(
+      screen.queryByText(/Endulzate by Noe: agosto/),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText(/Tu Viandita: agosto/)).toBeInTheDocument()
+  })
+
+  it("shows empty state in history tab when filtered provider has no history", async () => {
+    const user = userEvent.setup()
+    const paid = { ...account, collection_status: "approved" as const }
+    const bankless = {
+      home_delivery: true,
+      bank_name: null,
+      bank_account_details: null,
+      beneficiary: null,
+      payment_details_complete: false,
+    }
+
+    render(
+      <Index
+        {...props}
+        history={[{ ...paid, id: 1, provider_id: 1 }]}
+        providers={[
+          { id: 1, name: "Endulzate by Noe", ...bankless },
+          { id: 2, name: "Tu Viandita", ...bankless },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedor" }),
+    )
+    await user.click(screen.getByRole("menuitemradio", { name: "Tu Viandita" }))
+
+    expect(
+      screen.getByText("Todavía no hay períodos pagados"),
+    ).toBeInTheDocument()
   })
 
   it("shows the meals next to the pending total", () => {
@@ -163,10 +241,13 @@ describe("Admin Payments Page", () => {
     expect(screen.getByText("(130 viandas)")).toBeInTheDocument()
   })
 
-  it("shows the status the server resolved for each period", () => {
+  it("shows the status of each receipt instead of a badge per period", () => {
     const payment = {
       rejection_reason: null,
+      expected_amount: null,
       receipt_uploaded_at: "01/09/2026",
+      receipt_url: "/rrhh/pagos/1/archivo",
+      receipt_filename: "comprobante.png",
     }
 
     render(
@@ -198,8 +279,9 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
+            payment_details_complete: false,
           },
         ]}
       />,
@@ -207,6 +289,70 @@ describe("Admin Payments Page", () => {
 
     expect(
       document.querySelector("[data-slot='card-header'] [data-status]"),
-    ).toHaveAttribute("data-status", "submitted")
+    ).not.toBeInTheDocument()
+    expect(
+      document.querySelector("[data-status='submitted']"),
+    ).toBeInTheDocument()
+  })
+
+  it("disables upload and displays the bank missing notice when provider payment details are incomplete", () => {
+    render(
+      <Index
+        {...props}
+        accounts={[account]}
+        providers={[
+          {
+            id: 2,
+            name: "Tu Viandita",
+            home_delivery: true,
+            bank_name: null,
+            bank_account_details: null,
+            beneficiary: null,
+            payment_details_complete: false,
+          },
+        ]}
+      />,
+    )
+
+    expect(
+      screen.getByText("Este proveedor todavía no cargó sus datos de cobro."),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("enables upload and displays bank details when provider payment details are complete", () => {
+    render(
+      <Index
+        {...props}
+        accounts={[account]}
+        providers={[
+          {
+            id: 2,
+            name: "Tu Viandita",
+            home_delivery: true,
+            bank_name: "Santander",
+            bank_account_details: "1150260",
+            beneficiary: "Tu Viandita S.A.",
+            payment_details_complete: true,
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText("Santander")).toBeInTheDocument()
+    expect(screen.getByText(/1150260/)).toBeInTheDocument()
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
+    expect(
+      screen.queryByText(
+        "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
+      ),
+    ).not.toBeInTheDocument()
   })
 })

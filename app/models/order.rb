@@ -6,6 +6,8 @@
 # la cuenta se le asigna automáticamente. Las cuentas de una orden no deberían
 # asignarse manualmente.
 class Order < ApplicationRecord
+  include Auditable
+
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
   attribute :delivery_method, :integer
@@ -22,7 +24,8 @@ class Order < ApplicationRecord
     other: 4,
     dish_modified: 5,
     dish_deleted: 6,
-    dish_unpublished: 7
+    dish_unpublished: 7,
+    no_response: 8
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
@@ -32,6 +35,7 @@ class Order < ApplicationRecord
   # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
   # tiene que reescribir el historial.
   before_create :snapshot_order_context
+  audits :amount, :delivery_method, :address, :notes, :selected_options, :price, :discounted_price
 
   belongs_to :consumer
   belongs_to :schedule
@@ -46,6 +50,10 @@ class Order < ApplicationRecord
 
   has_many :order_benefits, dependent: :destroy
   has_many :benefits, through: :order_benefits
+
+  has_one :review, dependent: :destroy
+  # Sin dependent: la auditoría se conserva aunque se borre el pedido.
+  has_many :events, class_name: "OrderEvent"
 
   # El mensaje de aclaraciones es opcional: la pantalla manda "" cuando el
   # empleado no escribe nada, y sin esto el pedido queda con un string vacío que
@@ -76,15 +84,31 @@ class Order < ApplicationRecord
       .order(Schedule.arel_table[:date].asc)
   }
 
+  # Lo que ya generó deuda: un pedido confirmado se cobra recién desde el día de
+  # su entrega. Como ese corte depende de la fecha, DeliveredOrdersSyncJob
+  # recalcula cada día las cuentas de los pedidos que se entregan ese día.
+  scope :consumed, -> { confirmed.where(delivery_date: nil).or(confirmed.where(delivery_date: ..Date.current)) }
+
   # Definido como el complemento de upcoming para que las dos secciones
   # particionen las órdenes: sin esto, una orden sin schedule (schedule_id es
   # nullable por el dependent: :nullify) se caería de ambas listas.
   scope :history, -> {
     where.not(id: upcoming.reorder(nil).select(:id))
       .left_joins(:schedule)
-      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"))
+      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"), id: :desc)
   }
+
+  # Lo que cuenta es la fecha de entrega. Un pedido sin ninguna (sin schedule
+  # ni delivery_date) queda del lado reciente: no hay que recorrer todo el
+  # historial para verlo.
+  scope :delivered_since, ->(date) {
+    left_joins(:schedule)
+      .where("COALESCE(schedules.date, orders.delivery_date) >= ? OR COALESCE(schedules.date, orders.delivery_date) IS NULL", date)
+  }
+  scope :delivered_before, ->(date) { left_joins(:schedule).where("COALESCE(schedules.date, orders.delivery_date) < ?", date) }
+
   after_create :ensure_accounts!
+  after_save :record_event
   after_update_commit :sync_accounts,
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
@@ -94,10 +118,12 @@ class Order < ApplicationRecord
 
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
+  after_update_commit :refresh_received_notification,
+    if: -> { saved_change_to_amount? && pending? }
   after_create_commit :notify_received
 
-  # Inicializa una orden con el precio que calculó OrderPricing. benefits es
-  # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
+  # Inicializa una orden con el precio que calculó OrderPricing. benefits es un arreglo
+  # [[ benefit, viandas que cubre ]]; sin discounted_price se cobra el precio de
   # lista.
   def self.reserve(
     consumer:,
@@ -125,7 +151,7 @@ class Order < ApplicationRecord
     )
 
     benefits.each do |benefit, benefit_used|
-      order.apply_benefit benefit, benefit_used
+      order.apply_benefit benefit, benefit_used.units_used
     end
 
     return order unless order.valid?
@@ -172,15 +198,22 @@ class Order < ApplicationRecord
   end
 
   # RN-12 y RN-13: un pedido pendiente de confirmación se cancela hasta el día de
-  # la entrega inclusive; uno ya confirmado, solo mientras la entrega siga siendo
-  # para un día futuro. Devuelve el motivo del bloqueo para que la pantalla lo
-  # explique. La fecha se mira en los dos estados porque esto es la única guarda
-  # del endpoint: que la pantalla esconda el botón no frena un PATCH directo.
+  # la entrega inclusive, pero ese mismo día solo hasta la hora de cierre del
+  # proveedor: pasada, él ya está preparando lo pedido. Uno ya confirmado, solo
+  # mientras la entrega siga siendo para un día futuro. Devuelve el motivo del
+  # bloqueo para que la pantalla lo explique. La fecha se mira en los dos
+  # estados porque esto es la única guarda del endpoint: que la pantalla esconda
+  # el botón no frena un PATCH directo.
   def cancellation_block_reason
     return "already_closed" unless pending? || confirmed?
     return "unavailable" if schedule.nil?
     return if schedule.date.after?(Date.current)
-    return if pending? && schedule.date.today?
+
+    if pending? && schedule.date.today?
+      return "order_deadline_passed" if schedule.order_deadline_passed?
+
+      return
+    end
 
     schedule.date.today? ? "confirmed_for_today" : "already_closed"
   end
@@ -189,16 +222,34 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
+  # Solo los confirmados suman a la deuda de la cuenta, así que un confirmado
+  # cuya entrega ya pasó no se rechaza: cambiaría un monto que ya se cobró. Sin
+  # fecha de entrega no hay forma de saberlo y se trata igual que uno pasado.
+  def rejectable?
+    pending? || (confirmed? && delivery_date.present? && !delivery_date.before?(Date.current))
+  end
+
   # Confirmar solo corre sobre pedidos pendientes; rechazar también sobre los
   # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
   # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
   # empleado. El lock es por el doble envío, igual que en cancel.
   def decide(status, reason: nil, details: nil, by: nil)
     with_lock do
-      return false unless pending? || (confirmed? && status.to_s == "rejected")
+      rejecting = status.to_s == "rejected"
+      return false unless pending? || (confirmed? && rejecting)
+
+      if response_window_closed?
+        errors.add(:base, I18n.t("validations.order_response_window_closed"))
+        return false
+      end
+
+      if rejecting && !rejectable?
+        errors.add(:base, I18n.t("validations.order_not_rejectable"))
+        return false
+      end
 
       attrs = { status: status }
-      if status.to_s == "rejected"
+      if rejecting
         attrs[:rejection_reason] = reason
         attrs[:rejection_details] = details
         attrs[:rejected_at] = Time.current
@@ -210,19 +261,31 @@ class Order < ApplicationRecord
   end
 
   # RN-12: modificar equivale a cancelar y volver a pedir, así que rige la misma
-  # ventana. Una orden ya confirmada queda fuera: el proveedor la aceptó con
-  # esos datos. Devuelve el motivo del bloqueo para que la pantalla lo explique.
+  # ventana: una pendiente hasta el día de la entrega, una confirmada hasta el
+  # día previo. Devuelve el motivo del bloqueo para que la pantalla lo explique.
   def modification_block_reason
-    return "already_confirmed" if confirmed?
-    return "already_closed" unless pending?
+    return "already_closed" unless pending? || confirmed?
     return "unavailable" if schedule.nil?
-    return if schedule.date >= Date.current
+    return if schedule.date.after?(Date.current)
+    return if pending? && schedule.date.today?
 
-    "already_closed"
+    schedule.date.today? ? "confirmed_for_today" : "already_closed"
   end
 
   def modifiable?
     modification_block_reason.nil?
+  end
+
+  # Solo se califica un plato ya consumido: un pedido confirmado del empleado cuya
+  # entrega ya pasó y que todavía no calificó. Necesita el plato vivo porque la
+  # reseña se agrega sobre él para el detalle. Es la única guarda del endpoint:
+  # que la pantalla esconda el botón no frena un POST directo.
+  def reviewable?
+    confirmed? && delivery_date&.before?(Date.current) && schedule&.menu.present? && review.nil?
+  end
+
+  def reviewed?
+    review.present?
   end
 
   # El cupo del schedule y los beneficios ya cuentan las unidades de esta orden,
@@ -230,23 +293,28 @@ class Order < ApplicationRecord
   # sobre el total nuevo: sin eso, pasar de 2 a 3 se rechazaría contra su propio
   # consumo. El consumidor se bloquea primero, como al crear el carrito, para
   # que dos pedidos simultáneos no gasten los mismos usos de un beneficio.
-  def modify(by:, quantity:, notes:, delivery:, selected_options: nil)
+  #
+  # Devuelve el pedido que queda con el cambio, o false si no se pudo: uno
+  # confirmado no se reescribe (ver reorder_confirmed), así que puede ser otro.
+  def modify(by:, quantity:, notes:, delivery:, selected_options: nil, add_units: false)
+    selected_options ||= self.selected_options
+
     transaction do
       consumer.lock!
 
       with_lock do
         return false unless modifiable?
+        return reorder_confirmed(by:, quantity:, notes:, delivery:, selected_options:, add_units:) if confirmed?
 
         schedule.with_lock do
           # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
           # bloquea si la publicación está agotada y encima se pide aumentar.
-          if schedule.remaining_amount + amount.to_i < quantity ||
-             (!schedule.available && quantity > amount.to_i)
+          if !schedule.available && quantity > amount.to_i
             errors.add(:base, I18n.t("validations.schedule_unavailable"))
             return false
           end
 
-          line = OrderPricing.new(consumer, held_by: self).call([ { schedule:, quantity: } ]).first
+          line = Orders::Pricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity:, benefits: benefit_ids } ]).first.second
 
           # El update tiene que ir antes de tocar los beneficios y cortar si
           # falla: si una validación rechaza el cambio, los beneficios no se
@@ -257,7 +325,7 @@ class Order < ApplicationRecord
             notes:,
             price: line.price,
             discounted_price: line.discounted_price,
-            selected_options: selected_options || self.selected_options,
+            selected_options:,
             modified_at: Time.current,
             modified_by: by,
             **delivery
@@ -266,14 +334,12 @@ class Order < ApplicationRecord
           return false unless saved
 
           replace_benefits! line.benefits
-          true
+          self
         end
       end
     end
   end
 
-  # El tope mensual solo mira las entregas del mes en curso, así que una orden
-  # para el mes que viene no tiene unidades que devolver.
   def subsidized_units_held
     return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
 
@@ -295,6 +361,21 @@ class Order < ApplicationRecord
 
       notify_cancelled if before_cancellation_confirmed?
       true
+    end
+  end
+
+  # Un pendiente del día sin respuesta pasada la hora límite del proveedor ya no
+  # se confirma: UnansweredOrdersRejectionJob lo rechaza para que el empleado
+  # pueda pedirle a otro proveedor que todavía no cerró.
+  def response_window_closed?
+    pending? && delivery_date&.today? && provider&.response_deadline_passed_today?
+  end
+
+  def reject_unanswered!
+    with_lock do
+      return false unless response_window_closed?
+
+      update!(status: :rejected, rejection_reason: :no_response, rejected_at: Time.current)
     end
   end
 
@@ -324,6 +405,8 @@ class Order < ApplicationRecord
   def provider_name = super || provider&.user&.name
   def delivery_date = super || schedule&.date
 
+  def consumed? = confirmed? && (delivery_date.nil? || delivery_date <= Date.current)
+
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
   # subsidio. Es idempotente, así que sirve también para completar las cuentas de
@@ -349,22 +432,24 @@ class Order < ApplicationRecord
       user: consumer.user,
       notifiable: self,
       description_data: {
-        date: I18n.l(schedule.date, format: :short),
+        date: DateFormat.long(schedule.date, inline: true),
         provider: provider.user.name
       }
     )
   end
 
   def notify_cancelled
-    return unless provider&.user
+    target_provider = provider
+    return unless target_provider&.user
+    return if target_provider.closed_on?(Date.current)
 
     Notifier.call(
       event_key: :order_cancellation,
-      user: provider.user,
+      user: target_provider.user,
       notifiable: self,
       description_data: {
         consumer: consumer.user.name,
-        date: I18n.l(schedule.date, format: "%d/%m"),
+        date: DateFormat.long(schedule.date, inline: true),
         dish: menu_name
       }
     )
@@ -378,13 +463,32 @@ class Order < ApplicationRecord
       event_key: :order_received,
       user: provider.user,
       notifiable: self,
-      description_data: {
-        consumer: consumer.user.name,
-        amount:,
-        dish: menu_name,
-        date: I18n.l(schedule.date, format: :short)
-      }
+      description_data: order_received_description_data
     )
+  end
+
+  def refresh_received_notification
+    target_provider = provider
+    return unless target_provider&.user
+
+    notification = target_provider.user.notifications
+      .active
+      .find_by(event: "order_received", notifiable: self)
+
+    if notification
+      notification.update! description_data: order_received_description_data
+    else
+      notify_received
+    end
+  end
+
+  def order_received_description_data
+    {
+      consumer: consumer.user.name,
+      amount:,
+      dish: menu_name,
+      date: DateFormat.long(schedule.date, inline: true)
+    }
   end
 
   def notify_rejected
@@ -406,18 +510,16 @@ class Order < ApplicationRecord
   # Guarda los datos necesarios para notificar un rechazo aunque luego se elimine el schedule.
   def capture_rejection_notification_data
     @rejection_notification_data = {
-      date: I18n.l(delivery_date, format: :short),
+      date: DateFormat.long(delivery_date, inline: true),
       dish: menu_name,
       provider: provider_name
     }
   end
 
-  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
-  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
   def max_quantity
-    return amount.to_i if schedule.nil?
+    return amount.to_i if schedule.nil? || !schedule.available
 
-    schedule.remaining_amount + amount.to_i
+    99
   end
 
   # La dirección actual del pedido se mantiene como opción aunque no esté
@@ -453,6 +555,7 @@ class Order < ApplicationRecord
     values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
+
   def snapshot_order_context
     menu = schedule&.menu
     return if menu.nil?
@@ -473,15 +576,99 @@ class Order < ApplicationRecord
     owner.accounts.find_by(month:, provider:) || owner.accounts.create_or_find_by!(month:, provider:)
   end
 
+  # El proveedor aceptó este pedido con sus datos, así que no se pisan. Sumar
+  # unidades sin tocar nada más pide un complementario por la diferencia; otro
+  # cambio cancela este y pide uno nuevo. Los dos quedan pendientes, sujetos a
+  # su aprobación. Se cancela primero para que el pedido nuevo cuente con el
+  # cupo y los beneficios que este libera, y el savepoint deshace la
+  # cancelación si el nuevo no se puede pedir. Con add_units el empleado aceptó
+  # solo sumar unidades: si eso ya no es posible se rechaza, nunca se cancela.
+  def reorder_confirmed(by:, quantity:, notes:, delivery:, selected_options:, add_units:)
+    same_details = notes.presence == self.notes &&
+      delivery.values_at(:delivery_method, :address) == [ delivery_method, address ] &&
+      chosen_values(selected_options) == chosen_values(self.selected_options)
+    return self if same_details && quantity == amount
+
+    adding_units = same_details && quantity > amount
+    if add_units && !adding_units
+      errors.add(:base, I18n.t("validations.add_units_unavailable"))
+      return false
+    end
+
+    units = adding_units ? quantity - amount : quantity
+    chosen_benefit_ids = benefit_ids
+    replacement = nil
+
+    transaction(requires_new: true) do
+      raise ActiveRecord::Rollback unless adding_units || cancel(by:)
+
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: units, benefits: chosen_benefit_ids } ]).first.second
+      replacement = Order.reserve(
+        consumer:,
+        schedule:,
+        quantity: units,
+        notes:,
+        selected_options:,
+        discounted_price: line.discounted_price,
+        benefits: line.benefits,
+        **delivery
+      )
+
+      raise ActiveRecord::Rollback unless replacement.persisted?
+    end
+
+    return replacement if replacement&.persisted?
+
+    replacement&.errors&.each { errors.add(:base, it.attribute == :schedule_id ? it.message : it.full_message) }
+    false
+  end
+
+  # El nombre del grupo queda fuera: el pedido guarda el del momento en que se
+  # hizo y el proveedor puede renombrarlo sin que cambie lo elegido.
+  def chosen_values(options)
+    options.as_json.map { it.values_at("group_id", "values") }
+  end
+
   def replace_benefits!(benefits)
     order_benefits.where.not(benefit_id: benefits.keys.map(&:id)).destroy_all
     benefits.each do |benefit, benefit_used|
-      order_benefits.find_or_initialize_by(benefit:).update!(benefit_used:)
+      order_benefits.find_or_initialize_by(benefit:).update!(benefit_used: benefit_used.units_used)
     end
   end
 
   def sync_accounts
     accounts.each(&:sync_amount!)
+  end
+
+  # Corre dentro de la transacción del guardado: un cambio no queda sin su
+  # registro, ni un registro de un cambio que se revirtió.
+  def record_event
+    changeset = saved_changes.slice(
+      "status", "amount", "price", "discounted_price", "delivery_method", "address",
+      "notes", "selected_options", "rejection_reason", "rejection_details"
+    )
+    return if changeset.empty?
+
+    # Al crear, Rails informa como valor anterior de status el default crudo de
+    # la columna (0), no nil: un pedido nuevo no tenía ningún valor antes.
+    changeset.transform_values! { [ nil, it.last ] } if previously_new_record?
+
+    OrderEvent.create!(
+      order_id: id,
+      company_id: consumer.company_id,
+      user: Current.user,
+      actor_name: Current.user&.name,
+      role: Current.session&.role,
+      action: event_action(changeset),
+      changeset:
+    )
+  end
+
+  def event_action(changeset)
+    return :created if previously_new_record?
+    return status if changeset.key?("status")
+
+    (changeset.keys - %w[price discounted_price]).empty? ? :price_changed : :modified
   end
 
   def remember_accounts

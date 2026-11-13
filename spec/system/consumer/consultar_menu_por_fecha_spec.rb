@@ -45,8 +45,8 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     Schedule.delete_all
   end
 
-  def publish(menu, date, amount: 5)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date, available: true)
+    Schedule.create!(menu:, date:, available:)
   end
 
   def order_away(schedule, quantity)
@@ -64,6 +64,53 @@ RSpec.describe "Consultar el menú disponible por fecha" do
   # su número visible, que es lo que ve el empleado.
   def pick_day(date)
     within("[role=radiogroup]") { find("[role=radio]", text: /\b#{date.day}\b/).click }
+  end
+
+  def open_provider_filter
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      loop do
+        find("button[aria-label='Filtrar por proveedores']").click
+        break if page.has_css?("[data-provider-filter-sheet]", wait: 0.5)
+      rescue Capybara::ElementNotFound
+        sleep 0.2
+      end
+    end
+  end
+
+  it "conserva el filtro al navegar a pagos e historial y volver al menu" do
+    publish(menus(:milanesa), monday)
+    publish(menus(:sorrentinos), monday)
+    sign_in users(:one), role: :consumer
+    visit_hydrated dashboard_path
+
+    open_provider_filter
+    within("[data-provider-filter-sheet]") do
+      find("#dashboard-filter-#{menus(:milanesa).provider_id}").click
+      click_button "Aplicar"
+    end
+    expect(page).to have_no_content("Sorrentinos artesanales")
+
+    find("a[href='#{accounts_path}']", match: :first).click
+    expect(page).to have_current_path(accounts_path)
+    find("a[href='#{dashboard_path}']", match: :first).click
+    expect(page).to have_current_path(dashboard_path)
+    expect(page).to have_content("Milanesa con papas fritas")
+    expect(page).to have_no_content("Sorrentinos artesanales")
+
+    find("a[href='#{orders_path}']", match: :first).click
+    expect(page).to have_current_path(orders_path)
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("Proveedores: Todos")
+    find("a[href='#{dashboard_path}']", match: :first).click
+    expect(page).to have_current_path(dashboard_path)
+    expect(page).to have_content("Milanesa con papas fritas")
+    expect(page).to have_no_content("Sorrentinos artesanales")
+    open_provider_filter
+    within("[data-provider-filter-sheet]") do
+      find("#dashboard-filter-all").click
+      click_button "Aplicar"
+    end
+    expect(page).to have_content("Sorrentinos artesanales")
   end
 
   # Criterio 1
@@ -120,9 +167,8 @@ RSpec.describe "Consultar el menú disponible por fecha" do
 
   # Criterio 3
   it "marks the sold out dish and leaves only the available one orderable" do
-    sold_out = publish(menus(:milanesa), monday, amount: 2)
-    publish(menus(:sorrentinos), monday, amount: 2)
-    order_away(sold_out, 2)
+    sold_out = publish(menus(:milanesa), monday, available: false)
+    publish(menus(:sorrentinos), monday)
     sign_in users(:one)
 
     visit dashboard_path
@@ -141,7 +187,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
   # IBP-053, criterio 2 y 4: un plato que el proveedor marcó agotado se ve como
   # tal en el menú de empleados aunque su schedule todavía tenga cupo.
   it "marks a dish the provider turned off as sold out even with quota left" do
-    schedule = publish(menus(:milanesa), monday, amount: 5)
+    schedule = publish(menus(:milanesa), monday)
     schedule.update!(available: false)
     sign_in users(:one)
 
@@ -191,7 +237,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
 
     visit dashboard_path
 
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
     expect(page).to have_no_content("Milanesa con papas fritas")
     expect(page).to have_no_content("Menú semanal")
   end

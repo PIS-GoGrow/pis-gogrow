@@ -1,0 +1,10 @@
+﻿"# Plantilla para importar platos. Las filas que empiezan con # son ayuda y no se importan."
+"# Una fila por plato: nombre, descripción y precio. Los días, el cupo y las fechas se eligen después en la aplicación."
+"# En cada columna de opciones va UN grupo con este formato: Nombre=opción 1, opción 2"
+"# El asterisco después del nombre del grupo lo vuelve obligatorio: el empleado tiene que elegir una opción para poder pedir el plato."
+"# Ejemplo: Proteína*=carne, pollo  ->  grupo Proteína, obligatorio, con dos opciones."
+"# Dejá vacías las columnas de opciones que no uses. Borrá estas filas de ayuda y las de ejemplo antes de importar."
+nombre,descripcion,precio,opciones_1,opciones_2,opciones_3,opciones_4,opciones_5,opciones_6,opciones_7,opciones_8,opciones_9,opciones_10
+Milanesa con papas fritas,Milanesa de ternera con guarnición de papas,320,"Proteína*=carne, pollo",,,,,,,,,
+Sorrentinos,Sorrentinos caseros con salsa a elección,380,"Relleno*=ricota y nuez, jamón y queso","Salsa=filetto, bolognesa, crema",,,,,,,,
+Ensalada César,"Lechuga, pollo grillado, croutones y aderezo césar",290,,,,,,,,,,

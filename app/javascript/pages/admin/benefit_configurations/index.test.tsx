@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -8,6 +8,11 @@ import type { BenefitConfiguration } from "@/types/serializers"
 import Index from "./index"
 
 let currentFlashNotice: string | undefined = undefined
+let mockIsMobile = false
+
+vi.mock("@/hooks/use-mobile", () => ({
+  useIsMobile: () => mockIsMobile,
+}))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -80,6 +85,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     currentFlashNotice = undefined
+    mockIsMobile = false
   })
 
   it("renders empty state when there is no current configuration", () => {
@@ -96,7 +102,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     )
 
     expect(
-      screen.getByText(/todavía no configuraste el beneficio general/i),
+      screen.getByText(/todavía no configuraste el subsidio base/i),
     ).toBeInTheDocument()
   })
 
@@ -115,7 +121,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
 
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/account")
+    ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 
   it("renders current benefit configuration details when present", () => {
@@ -146,7 +152,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         employees={[]}
         pending_base_subsidies={[]}
         base_subsidy={currentConfig}
-        configurable_month={"12/12/2026"}
+        configurable_month={"2026-12-12"}
         debt_alert_threshold={2000}
       />,
     )
@@ -159,11 +165,40 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     expect(
       screen.getByRole("button", { name: /cancelar/i }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/12\/12\/2026/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/los cambios se aplicarán en el próximo período/i),
+    ).toBeInTheDocument()
 
     // Clicking cancel toggles back to read-only view
     await user.click(screen.getByRole("button", { name: /cancelar/i }))
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument()
+  })
+
+  it("opens bottom sheet when clicking 'Editar' on mobile", async () => {
+    mockIsMobile = true
+    const user = userEvent.setup()
+    render(
+      <Index
+        benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidies={[]}
+        base_subsidy={currentConfig}
+        configurable_month={"2026-12-12"}
+        debt_alert_threshold={2000}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Editar" }))
+
+    const sheet = screen.getByRole("dialog")
+    expect(sheet).toBeInTheDocument()
+    expect(within(sheet).getByText("Subsidio Base")).toBeInTheDocument()
+    expect(
+      within(sheet).getByRole("button", {
+        name: /programar subsidio|guardar cambios/i,
+      }),
+    ).toBeInTheDocument()
   })
 
   it("renders scheduled changes when pending_base_subsidies are present", () => {
@@ -174,13 +209,15 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         employees={[]}
         pending_base_subsidies={[pendingConfig]}
         base_subsidy={currentConfig}
-        configurable_month={"12/12/2026"}
+        configurable_month={"2026-12-12"}
         debt_alert_threshold={2000}
       />,
     )
 
     expect(
-      screen.getByText(/hay un cambio programado para el 12\/12\/2026/i),
+      screen.getByText(
+        /hay un cambio programado para el sábado 12 de diciembre/i,
+      ),
     ).toBeInTheDocument()
     expect(screen.getByText(/se descuenta 60%/i)).toBeInTheDocument()
   })
@@ -193,7 +230,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         employees={[]}
         pending_base_subsidies={[]}
         base_subsidy={currentConfig}
-        configurable_month={"12/12/2026"}
+        configurable_month={"2026-12-12"}
         debt_alert_threshold={2000}
       />,
     )
@@ -217,7 +254,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     )
 
     expect(screen.getByText("Alerta de deuda")).toBeInTheDocument()
-    expect(screen.getByText(/2500/)).toBeInTheDocument()
+    expect(screen.getByText("$2.500")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Editar monto" }),
     ).toBeInTheDocument()

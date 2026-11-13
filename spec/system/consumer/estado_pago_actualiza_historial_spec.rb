@@ -7,7 +7,7 @@ require "rails_helper"
 #
 # Criterio 3: "Los cambios de estado realizados por el proveedor se reflejan sin
 # alterar el historial anterior". El estado de un pago lo cambia el proveedor
-# desde /provider/collections, así que este archivo recorre el circuito completo --
+# desde /provider/cobros, así que este archivo recorre el circuito completo --
 # el empleado sube el comprobante, el proveedor lo aprueba o lo rechaza, y el
 # empleado vuelve a su historial en /accounts -- en vez de dar por hecho el
 # estado final con datos armados a mano.
@@ -27,7 +27,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def confirmed_order(consumer:, provider:, month:, quantity:, discounted_price:)
     travel_to(Time.zone.local(month.year, month.month, month.day, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,
@@ -38,6 +38,11 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   end
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumers(:one).orders.destroy_all
     consumers(:one).accounts.destroy_all
   end
@@ -84,20 +89,16 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def employee_submits_receipt
     sign_in employee
 
-    visit accounts_path
+    visit_hydrated accounts_path
     within(find("[role=tabpanel]")) do
-      expect(page).to have_button("Subir comprobante de pago")
-      click_on "Subir comprobante de pago"
-    end
-
-    within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      expect(page).to have_button("Subir comprobante de pago", disabled: true)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content("Enviado")
+      expect(page).to have_content("En revisión")
     end
   end
 
@@ -108,16 +109,52 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     )
     sign_in employee
 
-    visit accounts_path
-    within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
-    within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", Rails.root.join("public/robots.txt"), make_visible: true)
+    visit_hydrated accounts_path
+    within(find("[role=tabpanel]")) do
+      attach_file("Comprobante", Rails.root.join("public/robots.txt"), make_visible: true)
       click_on "Subir comprobante de pago"
     end
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_title"))
-    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_description"))
+    expect(page).to have_content(I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type"))
     expect(page).to have_button(I18n.t("pages.accounts.show.receipt_error_action"))
+    expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
+
+    # Al cerrar el aviso el selector queda limpio y se puede elegir otro archivo
+    click_on I18n.t("pages.accounts.show.receipt_error_action")
+    within(find("[role=tabpanel]")) do
+      expect(page).to have_no_content("robots.txt")
+      expect(page).to have_button("Subir comprobante de pago", disabled: true)
+      attach_file("Comprobante", receipt_file)
+      expect(page).to have_content("icon.png")
+      expect(page).to have_button("Subir comprobante de pago", disabled: false)
+    end
+  end
+
+  it "shows an error notification and saves nothing when the receipt exceeds 10 MB" do
+    confirmed_order(
+      consumer: consumers(:one), provider:, month: closed_month,
+      quantity: 2, discounted_price: 300
+    )
+    sign_in employee
+
+    visit accounts_path
+
+    Tempfile.create([ "comprobante-grande", ".pdf" ]) do |file|
+      file.binmode
+      file.write("x" * (10.megabytes + 1))
+      file.rewind
+
+      within(find("[role=tabpanel]")) do
+        attach_file("Comprobante", file.path, make_visible: true)
+        click_on "Subir comprobante de pago"
+      end
+
+      expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_title"), wait: 30)
+      expect(page).to have_content(I18n.t("activerecord.errors.models.payment.attributes.receipt.too_large"))
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt_error_action"))
+    end
+
     expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
   end
 
@@ -159,14 +196,14 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     sign_in employee
     visit accounts_path
     within(find("[role=tabpanel]")) do
-      expect(page).to have_no_content("Enviado")
+      expect(page).to have_no_content("En revisión")
     end
 
     find("[role=tab]", text: "Historial").click
     within(find("[role=tabpanel]")) do
       expect(page).to have_content(month_label(closed_month))
       expect(page).to have_content(month_label(previous_month))
-      expect(page).to have_content("Aceptado", count: 2)
+      expect(page).to have_content("Confirmado", count: 2)
       # El mes anterior conserva su propio importe: el pago nuevo no lo pisa.
       expect(page).to have_content("$300")
       expect(page).to have_content("$500")
@@ -220,7 +257,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     within(find("[role=tabpanel]")) do
       expect(page).to have_content(month_label(previous_month))
       expect(page).to have_content("$500")
-      expect(page).to have_content("Aceptado", count: 1)
+      expect(page).to have_content("Confirmado", count: 1)
       # Un pago rechazado no entra al historial: sigue siendo deuda pendiente.
       expect(page).to have_no_content(month_label(closed_month))
     end

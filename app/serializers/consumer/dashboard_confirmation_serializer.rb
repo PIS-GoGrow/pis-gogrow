@@ -5,4 +5,5 @@ class Consumer::DashboardConfirmationSerializer < ApplicationSerializer
 
   typelize total: :number
   typelize orders: "Array<{ id: number; date: string; address: string; delivery_method: string; provider_name: string; name: string; quantity: number; discounted_price: number }>"
+  has_many :upcoming_orders, resource: OrderSerializer
 end

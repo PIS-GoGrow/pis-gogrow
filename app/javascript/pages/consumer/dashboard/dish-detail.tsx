@@ -1,16 +1,25 @@
-import { ChevronLeft, Star } from "lucide-react"
+import { ChevronLeft, Star, TicketPercent } from "lucide-react"
+import type { ReactNode } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import AddedBadge from "@/components/consumer/menus/added-badge"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
+import { formatShortDate } from "@/lib/dates"
+import { formatMoney } from "@/lib/money"
+import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
-import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import type { Pricing } from "./pricing"
+import { cartPricedItem, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -20,10 +29,21 @@ interface Props {
   setNotes: (value: string) => void
   selections: Selections
   setSelections: (value: Selections) => void
-  benefit: Benefit
   cart: CartItem[]
   back: () => void
-  add: () => void
+  editingCartId?: string | null
+  onRemove?: () => void
+  add: (benefits: number[]) => void
+  benefit: ConsumerDashboardIndex["benefit"]
+  // Al modificar un pedido: el precio descuenta lo que ese pedido ya reservó y
+  // conserva los cupones que ya tiene, sin dejar elegir otros.
+  orderId?: number
+  fixedBenefitIds?: number[]
+  badge?: ReactNode
+  processing?: boolean
+  submitDisabled?: boolean
+  children?: ReactNode
+  todayDate?: string
 }
 
 export function DishDetail({
@@ -34,46 +54,186 @@ export function DishDetail({
   setNotes,
   selections,
   setSelections,
-  benefit,
   cart,
   back,
   add,
+  editingCartId,
+  onRemove,
+  benefit,
+  orderId,
+  fixedBenefitIds,
+  badge,
+  processing = false,
+  submitDisabled = false,
+  children,
+  todayDate,
 }: Props) {
   const { t } = useTranslation()
-  // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
-  // primero el cupo y los usos de los beneficios.
-  const pricing = priceItems(
-    [
-      ...cart.map(cartPricedItem),
-      { key: "", date: item.date, price: item.menu.price, quantity },
-    ],
-    benefit,
+  const [pricing, setPricing] = useState<Pricing | null>(null)
+  const line = pricing?.lines?.at(-1)
+
+  const benefitHeld = benefit.specials.reduce(
+    (acc, benefit) => {
+      acc[benefit.id] =
+        pricing?.lines?.slice(0, -1)?.reduce((acc, line) => {
+          return (
+            acc + (line.tiers.find((t) => t.id === benefit.id)?.quantity ?? 0)
+          )
+        }, 0) ?? 0
+
+      return acc
+    },
+    {} as Record<number, number>,
   )
-  const line = pricing.lines[""]
+
+  // No dejamos seleccionar beneficios sin límite (se aplican siempre)
+  // No mostramos beneficios para los que ya no quedan unidades disponibles
+  const selectableBenefits = benefit.specials.filter(
+    (b) =>
+      b.remaining !== null &&
+      b.remaining - benefitHeld[b.id] > 0 &&
+      (b.starts_on === null || b.starts_on <= item.date) &&
+      (b.due_date === null || b.due_date >= item.date),
+  )
+  const specialBenefitIds = selectableBenefits.map((b) => b.id)
+
+  // Al principio, todos los beneficios están activados
+  const [benefitIds, setBenefitIds] = useState<number[]>(
+    fixedBenefitIds ?? specialBenefitIds,
+  )
+  const [unusedBenefits, setUnusedBenefits] = useState<string[]>([])
+
+  const isEditing = Boolean(editingCartId ?? onRemove)
+
+  const inCart =
+    cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
+
+  const cartWithoutCurrent = useMemo(
+    () =>
+      editingCartId
+        ? cart.filter((c) => c.cartId !== editingCartId)
+        : cart.filter((c) => c.id !== item.id),
+    [cart, editingCartId, item.id],
+  )
+
+  const otherInCart = useMemo(
+    () =>
+      cartPricedItem(cartWithoutCurrent).find((i) => item.id === i.schedule_id)
+        ?.quantity ?? 0,
+    [cartWithoutCurrent, item.id],
+  )
+
+  const maxQuantity = item.remaining - (isEditing ? otherInCart : inCart)
+
+  useEffect(() => {
+    let cancelled = false
+
+    // Esperar 200 milisegundos para hacer la request, por si el usuario toca varias veces
+    // seguidas los botones de + o -.
+    const timeout = setTimeout(async () => {
+      try {
+        const cartToPrice = isEditing ? cartWithoutCurrent : cart
+        const pricedItems = cartPricedItem([
+          ...cartToPrice,
+          { ...item, quantity, benefits: benefitIds },
+        ])
+        const result = await (orderId === undefined
+          ? priceItems(pricedItems)
+          : priceItems(pricedItems, orderId))
+        if (cancelled || !result?.lines) return
+
+        const usedBenefitIds = result.lines
+          .at(-1)
+          ?.tiers?.map((tier) => tier.id)
+
+        setUnusedBenefits(
+          benefit.specials
+            .filter(
+              (benefit) =>
+                benefitIds.includes(benefit.id) &&
+                !usedBenefitIds?.includes(benefit.id),
+            )
+            .map((benefit) => benefit.name),
+        )
+        setPricing(result)
+      } finally {
+        // No hacer nada
+      }
+    }, 200)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [
+    cart,
+    item,
+    inCart,
+    isEditing,
+    cartWithoutCurrent,
+    otherInCart,
+    item.id,
+    item.date,
+    item.menu.price,
+    quantity,
+    benefitIds,
+    benefit.specials,
+    orderId,
+  ])
+
+  // Agrega/borra un beneficio para que se aplique a la orden
+  function setChecked(benefitId: number) {
+    if (benefitIds.includes(benefitId))
+      setBenefitIds(benefitIds.filter((b) => b !== benefitId))
+    else setBenefitIds(benefitIds.concat([benefitId]))
+  }
+
   const reviews = item.menu.reviews
+  const ratingAverage = item.menu.rating_average
+  const ratingCount = item.menu.rating_count
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
   )
-  const addDisabled = item.sold_out || item.orders_closed || choicesMissing
+  const isPast =
+    (todayDate ? item.date < todayDate : false) || item.remaining <= 0
+  const addDisabled =
+    item.sold_out ||
+    item.orders_closed ||
+    isPast ||
+    maxQuantity <= 0 ||
+    choicesMissing ||
+    processing ||
+    submitDisabled
 
   return (
-    <MobileCard>
+    <MobileCard className="pb-56">
       <Button
         type="button"
         variant="ghost"
         size="icon"
         onClick={back}
         aria-label="Volver"
-        className="mb-3"
+        className="mb-2 -ml-2 size-9 rounded-[10px]"
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
-      <p className="text-muted-foreground text-xs">{item.menu.provider_name}</p>
-      <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
-      <p className="text-muted-foreground mt-2 text-xs leading-5">
-        {item.menu.description}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-base font-medium text-[#737373] dark:text-neutral-400">
+          {item.menu.provider_name}
+        </p>
+        {badge ?? (inCart > 0 && <AddedBadge />)}
+      </div>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">
+        {item.menu.name}
+      </h1>
+      {item.menu.description && (
+        <p className="mt-1 text-base leading-normal text-[#737373] dark:text-neutral-400">
+          {item.menu.description}
+        </p>
+      )}
+      <p className="mt-2 text-xl font-bold text-[#0A0A0A] dark:text-neutral-100">
+        {formatMoney(item.menu.price)}
       </p>
-      <p className="mt-1 font-bold">{money(item.menu.price)}</p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}
@@ -90,49 +250,60 @@ export function DishDetail({
         />
       ))}
       <section className="border-border border-b py-5">
-        <div className="flex justify-between text-sm font-medium">
-          <h2>Opiniones del plato</h2>
-          <span className="text-xs leading-4">
-            <Star className="fill-foreground mr-1 inline size-3" />
-            {reviews[0]?.rating ?? "4.8"}
-          </span>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
+            {t("pages.consumer_dashboard.index.reviews.title")}
+          </h2>
+          {ratingCount > 0 && ratingAverage !== null && (
+            <span className="flex items-center text-sm font-semibold text-[#0A0A0A] dark:text-neutral-100">
+              <Star className="mr-1 inline size-4 fill-[#0A0A0A] text-[#0A0A0A] dark:fill-neutral-100 dark:text-neutral-100" />
+              {ratingAverage.toFixed(1)} ({ratingCount})
+            </span>
+          )}
         </div>
-        <div className="mt-3 flex gap-4 overflow-x-auto">
-          {(reviews.length
-            ? reviews
-            : [
-                {
-                  id: 0,
-                  rating: 5,
-                  description:
-                    "Los sorrentinos llegaron muy ricos y con mucho sabor.",
-                },
-              ]
-          ).map((review, index) => (
-            <article
-              key={review.id}
-              className="border-border bg-muted flex h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border p-4"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm leading-5 font-medium">
-                    {index ? "Pedro" : "Lucía"}
-                  </span>
-                  <span className="text-muted-foreground text-xs leading-4">
-                    28/07/26
-                  </span>
+        {ratingCount > 0 ? (
+          <div className="mt-4 flex gap-4 overflow-x-auto">
+            {reviews.map((review) => (
+              <article
+                key={review.id}
+                className="flex min-h-[136px] w-[280px] shrink-0 flex-col justify-between rounded-lg border border-[#E5E5E5] bg-[#F5F5F5] p-4 dark:border-neutral-700 dark:bg-neutral-800"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#0A0A0A] dark:text-neutral-100">
+                      {review.author ??
+                        t("pages.consumer_dashboard.index.reviews.anonymous")}
+                    </span>
+                    <span className="text-xs font-medium text-[#737373] dark:text-neutral-400">
+                      {formatShortDate(review.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-4">
+                    {"★".repeat(review.rating)}
+                    <span className="text-muted-foreground opacity-30">
+                      {"★".repeat(5 - review.rating)}
+                    </span>
+                  </p>
                 </div>
-                <p className="text-xs leading-4">
-                  {"★".repeat(Math.round(review.rating ?? 5))}
-                </p>
-              </div>
-              <p className="text-xs leading-4">{review.description}</p>
-            </article>
-          ))}
-        </div>
+                {review.description && (
+                  <p className="line-clamp-3 text-xs leading-snug text-[#0A0A0A] dark:text-neutral-200">
+                    {review.description}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-[#737373] dark:text-neutral-400">
+            {t("pages.consumer_dashboard.index.reviews.empty")}
+          </p>
+        )}
       </section>
-      <section className="border-border border-b py-4">
-        <label htmlFor="notes" className="text-xs font-semibold">
+      <section className="border-border border-b py-5">
+        <label
+          htmlFor="notes"
+          className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100"
+        >
           Notas para este plato
         </label>
         <Textarea
@@ -140,31 +311,89 @@ export function DishDetail({
           maxLength={140}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
-          placeholder="Escribe las notas que necesites..."
-          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
+          placeholder="Escribí las notas que necesites..."
+          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-base text-[#737373] placeholder:text-[#737373] dark:text-neutral-300"
         />
-        <p className="text-muted-foreground text-right text-[10px]">
+        <p className="mt-1 text-right text-sm text-[#737373] dark:text-neutral-400">
           {notes.length}/140
         </p>
       </section>
-      <OrderSummary
-        subtotal={line.subtotal}
-        total={line.total}
-        tiers={line.tiers}
-      />
-      <BottomAction className="flex">
-        <QuantityInput
-          value={quantity}
-          max={item.remaining}
-          onChange={setQuantity}
+      {children}
+      {selectableBenefits.length > 0 && (
+        <section className="border-border grid gap-2 border-b py-4 text-sm">
+          {selectableBenefits.map((benefit) => (
+            <div key={benefit.id} className="flex justify-between">
+              <div className="flex">
+                <TicketPercent color="#29944c" className="mr-2" size="20" />
+                <p>
+                  {benefit.name} ({benefit.percentage}% off)
+                </p>
+              </div>
+
+              <Field orientation="horizontal" className="max-w-fit">
+                <Checkbox
+                  id={`benefit-checkbox-${benefit.id}`}
+                  name={`benefit-checkbox-${benefit.id}`}
+                  onCheckedChange={() => setChecked(benefit.id)}
+                  checked={benefitIds.includes(benefit.id)}
+                />
+
+                <FieldContent className="max-w-fit">
+                  <FieldLabel htmlFor={`benefit-checkbox-${benefit.id}`}>
+                    Aplicar
+                  </FieldLabel>
+                </FieldContent>
+              </Field>
+            </div>
+          ))}
+          {unusedBenefits.length > 0 && (
+            <p className="text-sm">
+              {t(
+                `pages.consumer_dashboard.detail.reached_100.${unusedBenefits.length === 1 ? "one" : "other"}`,
+                { benefits: unusedBenefits.join(", ") },
+              )}
+            </p>
+          )}
+        </section>
+      )}
+      <BottomAction>
+        <OrderSummary
+          loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
+          subtotal={line?.subtotal}
+          total={line?.total}
+          tiers={line?.tiers}
+          specialBenefitIds={benefit.specials.map((special) => special.id)}
+          className="pt-0"
         />
-        <Button
-          disabled={addDisabled}
-          onClick={add}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
-        >
-          Agregar
-        </Button>
+        {!item.sold_out &&
+          !isPast &&
+          maxQuantity > 0 &&
+          quantity >= maxQuantity && (
+            <p role="status" className="text-muted-foreground text-sm">
+              {t("pages.consumer_dashboard.detail.stock_limit", {
+                count: maxQuantity,
+              })}
+            </p>
+          )}
+        <div className="flex gap-2">
+          <QuantityInput
+            value={quantity}
+            max={maxQuantity}
+            onChange={setQuantity}
+            onRemove={onRemove}
+            disabled={item.sold_out || maxQuantity <= 0 || isPast}
+          />
+          <Button
+            disabled={addDisabled}
+            onClick={() => add(benefitIds)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
+          >
+            {processing && <Spinner />}
+            {isEditing
+              ? t("pages.consumer_dashboard.index.modify")
+              : t("pages.consumer_dashboard.index.add")}
+          </Button>
+        </div>
       </BottomAction>
     </MobileCard>
   )

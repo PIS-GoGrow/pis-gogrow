@@ -23,10 +23,11 @@ RSpec.describe "Integración de recordatorios de menú", type: :job do
   end
 
   it "encola una sola entrega al teléfono del proveedor suscripto" do
+    provider.user.update!(phone: "+59899123456")
     configuration.users << provider.user
 
     expect { 2.times { run_reminders } }.to have_enqueued_job(WhatsappSenderJob)
-      .with(:provider_menu_unpublished, {}, { date: "9/1/2030" }, provider.user.phone).exactly(:once)
+      .with(instance_of(Notification)).exactly(:once)
   end
 
   it "no genera avisos ni entregas durante el fin de semana" do
@@ -42,7 +43,7 @@ RSpec.describe "Integración de recordatorios de menú", type: :job do
     run_reminders
     notification = provider.user.notifications.find_by!(event:)
 
-    expect(notification.description).to eq("Todavía no publicaste un menú para el 9/1/2030.")
+    expect(notification.description).to eq("Todavía no publicaste un menú para el miércoles 9 de enero.")
     travel_to Time.utc(2030, 1, 10, 3, 5)
     ProviderMenuUnpublishedNotificationsCleanupJob.perform_now
 
@@ -111,12 +112,11 @@ RSpec.describe "Integración de recordatorios de menú", type: :job do
       event: :order_received,
       role: :provider,
       requires_action: false,
-      title: "Nuevo pedido",
-      description: "Recibiste un pedido"
+      description_data: { consumer: "consumidor", amount: "cantidad", dish: "plato", date: "fecha" }
     )
     allow(Menus::MissingPublicationNotifier).to receive(:close_for)
-    menus(:milanesa).schedules.create!(date: Date.current, amount: 10)
-    menus(:sorrentinos).schedules.create!(date: Date.current, amount: 10)
+    menus(:milanesa).schedules.create!(date: Date.current)
+    menus(:sorrentinos).schedules.create!(date: Date.current)
     menus(:sorrentinos).update!(archived_at: Time.current)
 
     expect { 2.times { run_reminders } }.not_to change(Notification, :count)

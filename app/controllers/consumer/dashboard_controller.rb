@@ -5,9 +5,25 @@ class Consumer::DashboardController < Consumer::InertiaController
     @consumer = Current.user.consumer
     @week = week_data
     @schedules = schedule_data
+    if params[:schedule_id]
+      schedule = Schedule.on_active_menus.find(params[:schedule_id])
+      raise ActiveRecord::RecordNotFound if schedule.provider_closed?
+
+      unless @schedules.any? { |item| item[:id] == schedule.id }
+        @schedules << dish_data(schedule)
+      end
+    end
     @benefit = benefit_data
-    @addresses = @consumer.delivery_address_options
+    @providers = Provider.includes(:user).all
+    @favorites = favorite_data
+    @frequent = frequent_data
     @closures = ProviderClosure.upcoming.includes(provider: :user)
+  end
+
+  def dish
+    index
+    render_inertia "consumer/dashboard/index",
+                  serializer: Consumer::DashboardIndexSerializer
   end
 
   def confirmation
@@ -17,6 +33,15 @@ class Consumer::DashboardController < Consumer::InertiaController
 
     @total = order_confirmation[:total]
     @orders = order_confirmation[:orders]
+
+    @upcoming_orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } }).upcoming
+  end
+
+  def cart
+    @consumer = Current.user.consumer
+
+    @addresses = @consumer.delivery_address_options
+    @benefit = benefit_data
   end
 
   private
@@ -27,6 +52,7 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def week_data
     {
+      today: Date.current.iso8601,
       start_date: week_range.first.iso8601,
       end_date: week_range.last.iso8601,
       days: week_range.map do |date|
@@ -36,58 +62,76 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
+    schedules = Schedule.on_active_menus.includes(menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
+                        .reject(&:provider_closed?)
 
-    schedules.reject(&:provider_closed?).map do |schedule|
-      menu = schedule.menu
+    ordered = ordered_amounts(schedules.map(&:id))
+
+    schedules.map { dish_data(it).merge(ordered: ordered[it.id]) }
+  end
+
+  # Cada línea del carrito se guarda como un pedido aparte, así que un mismo
+  # plato puede tener unidades pendientes y confirmadas a la vez.
+  def ordered_amounts(schedule_ids)
+    amounts = @consumer.orders
+                       .where(schedule_id: schedule_ids, status: [ :pending, :confirmed ])
+                       .group(:schedule_id, :status)
+                       .sum(:amount)
+
+    schedule_ids.index_with do |schedule_id|
+      { pending: amounts[[ schedule_id, "pending" ]].to_i, confirmed: amounts[[ schedule_id, "confirmed" ]].to_i }
+    end
+  end
+
+  def favorite_data
+    { menus: menu_shortcuts(@consumer.favorite_ids("Menu")), provider_ids: @consumer.favorite_ids("Provider") }
+  end
+
+  def frequent_data
+    { menus: menu_shortcuts(@consumer.frequent(:menu)), provider_ids: @consumer.frequent(:provider) }
+  end
+
+  # Los platos se muestran aunque hoy no tengan programación: sirven de
+  # referencia y el cliente decide si se pueden pedir según el día elegido.
+  def menu_shortcuts(menu_ids)
+    menus = Menu.where(id: menu_ids, archived_at: nil).includes(provider: :user).index_by(&:id)
+
+    menu_ids.filter_map do |id|
+      menu = menus[id]
+      next unless menu
 
       {
-        id: schedule.id,
-        date: schedule.date.iso8601,
-        remaining: schedule.remaining_amount,
-        sold_out: schedule.remaining_amount.zero? || !schedule.available,
-        orders_closed: schedule.order_deadline_passed?,
-        menu: {
-          id: menu.id,
-          name: menu.name,
-          description: menu.description,
-          price: menu.price.to_f,
-          option_groups: menu.option_groups.map do |group|
-            { id: group.id, name: group.name, options: group.options, limit: group.limit, required: group.required }
-          end,
-          provider_name: menu.provider_name,
-          home_delivery: menu.provider.home_delivery?,
-          reviews: menu.reviews.first(4).map do |review|
-            {
-              id: review.id,
-              description: review.description,
-              rating: review.rating,
-              created_at: review.created_at.to_date.iso8601
-            }
-          end
-        }
+        id: menu.id,
+        name: menu.name,
+        description: menu.description,
+        price: menu.price.to_f,
+        provider_id: menu.provider_id,
+        provider_name: menu.provider_name
       }
     end
   end
 
   def benefit_data
-    pricing = OrderPricing.new(@consumer)
+    pricing = Orders::Pricing.new(@consumer)
+    week_date = week_range.first
 
     {
-      limit: @consumer.monthly_benefit_available / 4,
-      used: @consumer.monthly_benefit_used_this_week,
-      percentage: pricing.base_percentage,
-      monthly_limit: @consumer.monthly_benefit_available,
-      monthly_used: @consumer.monthly_benefit_used_this_month,
-      monthly_remaining: @consumer.remaining_monthly_benefit,
-      specials: pricing.special_benefits.map do |benefit|
+      percentage: @consumer.monthly_benefit_percentage(date: week_date),
+      monthly_limit: @consumer.monthly_benefit_available(date: week_date),
+      monthly_used: @consumer.monthly_benefit_used_this_month(date: week_date),
+      monthly_remaining: @consumer.remaining_monthly_benefit(date: week_date),
+      weekly_limit: @consumer.weekly_benefit_limit(date: week_date),
+      weekly_used: @consumer.weekly_benefit_used(date: week_date),
+      weekly_remaining: @consumer.remaining_weekly_benefit(date: week_date),
+      specials: @consumer.special_benefits.map do |benefit|
         {
           id: benefit.id,
           name: benefit.description.to_s,
           percentage: benefit.percentage,
           remaining: pricing.remaining_uses(benefit),
+          starts_on: benefit.starts_on&.iso8601,
           due_date: benefit.due_date&.iso8601
         }
       end

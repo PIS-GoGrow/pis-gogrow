@@ -1,8 +1,6 @@
 import { Head, Link } from "@inertiajs/react"
-import { format, parseISO } from "date-fns"
 import { ChevronLeft } from "lucide-react"
 import { useState } from "react"
-import { es } from "react-day-picker/locale"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -18,6 +16,7 @@ import SavedMenusTab from "@/components/menus/saved-menus-tab"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDateInline } from "@/lib/dates"
 import { providerMenus as menusRoutes, schedules } from "@/routes"
 import type { BreadcrumbItem, ProviderMenusNew } from "@/types"
 
@@ -29,6 +28,7 @@ export default function New(props: ProviderMenusNew) {
   const [defaultDate] = useState(props.default_date)
   const [addedOpen, setAddedOpen] = useState(false)
   const [addedDate, setAddedDate] = useState<string | null>(null)
+  const [addedCount, setAddedCount] = useState(1)
   const [addedOrigin, setAddedOrigin] = useState<AddedOrigin | null>(null)
   const [formKey, setFormKey] = useState(0)
   // Día al que se vuelve desde el cartel de "Plato agregado": el día donde quedó publicado.
@@ -66,7 +66,7 @@ export default function New(props: ProviderMenusNew) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t(`${key}.title`)} />
 
-      <div className="mx-auto w-full max-w-xl p-5">
+      <div className="mx-auto w-full max-w-300 p-5">
         <div className="relative mb-6 flex h-9 items-center justify-center">
           <Button
             variant="ghost"
@@ -94,6 +94,7 @@ export default function New(props: ProviderMenusNew) {
               onCreated={(publishedDate) => {
                 setAddedOrigin("new")
                 setAddedDate(null)
+                setAddedCount(1)
                 setLandingDate(publishedDate ?? defaultDate)
                 setAddedOpen(true)
               }}
@@ -107,9 +108,10 @@ export default function New(props: ProviderMenusNew) {
               published={props.published}
               today={props.today}
               maximumPublishDate={props.maximum_publish_date}
-              onPublished={(date) => {
+              onPublished={(date, count) => {
                 setAddedOrigin("saved")
                 setAddedDate(date)
+                setAddedCount(count)
                 setLandingDate(date)
                 setAddedOpen(true)
               }}
@@ -122,15 +124,22 @@ export default function New(props: ProviderMenusNew) {
         <AdaptableDialogContent showCloseButton={false} className="p-0">
           <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
             <AdaptableDialogTitle className="text-base">
-              {t(`${key}.added.title`)}
+              {t(
+                addedCount > 1
+                  ? `${key}.added.title_plural`
+                  : `${key}.added.title`,
+              )}
             </AdaptableDialogTitle>
             <AdaptableDialogDescription className="text-base">
               {addedDate
-                ? t(`${key}.added.description_date`, {
-                    date: format(parseISO(addedDate), "EEEE d 'de' MMMM", {
-                      locale: es,
-                    }),
-                  })
+                ? t(
+                    addedCount > 1
+                      ? `${key}.added.description_date_plural`
+                      : `${key}.added.description_date`,
+                    {
+                      date: formatLongDateInline(addedDate),
+                    },
+                  )
                 : t(`${key}.added.description`)}
             </AdaptableDialogDescription>
           </AdaptableDialogHeader>

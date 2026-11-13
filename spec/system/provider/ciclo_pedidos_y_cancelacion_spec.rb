@@ -49,7 +49,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
 
       sleep 1.5
       find_button("Confirmar").click
-      expect(page).to have_content("Pedido confirmado.")
+      expect(page).to have_content("Pedido confirmado")
       expect(order_a.reload.status).to eq("confirmed")
 
       # 1.3: Proveedor rechaza Orden B ingresando motivo obligatorio
@@ -57,13 +57,13 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
 
       sleep 1.5
       click_button "Rechazar"
-      expect(page).to have_content("¿Rechazar el pedido PED-#{order_b.id}?")
+      expect(page).to have_content("¿Rechazar pedido?")
 
       find("label", text: "Otro motivo").click
-      fill_in "rejection-details", with: "Sin insumos para la preparación"
+      fill_in "rejection-details", with: "Sin insumos para la preparación", fill_options: { rapid: false }
 
       click_button "Rechazar pedido"
-      expect(page).to have_content("Pedido rechazado.")
+      expect(page).to have_content("Pedido rechazado")
       expect(order_b.reload.status).to eq("rejected")
       expect(order_b.rejection_reason).to eq("other")
       expect(order_b.rejection_details).to eq("Sin insumos para la preparación")
@@ -117,7 +117,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
       expect(page).to have_content("¿Cancelar pedido?")
       click_button "Cancelar pedido"
 
-      expect(page).to have_content("Pedido cancelado.")
+      expect(page).to have_content("Pedido cancelado")
       expect(order_c.reload.status).to eq("cancelled")
       expect(order_c.cancelled_by).to eq(consumer_user)
     end
@@ -163,9 +163,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
 
     it "bloquea nuevos pedidos sin alterar los pedidos y cobros ya confirmados" do
       visible_date = Date.current.on_weekend? ? Date.current.next_week(:monday) : Date.current
-      visible_schedule = Schedule.find_or_create_by!(menu: milanesa, date: visible_date) do |s|
-        s.amount = 5
-      end
+      visible_schedule = Schedule.find_or_create_by!(menu: milanesa, date: visible_date)
       visible_schedule.update!(available: false)
 
       sign_in consumer_user, role: :consumer

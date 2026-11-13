@@ -1,10 +1,10 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import { DateRangePicker } from "./date-picker"
+import { DatePicker, DateRangePicker } from "./date-picker"
 
-// Figma "Date Picker": el botón muestra "9 junio – 27 junio 2027".
+// Figma "Date Picker": el botón muestra "09/06/27 – 27/06/27".
 function renderRange(from: string, to: string) {
   render(<DateRangePicker id="range" from={from} to={to} onChange={vi.fn()} />)
   return screen.getByRole("button")
@@ -17,21 +17,21 @@ describe("DateRangePicker", () => {
 
   it("writes the year once for a range inside a year", () => {
     expect(renderRange("2027-06-09", "2027-06-27")).toHaveTextContent(
-      "9 junio – 27 junio 2027",
+      "09/06/27 – 27/06/27",
     )
   })
 
   it("writes both years when the range crosses a year", () => {
     expect(renderRange("2026-12-28", "2027-01-03")).toHaveTextContent(
-      "28 diciembre 2026 – 3 enero 2027",
+      "28/12/26 – 03/01/27",
     )
   })
 
   it("writes just the start while the end is not chosen yet", () => {
-    expect(renderRange("2027-06-09", "")).toHaveTextContent("9 junio 2027")
+    expect(renderRange("2027-06-09", "")).toHaveTextContent("09/06/27")
   })
 
-  it("opens a calendar that starts on Sunday with the English header of the Figma", async () => {
+  it("opens a calendar in Spanish that starts on Sunday", async () => {
     const user = userEvent.setup()
     renderRange("2027-06-09", "2027-06-27")
 
@@ -39,16 +39,90 @@ describe("DateRangePicker", () => {
 
     expect(
       screen
-        .getAllByText(/^(Su|Mo|Tu|We|Th|Fr|Sa)$/)
+        .getAllByText(/^(do|lu|ma|mi|ju|vi|sá)$/)
         .map((header) => header.textContent),
-    ).toEqual(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"])
-    expect(screen.getAllByText("Jun").length).toBeGreaterThan(0)
+    ).toEqual(["do", "lu", "ma", "mi", "ju", "vi", "sá"])
+    expect(screen.getAllByText("jun").length).toBeGreaterThan(0)
+  })
+
+  it("does not let you pick Saturdays or Sundays when only weekdays are allowed", async () => {
+    const user = userEvent.setup()
+    render(
+      <DateRangePicker
+        id="range"
+        from="2027-06-09"
+        to="2027-06-11"
+        weekdaysOnly
+        onChange={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole("button"))
+
+    for (const weekend of screen.getAllByRole("button", {
+      name: /^(sábado|domingo),/,
+    })) {
+      expect(weekend).toBeDisabled()
+    }
+    const weekdays = screen.getAllByRole("button", {
+      name: /^(lunes|martes|miércoles|jueves|viernes),/,
+    })
+    expect(weekdays.some((weekday) => !weekday.hasAttribute("disabled"))).toBe(
+      true,
+    )
+  })
+
+  it("lets you navigate to next year", async () => {
+    const user = userEvent.setup()
+    renderRange("", "")
+
+    await user.click(screen.getByRole("button"))
+
+    const nextYear = String(new Date().getFullYear() + 1)
+    expect(screen.getByRole("option", { name: nextYear })).toBeInTheDocument()
   })
 
   it("writes a single day once", () => {
     const button = renderRange("2027-06-09", "2027-06-09")
 
-    expect(button).toHaveTextContent("9 junio 2027")
+    expect(button).toHaveTextContent("09/06/27")
     expect(button).not.toHaveTextContent("–")
+  })
+
+  it("renders the calendar inline when requested", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <DateRangePicker id="range" from="" to="" inline onChange={vi.fn()} />,
+    )
+
+    const trigger = screen.getByRole("button", { name: "Elegí un rango" })
+
+    await user.click(trigger)
+
+    const container = trigger.parentElement
+    expect(container).not.toBeNull()
+
+    expect(
+      within(container!).getAllByText(/^(do|lu|ma|mi|ju|vi|sá)$/),
+    ).toHaveLength(7)
+  })
+})
+
+describe("DatePicker", () => {
+  it("keeps the selected calendar day as ISO while displaying the unified date", async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<DatePicker value="2026-10-25" onChange={onChange} />)
+
+    expect(screen.getByRole("button")).toHaveTextContent(
+      "Domingo 25 de octubre",
+    )
+    await user.click(screen.getByRole("button"))
+    await user.click(
+      screen.getByRole("button", { name: / 28 de octubre de 2026/ }),
+    )
+
+    expect(onChange).toHaveBeenCalledExactlyOnceWith("2026-10-28")
   })
 })

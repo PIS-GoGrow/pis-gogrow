@@ -1,4 +1,4 @@
-import type { ConsumerDashboardIndex } from "@/types"
+import type { ConsumerDashboardCart, ConsumerDashboardIndex } from "@/types"
 
 export type Schedule = ConsumerDashboardIndex["schedules"][number]
 export type OptionGroup = Schedule["menu"]["option_groups"][number]
@@ -9,5 +9,6 @@ export type CartItem = Schedule & {
   quantity: number
   notes: string
   selections: Selections
+  benefits: number[]
 }
-export type DeliveryAddressOption = ConsumerDashboardIndex["addresses"][number]
+export type DeliveryAddressOption = ConsumerDashboardCart["addresses"][number]

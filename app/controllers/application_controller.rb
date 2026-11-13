@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
     authenticate
     return if performed?
 
-    redirect_to sign_in_path if Current.session && !Current.user.consumer?
+    redirect_to consumer_welcome_path if Current.session && !Current.user.consumer?
   end
 
   def authenticate
@@ -36,7 +36,7 @@ class ApplicationController < ActionController::Base
   end
 
   def unauthenticated_path
-    sign_in_path
+    consumer_welcome_path
   end
 
   def require_no_authentication
@@ -72,6 +72,7 @@ class ApplicationController < ActionController::Base
   def set_current_request_details
     Current.user_agent = request.user_agent
     Current.ip_address = request.ip
+    Current.request_id = request.request_id
   end
 
   # Identify the user in Sentry without sending PII — the id is enough to

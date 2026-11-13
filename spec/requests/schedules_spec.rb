@@ -30,7 +30,7 @@ RSpec.describe "Schedules", type: :request do
     JSON.parse(document.at_css('script[data-page="app"]').text)
   end
 
-  describe "GET /schedules" do
+  describe "GET /publicar-menu" do
     it "returns the current week for the provider" do
       user = users(:one)
       Provider.create!(user: user)
@@ -127,8 +127,7 @@ RSpec.describe "Schedules", type: :request do
       available_date = week_start + 2.days
 
       menu.schedules.create!(
-        date: published_date,
-        amount: 20
+        date: published_date
       )
 
       sign_in_with_role(user, role: :provider)
@@ -215,13 +214,11 @@ RSpec.describe "Schedules", type: :request do
       published_date = week_start + 2.days
 
       first_schedule = first_menu.schedules.create!(
-        date: published_date,
-        amount: 20
+        date: published_date
       )
 
       second_schedule = second_menu.schedules.create!(
-        date: published_date,
-        amount: 15
+        date: published_date
       )
 
       sign_in_with_role(user, role: :provider)
@@ -239,7 +236,6 @@ RSpec.describe "Schedules", type: :request do
         a_hash_including(
           "id" => first_schedule.id,
           "menu_id" => first_menu.id,
-          "amount" => 20,
           "menu" => a_hash_including(
             "id" => first_menu.id,
             "name" => "Milanesa"
@@ -248,7 +244,6 @@ RSpec.describe "Schedules", type: :request do
         a_hash_including(
           "id" => second_schedule.id,
           "menu_id" => second_menu.id,
-          "amount" => 15,
           "menu" => a_hash_including(
             "id" => second_menu.id,
             "name" => "Ravioles"
@@ -300,8 +295,8 @@ RSpec.describe "Schedules", type: :request do
         today_date = Date.current
         future_date = Date.current + 2.days
 
-        menu.schedules.create!(date: today_date, amount: 10)
-        menu.schedules.create!(date: future_date, amount: 15)
+        menu.schedules.create!(date: today_date)
+        menu.schedules.create!(date: future_date)
 
         sign_in_with_role(user, role: :provider)
 
@@ -328,7 +323,7 @@ RSpec.describe "Schedules", type: :request do
       week_start = Date.current.beginning_of_week(:monday) - 1.week
       past_date = week_start + 1.day
 
-      menu.schedules.create!(date: past_date, amount: 10)
+      menu.schedules.create!(date: past_date)
 
       sign_in_with_role(user, role: :provider)
 
@@ -344,7 +339,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "POST /schedules" do
+  describe "POST /publicar-menu" do
     it "publishes multiple menus for the selected date" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -391,8 +386,8 @@ RSpec.describe "Schedules", type: :request do
         date: date
       )
 
-      expect(first_schedule.amount).to eq(20)
-      expect(second_schedule.amount).to eq(15)
+      expect(first_schedule).to be_present
+      expect(second_schedule).to be_present
     end
 
     it "does not publish menus belonging to another provider" do
@@ -431,190 +426,6 @@ RSpec.describe "Schedules", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
-    it "does not publish a menu with zero initial stock" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
-
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
-
-      sign_in_with_role(user, role: :provider)
-
-      date = next_publishable_date
-
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: 0 }
-          ]
-        }
-      end.not_to change(Schedule, :count)
-
-      expect(response).to redirect_to(schedules_path)
-      follow_redirect!
-      expect(inertia).to have_props(
-        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
-      )
-    end
-
-    it "does not publish a menu with negative initial stock" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
-
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
-
-      sign_in_with_role(user, role: :provider)
-
-      date = next_publishable_date
-
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: -5 }
-          ]
-        }
-      end.not_to change(Schedule, :count)
-
-      expect(response).to redirect_to(schedules_path)
-      follow_redirect!
-      expect(inertia).to have_props(
-        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
-      )
-    end
-
-    it "does not publish a menu with stock greater than the integer limit" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
-
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
-
-      sign_in_with_role(user, role: :provider)
-
-      date = next_publishable_date
-
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: Schedule::MAX_AMOUNT + 1 }
-          ]
-        }
-      end.not_to change(Schedule, :count)
-
-      expect(response).to redirect_to(schedules_path)
-      follow_redirect!
-      expect(inertia).to have_props(
-        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
-      )
-    end
-
-    it "publishes a menu with stock equal to the maximum allowed" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
-
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
-
-      sign_in_with_role(user, role: :provider)
-
-      date = next_publishable_date
-
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: Schedule::MAX_AMOUNT }
-          ]
-        }
-      end.to change(Schedule, :count).by(1)
-
-      schedule = Schedule.find_by!(menu: menu, date: date)
-      expect(schedule.amount).to eq(Schedule::MAX_AMOUNT)
-      expect(response).to redirect_to(schedules_path(week_start: date.beginning_of_week(:monday).to_s))
-    end
-
-    it "does not publish any menu when at least one item exceeds the maximum allowed stock" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
-
-      first_menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
-
-      second_menu = provider.menus.create!(
-        name: "Ravioles",
-        description: "Ravioles con salsa",
-        price: 400
-      )
-
-      sign_in_with_role(user, role: :provider)
-
-      date = next_publishable_date
-
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: first_menu.id, amount: 20 },
-            { menu_id: second_menu.id, amount: Schedule::MAX_AMOUNT + 1 }
-          ]
-        }
-      end.not_to change(Schedule, :count)
-
-      expect(response).to redirect_to(schedules_path)
-      follow_redirect!
-      expect(inertia).to have_props(
-        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
-      )
-    end
-
-    it "does not publish a menu with non-integer stock" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
-
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
-
-      sign_in_with_role(user, role: :provider)
-
-      date = next_publishable_date
-
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: "10.5" }
-          ]
-        }
-      end.not_to change(Schedule, :count)
-
-      expect(response).to redirect_to(schedules_path)
-      follow_redirect!
-      expect(inertia).to have_props(
-        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
-      )
-    end
     it "does not publish the same menu twice for the same date" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -659,8 +470,7 @@ RSpec.describe "Schedules", type: :request do
       date = next_publishable_date
 
       first_menu.schedules.create!(
-        date: date,
-        amount: 20
+        date: date
       )
 
       sign_in_with_role(user, role: :provider)
@@ -723,7 +533,7 @@ RSpec.describe "Schedules", type: :request do
           }
         end.to change(Schedule, :count).by(1)
 
-        expect(Schedule.find_by!(menu: menu, date: date).amount).to eq(20)
+        expect(Schedule.find_by!(menu: menu, date: date)).to be_present
       end
     end
 
@@ -778,7 +588,7 @@ RSpec.describe "Schedules", type: :request do
         }
       end.to change(Schedule, :count).by(1)
 
-      expect(Schedule.find_by!(menu: menu, date: date).amount).to eq(20)
+      expect(Schedule.find_by!(menu: menu, date: date)).to be_present
     end
 
     #-------------------------------------------------------------------------#
@@ -805,8 +615,7 @@ RSpec.describe "Schedules", type: :request do
       date = next_publishable_date
 
       first_menu.schedules.create!(
-        date: date,
-        amount: 20
+        date: date
       )
 
       sign_in_with_role(second_user, role: :provider)
@@ -821,8 +630,8 @@ RSpec.describe "Schedules", type: :request do
       end.to change(Schedule, :count).by(1)
 
       expect(
-        Schedule.find_by!(menu: second_menu, date: date).amount
-      ).to eq(15)
+        Schedule.find_by!(menu: second_menu, date: date)
+      ).to be_present
     end
 
     it "does not allow a non-provider user to publish schedules" do
@@ -970,12 +779,12 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "PATCH /schedules/:id/availability" do
+  describe "PATCH /publicar-menu/:id/disponibilidad" do
     it "marks the publication as sold out and records who and when" do
       user = users(:one)
       provider = Provider.create!(user: user)
       menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
-      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+      schedule = menu.schedules.create!(date: next_publishable_date)
 
       sign_in_with_role(user, role: :provider)
 
@@ -996,7 +805,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       provider = Provider.create!(user: user)
       menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
-      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10, available: false)
+      schedule = menu.schedules.create!(date: next_publishable_date, available: false)
 
       sign_in_with_role(user, role: :provider)
 
@@ -1009,7 +818,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       provider = Provider.create!(user: user)
       menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
-      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+      schedule = menu.schedules.create!(date: next_publishable_date)
       # La base ya rechaza los datos que harían fallar el update: se simula.
       allow_any_instance_of(Schedule).to receive(:set_availability) do |record|
         record.errors.add(:base, "No se pudo guardar")
@@ -1030,7 +839,7 @@ RSpec.describe "Schedules", type: :request do
       owner = users(:one)
       provider = Provider.create!(user: owner)
       menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
-      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+      schedule = menu.schedules.create!(date: next_publishable_date)
 
       other = users(:two)
       Provider.create!(user: other)
@@ -1043,7 +852,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "DELETE /schedules/:id" do
+  describe "DELETE /publicar-menu/:id" do
     let(:provider_user) { users(:provider_user) }
     let(:provider) { providers(:tuviandita) }
     let(:menu) { menus(:milanesa) }
@@ -1066,7 +875,7 @@ RSpec.describe "Schedules", type: :request do
 
     context "control de acceso por rol" do
       it "redirige a iniciar sesión si el visitante no tiene sesión" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
 
         delete schedule_path(schedule)
 
@@ -1075,7 +884,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "bloquea a usuarios con rol consumer" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         sign_in(users(:one), role: :consumer)
 
         delete schedule_path(schedule)
@@ -1085,7 +894,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "devuelve 404 si la publicación es de otro proveedor" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         other = users(:two)
         Provider.create!(user: other)
         sign_in_with_role(other, role: :provider)
@@ -1099,7 +908,7 @@ RSpec.describe "Schedules", type: :request do
 
     context "quitar un plato publicado" do
       it "borra la publicación y vuelve a la semana de esa fecha" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         sign_in(provider_user, role: :provider)
 
         expect { delete schedule_path(schedule) }.to change(Schedule, :count).by(-1)
@@ -1110,7 +919,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "no vuelve a programar la fecha cuando el plato sigue una agenda" do
-        menu.agendas.create!(weekdays: [ target_date.cwday ], starts_on: Date.current, amount: 5)
+        menu.agendas.create!(weekdays: [ target_date.cwday ], starts_on: Date.current)
         Menus::AgendaScheduler.call(menu)
         schedule = Schedule.find_by!(menu_id: menu.family_ids, date: target_date)
         sign_in(provider_user, role: :provider)
@@ -1123,7 +932,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "permite quitar el último plato del día" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         sign_in(provider_user, role: :provider)
 
         delete schedule_path(schedule)
@@ -1132,19 +941,19 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "no toca los otros platos del mismo día" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         other_menu = provider.menus.create!(name: "Ensalada César", description: "Fresca", price: 280)
-        other_schedule = other_menu.schedules.create!(date: target_date, amount: 5)
+        other_schedule = other_menu.schedules.create!(date: target_date)
         sign_in(provider_user, role: :provider)
 
         delete schedule_path(schedule)
 
         expect(Schedule.exists?(schedule.id)).to be(false)
-        expect(other_schedule.reload.amount).to eq(5)
+        expect(Schedule.exists?(other_schedule.id)).to be(true)
       end
 
       it "rechaza los pedidos pendientes y confirmados del plato quitado" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         pending_order = create_order(schedule, status: :pending)
         confirmed_order = create_order(schedule, status: :confirmed, amount: 2)
         sign_in(provider_user, role: :provider)
@@ -1164,9 +973,9 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "no modifica los pedidos de otros platos" do
-        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        schedule = menu.schedules.create!(date: target_date)
         other_menu = provider.menus.create!(name: "Ensalada César", description: "Fresca", price: 280)
-        other_schedule = other_menu.schedules.create!(date: target_date, amount: 5)
+        other_schedule = other_menu.schedules.create!(date: target_date)
         untouched_order = create_order(other_schedule, status: :confirmed)
         sign_in(provider_user, role: :provider)
 
@@ -1179,7 +988,7 @@ RSpec.describe "Schedules", type: :request do
     context "fechas pasadas" do
       it "no permite quitar un plato de una fecha pasada" do
         past_date = Date.current - 2.days
-        schedule = menu.schedules.create!(date: past_date, amount: 10)
+        schedule = menu.schedules.create!(date: past_date)
         sign_in(provider_user, role: :provider)
 
         expect { delete schedule_path(schedule) }.not_to change(Schedule, :count)

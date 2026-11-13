@@ -16,8 +16,7 @@ RSpec.describe "Editar el correo del proveedor" do
   before { sign_in provider_user, role: :provider }
 
   it "cambia el correo con la contraseña actual y queda registrado en la auditoría" do
-    visit settings_profile_path
-    click_link "Correo electrónico"
+    visit settings_email_path
 
     expect(page).to have_current_path(settings_email_path)
 

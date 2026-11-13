@@ -16,7 +16,7 @@ RSpec.describe "Provider::Collections", type: :request do
     props[tab].find { it[:month] == I18n.l(month, format: :month_name_year) }
   end
 
-  describe "GET /provider/collections" do
+  describe "GET /provider/cobros" do
     it "mantiene el subtotal y aplica IVA una sola vez en detalle, deuda e historial" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
@@ -32,11 +32,11 @@ RSpec.describe "Provider::Collections", type: :request do
       end
 
       get provider_collections_path
-      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 2178.0, meals: 4 })
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 1 }, outstanding: { total: 2178.0, meals: 1 })
 
       company.payments.create!(provider: company.provider, status: :approved)
       get provider_collections_path
-      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 1202.0, meals: 4 })
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 1 }, outstanding: { total: 1202.0, meals: 1 })
       expect(inertia).to have_props { |page|
         group = page[:history].find { it[:company][:id] == company.id }
         expect(group[:confirmed_total]).to eq(976.0)
@@ -77,10 +77,29 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collections_path
 
       expect(inertia).to render_component("provider/collections/index")
-      # Cuatro viandas confirmadas: cada pedido se cuenta una vez aunque cuelgue
-      # de la cuenta del empleado y de la de la empresa.
-      expect(props[:sales]).to include(total: 1202.0, meals: 4)
-      expect(props[:outstanding]).to include(total: 1202.0, meals: 4)
+      # De las cuatro viandas confirmadas solo una ya se entregó: cada pedido se
+      # cuenta una vez aunque cuelgue de la cuenta del empleado y de la de la
+      # empresa.
+      expect(props[:sales]).to include(total: 1202.0, meals: 1)
+      expect(props[:outstanding]).to include(total: 1202.0, meals: 1)
+    end
+
+    it "muestra solo los cargos nuevos de una cuenta con un pago aprobado" do
+      sign_in provider_user, role: :provider
+      get provider_collections_path
+      previous_outstanding = props[:outstanding][:total]
+      account = Account.create!(
+        owner: Company.create!(name: "Cliente con deuda nueva", address: "Rivera 123"),
+        provider: providers(:tuviandita), month: Date.current.prev_month, amount: "500.25"
+      )
+      account.payments.create!(provider: account.provider, status: :approved)
+      account.update!(amount: "650.25")
+
+      get provider_collections_path
+
+      expect(props[:outstanding][:total]).to eq(previous_outstanding + 150.0)
+      expect(props[:pending].flat_map { [ it[:company], *it[:employees] ] }.compact)
+        .to include(include(id: account.id, outstanding_amount: 150.0, status: "pending"))
     end
 
     %i[beginning_of_month end_of_month].each do |boundary|
@@ -89,25 +108,27 @@ RSpec.describe "Provider::Collections", type: :request do
         dates = month.all_month.reject { it == schedules(:today).date }
         schedules(:past).update!(date: dates.first)
         schedules(:future).update!(date: dates.last)
+        Order.where(schedule: [ schedules(:past), schedules(:future) ]).find_each { it.update_columns(delivery_date: it.schedule.date) }
+        delivered = boundary == :end_of_month ? [ dates.last, dates.first ] : [ dates.first ]
+        delivered_orders = [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ]
+                             .select { delivered.include?(it.reload.delivery_date) }
 
         travel_to Time.zone.local(month.year, month.month, month.public_send(boundary).day, 12) do
           sign_in provider_user, role: :provider
 
           get provider_collections_path
 
-          expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 })
+          expect(inertia).to have_props(sales: { total: 1202.0, meals: delivered_orders.sum(&:amount) })
           expect(inertia).to have_props { |page|
             detail = page[:sales_detail]
             detail_orders = detail[:days].flat_map { it[:orders] }
 
             expect(detail[:month]).to eq(I18n.l(month, format: :month_name_year))
             expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow", "subtotal" => 1202.0, "vat_amount" => 0.0, "payable_amount" => 1202.0 } ])
-            expect(detail_orders.pluck(:id)).to match_array(
-              [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-            )
-            expect(detail_orders.sum { it[:meals] }).to eq(4)
-            expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
-            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { it.strftime("%d/%m") })
+            expect(detail_orders.pluck(:id)).to match_array(delivered_orders.map(&:id))
+            expect(detail_orders.sum { it[:meals] }).to eq(delivered_orders.sum(&:amount))
+            expect(detail_orders.sum { it[:amount] }).to eq(delivered_orders.sum(&:price).to_f)
+            expect(detail[:days].pluck(:date)).to eq(delivered.map { DateFormat.short(it) })
             true
           }
         end
@@ -121,17 +142,13 @@ RSpec.describe "Provider::Collections", type: :request do
 
       group = group_for(:pending, Date.current)
 
-      expect(group).to include(client_name: "GoGrow", total: 1202.0, confirmed_total: 0.0, meals: 4)
+      expect(group).to include(client_name: "GoGrow", total: 1202.0, confirmed_total: 0.0, meals: 1)
       expect(group[:company]).to include(owner_name: "GoGrow", amount: 601.0, status: "pending")
       expect(group[:employees].pluck(:owner_name, :status)).to eq(
         [ [ "Other Consumer User", "submitted" ], [ "Test User", "rejected" ] ]
       )
-      expect(group[:company][:orders].pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
-      expect(group[:employees].flat_map { it[:orders] }.pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
+      expect(group[:company][:orders].pluck(:id)).to eq([ orders(:history_confirmed_past).id ])
+      expect(group[:employees].flat_map { it[:orders] }.pluck(:id)).to eq([ orders(:history_confirmed_past).id ])
     end
 
     it "counts what is awaiting confirmation and what was rejected" do
@@ -141,9 +158,35 @@ RSpec.describe "Provider::Collections", type: :request do
 
       group = group_for(:pending, Date.current)
 
-      expect(group).to include(awaiting_count: 2, rejected_count: 1, employees_total: 601.0)
+      expect(group).to include(awaiting_count: 1, rejected_count: 1, employees_total: 601.0)
       # Un rechazo pide más atención que un pago por revisar.
       expect(group[:employees_status]).to eq("rejected")
+    end
+
+    it "keeps a partial account pending without classifying it as rejected or settled" do
+      partial_account = accounts(:one_tuviandita_current)
+      other_account = accounts(:other_tuviandita_current)
+      partial_account.payments.destroy_all
+      other_account.payments.destroy_all
+      partial = partial_account.payments.build(provider: partial_account.provider, status: :partial)
+      partial.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "parcial.png",
+        content_type: "image/png"
+      )
+      partial.save!
+      other_account.payments.create!(provider: other_account.provider, status: :approved)
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      group = group_for(:pending, Date.current)
+      employee = group[:employees].find { it[:id] == partial_account.id }
+      expect(employee).to include(status: "partial")
+      expect(employee[:payments].sole).to include(status: "partial", rejection_reason: nil)
+      expect(group[:employees_status]).to eq("partial")
+      expect(group[:rejected_count]).to eq(0)
+      expect(props[:history].flat_map { it[:employees] }.pluck(:id)).not_to include(partial_account.id)
     end
 
     it "moves a month to the history once every account is confirmed" do
@@ -283,7 +326,7 @@ RSpec.describe "Provider::Collections", type: :request do
     end
   end
 
-  describe "GET /provider/collections/:id" do
+  describe "GET /provider/cobros/:id" do
     it "keeps the individual orders available after the group is settled" do
       current_accounts = providers(:tuviandita).accounts.current
       current_accounts.each do |account|
@@ -291,7 +334,7 @@ RSpec.describe "Provider::Collections", type: :request do
         account.payments.create!(provider: account.provider, status: :approved)
       end
       account = accounts(:gogrow_tuviandita_current)
-      order_ids = account.orders.confirmed.ids
+      order_ids = account.orders.consumed.ids
       sign_in provider_user, role: :provider
 
       get provider_collections_path
@@ -320,10 +363,21 @@ RSpec.describe "Provider::Collections", type: :request do
 
       expect(inertia).to render_component("provider/collections/show")
       expect(props[:account]).to include(owner_name: "GoGrow", amount: 601.0)
-      expect(props[:orders].pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
-      expect(props[:orders].sum { it[:subsidy] }).to eq(601.0)
+      expect(props[:orders].pluck(:id)).to eq([ orders(:history_confirmed_past).id ])
+      expect(props[:orders].sole).to include(subsidy: 150.25, delivery_date: orders(:history_confirmed_past).delivery_date.strftime("%d/%m/%y"))
+    end
+
+    it "retains delivery_date in orders props even when schedule is nil" do
+      sign_in provider_user, role: :provider
+
+      order = orders(:history_confirmed_past)
+      delivery = order.delivery_date
+      order.update_columns(schedule_id: nil)
+
+      get provider_collection_path(accounts(:gogrow_tuviandita_current))
+
+      serialized_order = props[:orders].find { it[:id] == order.id }
+      expect(serialized_order[:delivery_date]).to eq(delivery.strftime("%d/%m/%y"))
     end
 
     it "lists the payments of the account, newest first" do
@@ -332,6 +386,24 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collection_path(accounts(:one_tuviandita_current))
 
       expect(props[:payments].pluck(:status)).to eq([ "rejected" ])
+    end
+
+    it "renders the collection page with partial status in inertia props when account has a partial payment" do
+      account = accounts(:one_tuviandita_current)
+      account.payments.destroy_all
+      payment = account.payments.build(provider: account.provider, status: :partial)
+      payment.receipt.attach(io: StringIO.new("partial"), filename: "parcial.png", content_type: "image/png")
+      payment.save!
+
+      sign_in provider_user, role: :provider
+      get provider_collection_path(account)
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("provider/collections/show")
+      expect(inertia).to have_props { |page|
+        page[:account][:status] == "partial" &&
+          page[:payments].first[:status] == "partial"
+      }
     end
 
     it "does not find the account of another provider" do

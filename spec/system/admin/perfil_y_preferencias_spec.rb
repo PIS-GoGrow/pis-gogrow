@@ -29,8 +29,8 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
   def open_profile(user = admin_user)
     sign_in user, role: :admin
     visit admin_account_path
-    click_link "Perfil y Apariencia"
     click_link "Perfil"
+    expect(page).to have_current_path(settings_profile_path)
     expect(page).to have_content("Información del perfil")
   end
 
@@ -51,8 +51,9 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
   describe "consultar (CA1)" do
     it "llega a su cuenta desde el menú y ve su nombre y email" do
       sign_in admin_user, role: :admin
-      visit admin_dashboard_path
-      click_link "Cuenta", match: :first
+      visit_hydrated admin_dashboard_path
+      find("[data-sidebar=menu-button]", text: admin_user.name).click
+      find("[role=menuitem]", text: "Configuración").click
 
       expect(page).to have_current_path(admin_account_path)
       expect(page).to have_content("Admin User")
@@ -60,11 +61,11 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
     end
 
     it "ve sus datos de perfil cargados" do
-      admin_user.update!(phone: "099123456")
+      admin_user.update!(phone: "+59899123456")
       open_profile
 
       expect(page).to have_field("Nombre", with: "Admin User")
-      expect(page).to have_field("Teléfono", with: "099123456")
+      expect(page).to have_field("Teléfono", with: "+59899123456")
       expect(page).to have_field("Correo electrónico", with: "admin@example.com")
     end
 
@@ -73,7 +74,7 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
       visit admin_account_path
       click_link "Notificaciones"
 
-      expect(page).to have_content("Preferencias de RRHH")
+      expect(page).to have_content("Preferencias de RR. HH.")
       hr_notification_titles.each { expect_switch(it, on: false) }
       expect(page).to have_no_content("Actualizaciones de pedidos")
       expect(page).to have_no_content("Recordatorios de pago de Recursos Humanos")
@@ -109,19 +110,23 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
       expect(page).to have_field("Correo electrónico", with: "admin@example.com")
     end
 
-    it "acepta los largos límite del teléfono (8 y 15 dígitos)" do
+    it "guarda un celular uruguayo o de otro país en formato internacional" do
       open_profile
 
-      save_profile(phone: "12345678")
+      save_profile(phone: "099 123 456")
       expect(page).to have_content("Tu perfil fue actualizado")
-      expect(admin_user.reload.phone).to eq("12345678")
+      expect(admin_user.reload.phone).to eq("+59899123456")
 
-      save_profile(phone: "123456789012345")
-      expect(page).to have_field("Teléfono", with: "123456789012345")
-      expect(admin_user.reload.phone).to eq("123456789012345")
+      save_profile(phone: "+54 9 11 2345-6789")
+      # El campo ya tiene el valor tipeado antes de que termine el PATCH: hay que
+      # esperar a que se persista, no leer la base de inmediato.
+      page.document.synchronize do
+        raise Capybara::ExpectationNotMet, "el teléfono todavía no se guardó" unless admin_user.reload.phone == "+5491123456789"
+      end
+      expect(admin_user.reload.phone).to eq("+5491123456789")
     end
 
-    [ "1234567", "1234567890123456", "llamame" ].each do |phone|
+    [ "1234567", "2900 1234", "llamame" ].each do |phone|
       it "rechaza el teléfono #{phone.inspect} sin perder lo ingresado ni guardar nada" do
         open_profile
 
@@ -171,7 +176,7 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
     it "sin sesión no entra a la cuenta de RRHH" do
       visit admin_account_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "un empleado no entra a la cuenta ni a las preferencias de RRHH aunque escriba la URL" do

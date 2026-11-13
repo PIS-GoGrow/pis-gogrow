@@ -1,16 +1,11 @@
 # frozen_string_literal: true
 
-# TODO(integración): falta implementar el envío real en WhatsappSenderJob (va en
-# otro PR; hoy el POST a la API de WhatsApp está comentado, sin token ni teléfono
-# configurable) antes de poder testear que el empleado efectivamente recibe el mensaje por
-# WhatsApp (CA2/CA3). Hoy solo se prueba que el envío se encola o no, en
-# spec/services/notifier_spec.rb. Historia 23 "Como EMPLEADO, quiero activar o
-# desactivar las notificaciones por WhatsApp".
-
 require "rails_helper"
 
 RSpec.describe "Activar y desactivar notificaciones por WhatsApp", type: :system do
-  fixtures :users, :companies, :consumers, :admins
+  fixtures :users, :companies, :consumers, :admins, :orders
+
+  include ActiveJob::TestHelper
 
   let(:employee) { users(:one) }
   let(:orders_title) { "Actualizaciones de pedidos" }
@@ -30,7 +25,7 @@ RSpec.describe "Activar y desactivar notificaciones por WhatsApp", type: :system
 
   it "muestra la sección con un interruptor por grupo configurable, apagado al principio" do
     sign_in employee, role: :consumer
-    visit settings_profile_path
+    visit profile_path
     click_link "Notificaciones"
 
     expect(page).to have_content("Configurá qué alertas querés recibir por WhatsApp")
@@ -83,5 +78,53 @@ RSpec.describe "Activar y desactivar notificaciones por WhatsApp", type: :system
     expect(page).to have_content("Pagos a proveedores")
     expect(page).to have_no_content(orders_title)
     expect(page).to have_no_content(reminders_title)
+  end
+
+  it "encola el envío por WhatsApp al dispararse un evento solo si el empleado tiene el interruptor prendido" do
+    employee.update!(phone: "+59899123456")
+    sign_in employee, role: :consumer
+    visit settings_notifications_path
+
+    expect_switch(orders_title, on: false)
+    expect {
+      Notifier.call(
+        event_key: :order_confirmation,
+        user: employee,
+        notifiable: orders(:upcoming_pending_today),
+        description_data: { date: "12/12", provider: "TuViandita" }
+      )
+    }.not_to have_enqueued_job(WhatsappSenderJob)
+
+    switch_for(orders_title).click
+    expect(page).to have_content("Configuración actualizada")
+    expect_switch(orders_title, on: true)
+
+    expect {
+      Notifier.call(
+        event_key: :order_confirmation,
+        user: employee,
+        notifiable: orders(:upcoming_pending_future),
+        description_data: { date: "13/12", provider: "TuViandita" }
+      )
+    }.to have_enqueued_job(WhatsappSenderJob)
+  end
+
+  it "no encola el envío por WhatsApp si el usuario no tiene teléfono aunque el interruptor esté prendido" do
+    employee.update!(phone: nil)
+    sign_in employee, role: :consumer
+    visit settings_notifications_path
+
+    switch_for(orders_title).click
+    expect(page).to have_content("Configuración actualizada")
+    expect_switch(orders_title, on: true)
+
+    expect {
+      Notifier.call(
+        event_key: :order_confirmation,
+        user: employee,
+        notifiable: orders(:upcoming_pending_today),
+        description_data: { date: "12/12", provider: "TuViandita" }
+      )
+    }.not_to have_enqueued_job(WhatsappSenderJob)
   end
 end

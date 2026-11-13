@@ -4,17 +4,20 @@
 # owner Company guarda el subsidio, que es la parte que paga GoGrow; la parte
 # del empleado vive en su propia cuenta y no se muestra acá.
 class Admin::PaymentsController < Admin::InertiaController
-  before_action :set_payment, only: [ :destroy, :receipt ]
+  before_action :set_payment, only: [ :destroy ]
 
   def index
-    accounts = company.accounts.where.not(amount: ..0).preload(:payments).order(month: :desc)
+    accounts = company.accounts.where.not(amount: ..0).preload(:payments, :invoices).order(month: :desc)
     settled, unpaid = accounts.partition { it.collection_status == "approved" }
     sums = Account.amount_and_price_sum(accounts.map(&:id))
 
-    @accounts = serialize(unpaid, sums)
+    reminders = Notification.where(event: InvoiceReminders::Eligibility::EVENT, notifiable: unpaid)
+      .group(:notifiable_id).maximum(:created_at)
+
+    @accounts = serialize(unpaid, sums, reminders)
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
-    @total_debt = unpaid.sum(&:payable_amount).to_f
+    @total_debt = unpaid.sum(&:outstanding_amount).to_f
     @total_meals = unpaid.sum { sums.dig(it.id, :amount).to_i }
 
     # La tarjeta "Tu consumo" muestra el mes de ?month=AAAA-MM, o el actual.
@@ -38,6 +41,14 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def create
     account = company.accounts.find(payment_account_id)
+    return reject_closed_account if account.settled?
+
+    unless account.provider.payment_details_complete?
+      return redirect_back fallback_location: admin_payments_path, inertia: {
+        errors: { receipt: [ t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing") ] }
+      }, status: :see_other
+    end
+
     payment = account.payments.build(
       provider: account.provider,
       receipt: payment_params[:receipt],
@@ -58,13 +69,18 @@ class Admin::PaymentsController < Admin::InertiaController
     }, status: :see_other
   end
 
+  # RR. HH. también ve los comprobantes que sus empleados le mandaron a cada
+  # proveedor, desde el historial de Empleados; borrar sigue siendo solo de los
+  # de la empresa.
   def receipt
-    return head :not_found unless @payment.receipt.attached?
+    accounts = Account.where(owner: company).or(Account.where(owner: company.consumers))
+    payment = Payment.where(account: accounts).find(params[:id])
+    return head :not_found unless payment.receipt.attached?
 
     send_data(
-      @payment.receipt.download,
-      filename: @payment.receipt.filename.to_s,
-      type: @payment.receipt.content_type,
+      payment.receipt.download,
+      filename: payment.receipt.filename.to_s,
+      type: payment.receipt.content_type,
       disposition: "inline"
     )
   end
@@ -99,9 +115,15 @@ class Admin::PaymentsController < Admin::InertiaController
     params.require(:payment).fetch(:account_id)
   end
 
+  def reject_closed_account
+    redirect_back fallback_location: admin_payments_path, inertia: {
+      errors: { receipt: [ t("validations.payment_closed") ] }
+    }, status: :see_other
+  end
+
   # Las viandas de todas las cuentas salen de una consulta sola y viajan como
   # params, que no llegan al serializer de la página: por eso se arma acá.
-  def serialize(accounts, sums)
-    AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
+  def serialize(accounts, sums, invoice_reminders = {})
+    Admin::AccountSerializer.new(accounts, params: { orders_sum: sums, invoice_reminders: }).serializable_hash
   end
 end

@@ -24,10 +24,10 @@ RSpec.describe "Users", type: :request do
     end
   end
 
-  describe "DELETE /users" do
+  describe "DELETE /usuario" do
     it "requires authentication" do
       delete users_path, params: { password_challenge: "Secret1*3*5*" }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "destroys current user with valid password" do

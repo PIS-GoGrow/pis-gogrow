@@ -25,7 +25,7 @@ async function openReview(canApprove = true) {
     <PaymentReviewResultProvider value={showResult}>
       <PaymentReviewSheet
         paymentId={17}
-        receiptUrl="/provider/payments/17/receipt"
+        receiptUrl="/provider/comprobantes/17/archivo"
         contentType="image/png"
         filename="Empleado de prueba"
         expectedAmount={800}
@@ -48,12 +48,17 @@ describe("PaymentReviewSheet", () => {
   it("shows the account amount and downloads the existing protected receipt", async () => {
     await openReview()
     expect(screen.getByText("Importe esperado:")).toBeInTheDocument()
-    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$800")).toBeInTheDocument()
     expect(
-      screen.getByText(/importe transferido debe verificarse en el archivo/),
+      screen.getByText(
+        "Chequeá que el total, la cuenta y el concepto del pago sean correctos antes de confirmar.",
+      ),
     ).toBeInTheDocument()
     const download = screen.getByRole("link", { name: "Descargar comprobante" })
-    expect(download).toHaveAttribute("href", "/provider/payments/17/receipt")
+    expect(download).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/17/archivo",
+    )
     expect(download).toHaveAttribute("download")
   })
 
@@ -91,12 +96,36 @@ describe("PaymentReviewSheet", () => {
     expect(showResult).toHaveBeenCalledWith("approved")
   })
 
+  it("does not show approved result dialog when response contains an alert flash", async () => {
+    const user = await openReview()
+    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    await user.click(confirm)
+    const callbacks = patch.mock.calls[0][2] as {
+      onSuccess: (page: { flash: { alert: string } }) => void
+    }
+    act(() =>
+      callbacks.onSuccess({
+        flash: { alert: "Este comprobante ya fue revisado." },
+      }),
+    )
+    expect(showResult).not.toHaveBeenCalled()
+  })
+
   it.each([
-    ["El pago es parcial", "partial_payment", "partial"],
-    ["El comprobante no corresponde", "incorrect_receipt", "rejected"],
+    ["El pago es parcial", "partial_payment", "partial", { status: "partial" }],
+    [
+      "El comprobante no corresponde",
+      "incorrect_receipt",
+      "rejected",
+      {
+        status: "rejected",
+        rejection_reason: "incorrect_receipt",
+        rejection_details: null,
+      },
+    ],
   ] as const)(
     "reports with reason %s only after confirmation",
-    async (label, reason, result) => {
+    async (label, _reason, result, expectedPayload) => {
       const user = await openReview()
       await user.click(screen.getByRole("button", { name: "Reportar" }))
       const dialog = screen.getByRole("dialog", {
@@ -112,11 +141,7 @@ describe("PaymentReviewSheet", () => {
       await user.click(submit)
       expect(patch).toHaveBeenCalledWith(
         providerPayments.update(17).url,
-        {
-          status: "rejected",
-          rejection_reason: reason,
-          rejection_details: null,
-        },
+        expectedPayload,
         expect.any(Object),
       )
       expect(
@@ -131,7 +156,7 @@ describe("PaymentReviewSheet", () => {
     },
   )
 
-  it("requires and sends a description when reporting with another reason", async () => {
+  it("sends the description when reporting with another reason", async () => {
     const user = await openReview()
     await user.click(screen.getByRole("button", { name: "Reportar" }))
     const dialog = screen.getByRole("dialog", {
@@ -145,10 +170,9 @@ describe("PaymentReviewSheet", () => {
     const submit = within(dialog).getByRole("button", { name: "Continuar" })
     expect(details).toHaveAttribute("placeholder", "Describir el motivo")
     expect(details).toHaveAttribute("maxlength", "500")
-    expect(submit).toBeDisabled()
+    expect(submit).toBeEnabled()
 
     await user.type(details, "   ")
-    expect(submit).toBeDisabled()
 
     await user.type(details, "El importe no coincide   ")
     expect(submit).toBeEnabled()
@@ -160,6 +184,26 @@ describe("PaymentReviewSheet", () => {
         status: "rejected",
         rejection_reason: "other",
         rejection_details: "El importe no coincide",
+      },
+      expect.any(Object),
+    )
+  })
+
+  it("reports with another reason without a description", async () => {
+    const user = await openReview()
+    await user.click(screen.getByRole("button", { name: "Reportar" }))
+    const dialog = screen.getByRole("dialog", {
+      name: "Reportar un problema",
+    })
+    await user.click(within(dialog).getByRole("radio", { name: "Otro motivo" }))
+    await user.click(within(dialog).getByRole("button", { name: "Continuar" }))
+
+    expect(patch).toHaveBeenCalledWith(
+      providerPayments.update(17).url,
+      {
+        status: "rejected",
+        rejection_reason: "other",
+        rejection_details: null,
       },
       expect.any(Object),
     )

@@ -20,6 +20,10 @@ vi.mock("@/layouts/settings/layout", () => ({
   ),
 }))
 
+vi.mock("@/components/consumer/consumer-mobile-nav", () => ({
+  ConsumerMobileNav: () => <div data-testid="consumer-mobile-nav" />,
+}))
+
 describe("SettingsPageLayout", () => {
   it("renders RRHH settings as a standalone page with account navigation", () => {
     role = "admin"
@@ -39,10 +43,10 @@ describe("SettingsPageLayout", () => {
     ).not.toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/account")
+    ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 
-  it("preserves the existing settings layout for other roles", () => {
+  it("renders provider settings as a standalone page with account navigation", () => {
     role = "provider"
 
     render(
@@ -54,6 +58,32 @@ describe("SettingsPageLayout", () => {
       </SettingsPageLayout>,
     )
 
-    expect(screen.getByTestId("settings-sidebar-layout")).toBeInTheDocument()
+    expect(
+      screen.queryByTestId("settings-sidebar-layout"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/proveedor/cuenta")
+  })
+
+  it("renders consumer settings as a standalone page with account navigation", () => {
+    role = "consumer"
+
+    render(
+      <SettingsPageLayout
+        title="Notificaciones"
+        description="Configurá qué alertas querés recibir"
+      >
+        <div>Opciones</div>
+      </SettingsPageLayout>,
+    )
+
+    expect(
+      screen.queryByTestId("settings-sidebar-layout"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/cuenta")
+    expect(screen.getByTestId("consumer-mobile-nav")).toBeInTheDocument()
   })
 })

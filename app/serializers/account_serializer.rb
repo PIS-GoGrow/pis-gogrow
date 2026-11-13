@@ -22,6 +22,11 @@ class AccountSerializer < ApplicationSerializer
     account.payable_amount.to_f
   end
 
+  typelize :number
+  attribute :outstanding_amount do |account|
+    account.outstanding_amount.to_f
+  end
+
   typelize :boolean
   attribute :current do |account|
     account.current?
@@ -34,7 +39,7 @@ class AccountSerializer < ApplicationSerializer
 
   typelize :string
   attribute :due_date do |account|
-    account.due_date.strftime("%d/%m/%y")
+    DateFormat.short(account.due_date)
   end
 
   typelize :boolean
@@ -44,7 +49,7 @@ class AccountSerializer < ApplicationSerializer
 
   # Sigue el enum de Payment; escrito a mano porque collection_status es un
   # método y no una columna de la que inferirlo.
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected'"
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial'"
   attribute :collection_status, &:collection_status
 
   typelize :number

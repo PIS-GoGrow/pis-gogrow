@@ -44,13 +44,13 @@ export default function AdminPreferences() {
         description={t(`${page}.description`)}
         back={
           <Button variant="ghost" size="icon" asChild>
-            <Link href={adminAccount()} aria-label={t(`${page}.back`)}>
+            <Link href={adminAccount().url} aria-label={t(`${page}.back`)}>
               <ArrowLeft aria-hidden="true" />
             </Link>
           </Button>
         }
       >
-        <div className="max-w-xl border-t">
+        <div className="border-t">
           {options.map(({ title, description, href }) => (
             <Link
               key={href}

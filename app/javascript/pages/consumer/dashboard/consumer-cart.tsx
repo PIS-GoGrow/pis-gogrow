@@ -1,25 +1,32 @@
+import { Link } from "@inertiajs/react"
+import { type TFunction } from "i18next"
 import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { formatLongDate } from "@/lib/dates"
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
+import { consumerDashboard } from "@/routes"
 
 import { AddAddressSheet } from "./add-address-sheet"
 import { AddressOption } from "./address-option"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
-import { money } from "./formatters"
 import { BenefitLine, OrderSummary } from "./order-summary"
-import type { Pricing } from "./pricing"
+import type { DiscountTier, Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 interface Props {
+  specialBenefitIds?: number[]
   monthlyLimit: number
   monthlyRemaining: number
-  pricing: Pricing
+  weeklyLimit: number
+  pricing: Pricing | null
   cart: CartItem[]
   addresses: DeliveryAddressOption[]
   address: string
@@ -27,14 +34,17 @@ interface Props {
   onAddAddress: (option: DeliveryAddressOption, saved: boolean) => void
   processing: boolean
   error?: string | string[]
-  back: () => void
   confirm: () => void
   remove: (cartId: string) => void
+  setQuantity: (cartId: string, quantity: number) => void
+  loading: boolean
 }
 
 export function ConsumerCart({
+  specialBenefitIds = [],
   monthlyLimit,
   monthlyRemaining,
+  weeklyLimit,
   pricing,
   cart,
   addresses,
@@ -43,9 +53,10 @@ export function ConsumerCart({
   onAddAddress,
   processing,
   error,
-  back,
   confirm,
   remove,
+  setQuantity,
+  loading,
 }: Props) {
   const { t } = useTranslation()
   const office = addresses.find((item) => item.id === "office")
@@ -56,6 +67,9 @@ export function ConsumerCart({
         .map((item) => item.menu.provider_name),
     ),
   ]
+  const officeOnlyNames = new Intl.ListFormat("es", {
+    type: "conjunction",
+  }).format(officeOnlyProviders)
   const missingOffice = officeOnlyProviders.length > 0 && !office
   // Sin ningún proveedor que entregue a domicilio, todo el pedido va a la oficina.
   const homeDeliveryAvailable = cart.some((item) => item.menu.home_delivery)
@@ -72,24 +86,43 @@ export function ConsumerCart({
     officeOnlyProviders.length > 0 &&
     !!selectedAddress &&
     selectedAddress !== office?.address
+  const deliveryDates = [...new Set(cart.map((item) => item.date))]
+  // Con un solo día de entrega la fecha va arriba; con varios, cada plato
+  // lleva la suya.
+  const singleDeliveryDate =
+    deliveryDates.length === 1 ? deliveryDates[0] : null
+  const deliveryLabel = (date: string) =>
+    t("pages.cart.delivery", {
+      date: formatLongDate(date),
+    })
 
   return (
-    <MobileCard>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={back}
-        disabled={processing}
-        aria-label="Volver"
-        className="mb-3"
-      >
-        <ChevronLeft aria-hidden="true" className="size-5" />
-      </Button>
-      <h1 className="text-xl font-bold">Tu carrito</h1>
-      <section className="border-border mt-8 border-b pb-4">
-        <div className="mb-3 flex items-center justify-between text-sm font-semibold">
-          <h2>{t("pages.cart.delivery_address")}</h2>
+    <MobileCard className="pb-48">
+      <Link href={consumerDashboard.index()}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled={processing}
+          aria-label="Volver"
+          className="mb-2 -ml-2 size-9 rounded-[10px]"
+        >
+          <ChevronLeft aria-hidden="true" className="size-5" />
+        </Button>
+      </Link>
+      <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">
+        {t("pages.cart.title")}
+      </h1>
+      {singleDeliveryDate && (
+        <p className="mt-1 text-base text-[#737373] dark:text-neutral-400">
+          {deliveryLabel(singleDeliveryDate)}
+        </p>
+      )}
+      <section className="mt-6 pb-2">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
+            {t("pages.cart.delivery_address")}
+          </h2>
           <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
         </div>
         <RadioGroup
@@ -113,6 +146,14 @@ export function ConsumerCart({
           disabled={customDisabled}
           onSelect={setAddress}
         />
+        {!homeDeliveryAvailable && office && cart.length > 0 && (
+          <p className="text-muted-foreground mt-3 text-sm">
+            {t("pages.cart.office_only", {
+              count: officeOnlyProviders.length,
+              providers: officeOnlyNames,
+            })}
+          </p>
+        )}
         {showDeliveryWarning && (
           <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
             <TriangleAlert aria-hidden="true" className="text-amber-500" />
@@ -123,9 +164,7 @@ export function ConsumerCart({
                 <p>
                   {t("pages.cart.office_delivery_warning", {
                     count: officeOnlyProviders.length,
-                    providers: new Intl.ListFormat("es", {
-                      type: "conjunction",
-                    }).format(officeOnlyProviders),
+                    providers: officeOnlyNames,
                   })}
                 </p>
               )}
@@ -134,126 +173,200 @@ export function ConsumerCart({
         )}
       </section>
 
-      {pricing.fullPriceQuantity > 0 && (
+      {((pricing?.fullPriceQuantity ?? 0) > 0 ||
+        (pricing?.weeklyLimitQuantity ?? 0) > 0) && (
         <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <TriangleAlert aria-hidden="true" className="text-amber-600" />
           <AlertDescription>
-            {monthlyRemaining === 0 ? (
-              <p>
-                Ya utilizaste las {monthlyLimit} viandas subsidiadas de este
-                mes. Las {pricing.fullPriceQuantity} viandas de este pedido se
-                cobrarán a precio completo.
-              </p>
-            ) : (
-              <p>
-                Te quedan {monthlyRemaining} viandas subsidiadas este mes. De
-                este pedido, {pricing.subsidizedQuantity} tendrán el beneficio y{" "}
-                {pricing.fullPriceQuantity} se cobrarán a precio completo.
-              </p>
-            )}
+            <p>
+              {fullPriceNotice(
+                t,
+                monthlyLimit,
+                monthlyRemaining,
+                weeklyLimit,
+                pricing,
+              )}
+            </p>
           </AlertDescription>
         </Alert>
       )}
 
-      <section className="border-border mt-6 pb-4 text-sm md:border-b">
-        {cart.map((item) => {
-          const line = item.menu.price * item.quantity
-          return (
-            <div
-              key={item.cartId}
-              className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
-            >
-              <p className="text-muted-foreground mb-2">
-                {t("pages.cart.delivery", {
-                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
-                    "es-UY",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    },
-                  ),
-                })}
+      {loading && !pricing ? (
+        // Solo mostramos el spinner la primera vez que carga el carrito.
+        // Cuando el usuario toca el + o - en un plato, no queremos borrar toda la vista
+        // solo para mostrar el spinner
+        <Spinner className="mx-auto my-3" />
+      ) : (
+        <>
+          <section className="mt-4 border-t border-[#898887] text-sm">
+            {cart.map((item, i) => {
+              const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
+              return (
+                <div
+                  key={item.cartId}
+                  className="border-b border-[#E5E5E5] py-3 last:border-b-0"
+                >
+                  {!singleDeliveryDate && (
+                    <p className="text-muted-foreground mb-1 text-xs">
+                      {deliveryLabel(item.date)}
+                    </p>
+                  )}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[#737373] dark:text-neutral-400">
+                      {item.menu.name} x{item.quantity}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <QuantityInput
+                        size="compact"
+                        value={item.quantity}
+                        max={item.remaining}
+                        disabled={processing}
+                        onChange={(quantity) =>
+                          setQuantity(item.cartId, quantity)
+                        }
+                        onRemove={() => remove(item.cartId)}
+                        decreaseLabel={t("pages.cart.decrease", {
+                          name: item.menu.name,
+                        })}
+                        increaseLabel={t("pages.cart.increase", {
+                          name: item.menu.name,
+                        })}
+                        removeLabel={t("pages.cart.remove", {
+                          name: item.menu.name,
+                        })}
+                      />
+                      <span className="min-w-12 text-right font-normal text-[#171717] dark:text-neutral-100">
+                        {formatMoney(line)}
+                      </span>
+                    </div>
+                  </div>
+                  {pricing?.lines?.[i] && (
+                    <ItemBenefitLines
+                      tiers={pricing.lines[i].tiers}
+                      specialBenefitIds={specialBenefitIds}
+                    />
+                  )}
+                  {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
+                    aparte, así que el carrito lo muestra por su cuenta. */}
+                  {item.menu.option_groups
+                    .filter((group) => item.selections[group.id]?.length)
+                    .map((group) => (
+                      <p
+                        key={group.id}
+                        className="text-muted-foreground mt-1.5 text-xs"
+                      >
+                        {group.name}: {item.selections[group.id].join(", ")}
+                      </p>
+                    ))}
+                  {item.notes && (
+                    <p className="text-muted-foreground mt-1.5 text-xs [overflow-wrap:anywhere]">
+                      {item.notes}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+            {!cart.length && (
+              <p className="text-muted-foreground py-6 text-center">
+                {t("pages.cart.empty")}
               </p>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {item.menu.name} x{item.quantity}
-                </span>
-                <span>{money(line)}</span>
-              </div>
-              {pricing.lines[item.cartId]?.tiers
-                .filter((tier) => tier.discount > 0)
-                .map((tier, index) => (
-                  <BenefitLine
-                    key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
-                    tier={tier}
-                    className="mt-3"
-                  />
-                ))}
-              {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
-                  aparte, así que el carrito lo muestra por su cuenta. */}
-              {item.menu.option_groups
-                .filter((group) => item.selections[group.id]?.length)
-                .map((group) => (
-                  <p key={group.id} className="text-muted-foreground mt-2">
-                    {group.name}: {item.selections[group.id].join(", ")}
-                  </p>
-                ))}
-              {item.notes && (
-                <p className="text-muted-foreground mt-2">{item.notes}</p>
+            )}
+          </section>
+          <BottomAction className="border-t border-[#898887] pt-4">
+            <OrderSummary
+              loading={loading}
+              subtotal={pricing?.subtotal}
+              total={pricing?.total}
+              compact
+              className="pt-0"
+            />
+            <Button
+              disabled={
+                !cart.length || processing || !selectedAddress || missingOffice
+              }
+              onClick={confirm}
+              className={cn(
+                "mt-2 h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 hover:text-[#FAFAFA] disabled:opacity-100 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200",
+                processing && "bg-muted hover:bg-muted",
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={processing}
-                onClick={() => remove(item.cartId)}
-                className="mt-2"
-              >
-                {t("pages.cart.remove", { name: item.menu.name })}
-              </Button>
-            </div>
-          )
-        })}
-        {!cart.length && (
-          <p className="text-muted-foreground py-6 text-center">
-            Todavía no agregaste platos.
-          </p>
-        )}
-      </section>
-      <BottomAction>
-        <OrderSummary
-          subtotal={pricing.subtotal}
-          total={pricing.total}
-          compact
-        />
-        <Button
-          disabled={
-            !cart.length || processing || !selectedAddress || missingOffice
-          }
-          onClick={confirm}
-          className={cn(
-            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-            processing && "bg-muted hover:bg-muted",
+            >
+              {processing ? (
+                <>
+                  <Spinner />
+                  {t("pages.cart.confirming")}
+                </>
+              ) : (
+                t("pages.cart.confirm")
+              )}
+            </Button>
+          </BottomAction>
+          {error && (
+            <Alert variant="destructive" className="mt-3">
+              <AlertDescription>
+                {Array.isArray(error) ? error.join(" ") : error}
+              </AlertDescription>
+            </Alert>
           )}
-        >
-          {processing ? (
-            <>
-              <Spinner />
-              Confirmando pedido
-            </>
-          ) : (
-            "Confirmar pedido"
-          )}
-        </Button>
-      </BottomAction>
-      {error && (
-        <Alert variant="destructive" className="mt-3">
-          <AlertDescription>
-            {Array.isArray(error) ? error.join(" ") : error}
-          </AlertDescription>
-        </Alert>
+        </>
       )}
     </MobileCard>
   )
+}
+
+// Explica por qué parte del pedido va a precio completo. Sin cupo mensual pero
+// con un subsidio especial aplicado, no se dice que no hay beneficio.
+function fullPriceNotice(
+  t: TFunction,
+  monthlyLimit: number,
+  monthlyRemaining: number,
+  weeklyLimit: number,
+  pricing: Pricing | null,
+) {
+  const subsidized = pricing?.subsidizedQuantity ?? 0
+  const full = pricing?.fullPriceQuantity ?? 0
+
+  if ((pricing?.weeklyLimitQuantity ?? 0) > 0) {
+    const baseSubsidized = pricing?.baseSubsidizedQuantity ?? 0
+
+    return baseSubsidized > 0
+      ? t("pages.cart.weekly.split", {
+          subsidized: baseSubsidized,
+          count: pricing?.withoutBaseSubsidyQuantity ?? 0,
+        })
+      : t("pages.cart.weekly.used_up", { count: weeklyLimit })
+  }
+
+  const reason =
+    monthlyLimit === 0
+      ? subsidized === 0 && t("pages.cart.monthly.no_benefit")
+      : monthlyRemaining === 0
+        ? t("pages.cart.monthly.used_up", { count: monthlyLimit })
+        : t("pages.cart.monthly.remaining", { count: monthlyRemaining })
+  const detail =
+    subsidized > 0
+      ? t("pages.cart.monthly.split", { subsidized, full })
+      : t("pages.cart.monthly.full_price", { count: full })
+
+  return [reason, detail].filter(Boolean).join(" ")
+}
+
+function ItemBenefitLines({
+  tiers,
+  specialBenefitIds,
+}: {
+  tiers: DiscountTier[]
+  specialBenefitIds: number[]
+}) {
+  const discounted = tiers.filter((tier) => tier.discount > 0)
+
+  if (discounted.length === 0) return <BenefitLine className="mt-2" />
+
+  return discounted.map((tier, index) => (
+    <BenefitLine
+      key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
+      tier={tier}
+      special={specialBenefitIds.includes(tier.id)}
+      className="mt-2"
+    />
+  ))
 }

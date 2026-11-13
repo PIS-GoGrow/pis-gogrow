@@ -4,15 +4,20 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import ClosingTimeSection from "@/components/provider/closing-time-section"
+import ClosuresSection from "@/components/provider/closures-section"
 import { Button } from "@/components/ui/button"
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -21,31 +26,105 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { providerDashboard, providerOnboarding } from "@/routes"
 import type { ProviderOnboardingShow } from "@/types/serializers/ProviderOnboardingShow"
 
 const TOTAL_STEPS = 4
 const PAGE = "pages.provider_onboarding"
+const PRIMARY_BUTTON = "h-12 w-full rounded-[10px] text-base font-medium"
+const SECONDARY_BUTTON = "h-12 w-full text-base font-medium"
+
+const REQUIRED_STEP_1_FIELDS = [
+  "provider[bank_name]",
+  "provider[bank_account_details]",
+  "provider[beneficiary]",
+] as const
+
+function step1Complete(provider: ProviderOnboardingShow["provider"]) {
+  return [
+    provider.bank_name,
+    provider.bank_account_details,
+    provider.beneficiary,
+  ].every((value) => (value ?? "").toString().trim() !== "")
+}
 
 export default function Onboarding({
   provider,
+  bank_names,
   step,
   notification_configurations,
   subscribed_keys,
+  closures,
+  today,
+  order_deadline_passed_today,
 }: ProviderOnboardingShow) {
   const { t } = useTranslation()
+  const [canContinue, setCanContinue] = useState(() =>
+    step === "1" ? step1Complete(provider) : true,
+  )
+  const [skippingIntro, setSkippingIntro] = useState(false)
+
+  if (step === "intro") {
+    function skipIntro() {
+      setSkippingIntro(true)
+      router.patch(
+        providerOnboarding.update().url,
+        { step: "intro", commit: "skip" },
+        {
+          preserveScroll: true,
+          onFinish: () => setSkippingIntro(false),
+        },
+      )
+    }
+
+    return (
+      <Shell>
+        <Head title={t(`${PAGE}.intro.title`)} />
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <ProviderAvatar name={provider.name} />
+          <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
+            {t(`${PAGE}.intro.title`)}
+          </h1>
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
+            {t(`${PAGE}.intro.description`)}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button asChild size="lg" className={PRIMARY_BUTTON}>
+            <Link href={`${providerOnboarding.show().url}?step=1`}>
+              {t(`${PAGE}.intro.start`)}
+            </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            disabled={skippingIntro}
+            onClick={skipIntro}
+            className={SECONDARY_BUTTON}
+          >
+            {t(`${PAGE}.intro.skip_later`)}
+          </Button>
+        </div>
+      </Shell>
+    )
+  }
 
   if (step === "done") {
     return (
       <Shell>
         <Head title={t(`${PAGE}.done.title`)} />
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <h1 className="text-2xl font-semibold">{t(`${PAGE}.done.title`)}</h1>
-          <p className="text-muted-foreground mt-3 max-w-xs">
+          <ProviderAvatar name={provider.name} />
+          <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
+            {t(`${PAGE}.done.title`)}
+          </h1>
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
             {t(`${PAGE}.done.description`)}
           </p>
         </div>
-        <Button asChild className="w-full">
+        <Button asChild size="lg" className={PRIMARY_BUTTON}>
           <Link href={providerDashboard.index()}>{t(`${PAGE}.done.cta`)}</Link>
         </Button>
       </Shell>
@@ -53,6 +132,21 @@ export default function Onboarding({
   }
 
   const current = Number(step)
+
+  function handleStep1Change(event: React.FormEvent<HTMLDivElement>) {
+    if (current !== 1) return
+
+    const form = event.currentTarget.closest("form")
+    if (!form) return
+
+    const data = new FormData(form)
+    setCanContinue(
+      REQUIRED_STEP_1_FIELDS.every((name) => {
+        const value = data.get(name)
+        return typeof value === "string" && value.trim() !== ""
+      }),
+    )
+  }
 
   function skip() {
     router.patch(
@@ -82,25 +176,42 @@ export default function Onboarding({
           onSkip={skip}
         />
       ) : current === 3 ? (
-        <DeliveriesStep homeDelivery={provider.home_delivery} onSkip={skip} />
+        <DeliveriesStep
+          homeDelivery={provider.home_delivery}
+          configured={provider.deliveries_configured}
+          onSkip={skip}
+        />
+      ) : current === 2 ? (
+        <OrderConfigStep
+          provider={provider}
+          closures={closures}
+          today={today}
+          orderDeadlinePassedToday={order_deadline_passed_today}
+          onSkip={skip}
+        />
       ) : (
         <Form
           action={providerOnboarding.update()}
           options={{ preserveScroll: true }}
           className="flex flex-1 flex-col"
+          noValidate
         >
           {({ errors, processing }) => (
             <>
               <input type="hidden" name="step" value={current} />
-              <div className="flex-1">
-                {current === 1 && (
-                  <PaymentDetailsFields provider={provider} errors={errors} />
-                )}
-                {current === 2 && (
-                  <OrderDeadlineFields provider={provider} errors={errors} />
-                )}
+              <div className="flex-1" onChange={handleStep1Change}>
+                <PaymentDetailsFields
+                  provider={provider}
+                  bankNames={bank_names}
+                  errors={errors}
+                />
               </div>
-              <Footer processing={processing} isLast={false} onSkip={skip} />
+              <Footer
+                processing={processing}
+                isLast={false}
+                canContinue={canContinue}
+                onSkip={skip}
+              />
             </>
           )}
         </Form>
@@ -109,10 +220,20 @@ export default function Onboarding({
   )
 }
 
+function ProviderAvatar({ name }: { name: string }) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] p-3 text-center text-base font-semibold text-[#FAFAFA]">
+      {name || t("roles.provider")}
+    </div>
+  )
+}
+
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-background flex min-h-svh justify-center p-6">
-      <div className="flex w-full max-w-md flex-col gap-6">{children}</div>
+      <div className="flex w-full max-w-300 flex-col gap-6">{children}</div>
     </div>
   )
 }
@@ -148,16 +269,18 @@ function StepHeader({
         {t(`${PAGE}.progress`, { current, total: TOTAL_STEPS })}
       </span>
       <div className="flex flex-1 justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="rounded-full"
-          aria-label={t(`${PAGE}.skip`)}
-          onClick={onSkip}
-        >
-          <ChevronRight aria-hidden="true" />
-        </Button>
+        {current < TOTAL_STEPS && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="rounded-full"
+            aria-label={t(`${PAGE}.skip`)}
+            onClick={onSkip}
+          >
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -168,7 +291,7 @@ function StepIntro({ step }: { step: number }) {
 
   return (
     <div className="mb-6">
-      <h1 className="text-2xl font-semibold">
+      <h1 className="text-2xl font-bold tracking-tight">
         {t(`${PAGE}.steps.${step}.title`)}
       </h1>
       <p className="text-muted-foreground mt-2">
@@ -181,10 +304,12 @@ function StepIntro({ step }: { step: number }) {
 function Footer({
   processing,
   isLast,
+  canContinue,
   onSkip,
 }: {
   processing: boolean
   isLast: boolean
+  canContinue: boolean
   onSkip: () => void
 }) {
   const { t } = useTranslation()
@@ -195,19 +320,24 @@ function Footer({
         type="submit"
         name="commit"
         value="continue"
-        disabled={processing}
-        className="w-full"
+        size="lg"
+        disabled={processing || !canContinue}
+        className={PRIMARY_BUTTON}
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={processing}
-        onClick={onSkip}
-      >
-        {t(`${PAGE}.skip`)}
-      </Button>
+      {!isLast && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="lg"
+          disabled={processing}
+          onClick={onSkip}
+          className={SECONDARY_BUTTON}
+        >
+          {t(`${PAGE}.skip`)}
+        </Button>
+      )}
     </div>
   )
 }
@@ -217,11 +347,13 @@ function ControlledFooter({
   isLast,
   onContinue,
   onSkip,
+  canContinue = true,
 }: {
   processing: boolean
   isLast: boolean
   onContinue: () => void
-  onSkip: () => void
+  onSkip?: () => void
+  canContinue?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -229,29 +361,35 @@ function ControlledFooter({
     <div className="flex flex-col gap-2">
       <Button
         type="button"
-        disabled={processing}
+        disabled={processing || !canContinue}
         onClick={onContinue}
-        className="w-full"
+        className={PRIMARY_BUTTON}
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={processing}
-        onClick={onSkip}
-      >
-        {t(`${PAGE}.skip`)}
-      </Button>
+      {!isLast && onSkip && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="lg"
+          disabled={processing}
+          onClick={onSkip}
+          className={SECONDARY_BUTTON}
+        >
+          {t(`${PAGE}.skip`)}
+        </Button>
+      )}
     </div>
   )
 }
 
 function PaymentDetailsFields({
   provider,
+  bankNames,
   errors,
 }: {
   provider: ProviderOnboardingShow["provider"]
+  bankNames: ProviderOnboardingShow["bank_names"]
   errors: Record<string, ErrorValue>
 }) {
   const { t } = useTranslation()
@@ -265,140 +403,131 @@ function PaymentDetailsFields({
           <FieldLabel htmlFor="bank_name">
             {t(`${fields}.bank_name`)}
           </FieldLabel>
-          <Input
-            id="bank_name"
-            name="provider[bank_name]"
-            defaultValue={provider.bank_name ?? ""}
-            placeholder={t(`${fields}.bank_name_placeholder`)}
-            aria-invalid={!!errors.bank_name}
-          />
-          <FieldError>{errors.bank_name}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.bank_account_type}>
-          <FieldLabel htmlFor="bank_account_type">
-            {t(`${fields}.bank_account_type`)}
-          </FieldLabel>
           <Select
-            name="provider[bank_account_type]"
-            defaultValue={provider.bank_account_type ?? undefined}
+            name="provider[bank_name]"
+            defaultValue={provider.bank_name ?? undefined}
           >
             <SelectTrigger
-              id="bank_account_type"
+              id="bank_name"
               className="w-full"
-              aria-invalid={!!errors.bank_account_type}
+              aria-invalid={!!errors.bank_name}
             >
-              <SelectValue
-                placeholder={t(`${fields}.bank_account_type_placeholder`)}
-              />
+              <SelectValue placeholder={t(`${fields}.bank_name_placeholder`)} />
             </SelectTrigger>
             <SelectContent>
-              {(["savings", "checking"] as const).map((type) => (
-                <SelectItem key={type} value={type}>
-                  {t(`${fields}.bank_account_types.${type}`)}
+              {bankNames.map((bankName) => (
+                <SelectItem key={bankName} value={bankName}>
+                  {bankName}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <FieldError>{errors.bank_account_type}</FieldError>
+          <FieldError>{errors.bank_name}</FieldError>
         </Field>
 
-        <Field data-invalid={!!errors.bank_account_number}>
-          <FieldLabel htmlFor="bank_account_number">
-            {t(`${fields}.bank_account_number`)}
+        <Field data-invalid={!!errors.bank_account_details}>
+          <FieldLabel htmlFor="bank_account_details">
+            {t(`${fields}.bank_account_details`)}
+          </FieldLabel>
+          <Textarea
+            id="bank_account_details"
+            name="provider[bank_account_details]"
+            defaultValue={provider.bank_account_details ?? ""}
+            placeholder={t(`${fields}.bank_account_details_placeholder`)}
+            className="min-h-36"
+            aria-invalid={!!errors.bank_account_details}
+          />
+          <FieldError>{errors.bank_account_details}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.beneficiary}>
+          <FieldLabel htmlFor="beneficiary">
+            {t(`${fields}.beneficiary`)}
           </FieldLabel>
           <Input
-            id="bank_account_number"
-            name="provider[bank_account_number]"
-            inputMode="numeric"
-            defaultValue={provider.bank_account_number ?? ""}
-            aria-invalid={!!errors.bank_account_number}
+            id="beneficiary"
+            name="provider[beneficiary]"
+            defaultValue={provider.beneficiary ?? ""}
+            aria-invalid={!!errors.beneficiary}
           />
-          <FieldError>{errors.bank_account_number}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.bank_account_holder}>
-          <FieldLabel htmlFor="bank_account_holder">
-            {t(`${fields}.bank_account_holder`)}
-          </FieldLabel>
-          <Input
-            id="bank_account_holder"
-            name="provider[bank_account_holder]"
-            defaultValue={provider.bank_account_holder ?? ""}
-            aria-invalid={!!errors.bank_account_holder}
-          />
-          <FieldError>{errors.bank_account_holder}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.tax_id}>
-          <FieldLabel htmlFor="tax_id">{t(`${fields}.tax_id`)}</FieldLabel>
-          <Input
-            id="tax_id"
-            name="provider[tax_id]"
-            inputMode="numeric"
-            defaultValue={provider.tax_id ?? ""}
-            aria-invalid={!!errors.tax_id}
-          />
-          <FieldDescription>
-            {t(`${fields}.tax_id_description`)}
-          </FieldDescription>
-          <FieldError>{errors.tax_id}</FieldError>
+          <FieldError>{errors.beneficiary}</FieldError>
         </Field>
       </FieldGroup>
     </>
   )
 }
 
-function OrderDeadlineFields({
+function OrderConfigStep({
   provider,
-  errors,
-}: {
-  provider: ProviderOnboardingShow["provider"]
-  errors: Record<string, ErrorValue>
-}) {
-  const { t } = useTranslation()
-
-  return (
-    <>
-      <StepIntro step={2} />
-      <FieldGroup>
-        <Field data-invalid={!!errors.order_deadline}>
-          <FieldLabel htmlFor="order_deadline">
-            {t(`${PAGE}.steps.2.order_deadline`)}
-          </FieldLabel>
-          <Input
-            id="order_deadline"
-            name="order_deadline"
-            type="time"
-            defaultValue={provider.order_deadline ?? ""}
-            aria-invalid={!!errors.order_deadline}
-          />
-          <FieldDescription>
-            {t(`${PAGE}.steps.2.order_deadline_description`)}
-          </FieldDescription>
-          <FieldError>{errors.order_deadline}</FieldError>
-        </Field>
-      </FieldGroup>
-    </>
-  )
-}
-
-function DeliveriesStep({
-  homeDelivery,
+  closures,
+  today,
+  orderDeadlinePassedToday,
   onSkip,
 }: {
-  homeDelivery: boolean
+  provider: ProviderOnboardingShow["provider"]
+  closures: ProviderOnboardingShow["closures"]
+  today: string
+  orderDeadlinePassedToday: boolean
   onSkip: () => void
 }) {
-  const { t } = useTranslation()
-  const [enabled, setEnabled] = useState(homeDelivery)
   const [processing, setProcessing] = useState(false)
 
   function submit() {
     setProcessing(true)
     router.patch(
       providerOnboarding.update().url,
-      { step: 3, commit: "continue", home_delivery: enabled },
+      { step: 2, commit: "continue" },
+      { preserveScroll: true, onFinish: () => setProcessing(false) },
+    )
+  }
+
+  return (
+    <>
+      <div className="flex-1">
+        <StepIntro step={2} />
+        <div className="flex flex-col gap-4">
+          <ClosingTimeSection
+            orderDeadline={provider.order_deadline}
+            orderDeadlinePassedToday={orderDeadlinePassedToday}
+            onboarding
+          />
+          <ClosuresSection closures={closures} today={today} onboarding />
+        </div>
+      </div>
+      <ControlledFooter
+        processing={processing}
+        isLast={false}
+        onContinue={submit}
+        onSkip={onSkip}
+        canContinue={!!provider.order_deadline}
+      />
+    </>
+  )
+}
+
+function DeliveriesStep({
+  homeDelivery,
+  configured,
+  onSkip,
+}: {
+  homeDelivery: boolean
+  configured: boolean
+  onSkip: () => void
+}) {
+  const { t } = useTranslation()
+  const [selected, setSelected] = useState<"office" | "home" | null>(
+    configured ? (homeDelivery ? "home" : "office") : null,
+  )
+  const [processing, setProcessing] = useState(false)
+  const deliveries = "pages.provider_deliveries.show"
+
+  function submit() {
+    if (!selected) return
+
+    setProcessing(true)
+    router.patch(
+      providerOnboarding.update().url,
+      { step: 3, commit: "continue", home_delivery: selected === "home" },
       { preserveScroll: true, onFinish: () => setProcessing(false) },
     )
   }
@@ -407,21 +536,33 @@ function DeliveriesStep({
     <>
       <div className="flex-1">
         <StepIntro step={3} />
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div className="pr-4">
-            <p className="font-medium">{t(`${PAGE}.steps.3.home_delivery`)}</p>
-            <p className="text-muted-foreground text-sm">
-              {t(`${PAGE}.steps.3.home_delivery_description`)}
-            </p>
-          </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
-        </div>
+        <RadioGroup
+          value={selected ?? ""}
+          onValueChange={(value) => setSelected(value as "office" | "home")}
+          aria-label={t(`${PAGE}.steps.3.title`)}
+          className="gap-3"
+        >
+          {(["office", "home"] as const).map((option) => (
+            <FieldLabel key={option} htmlFor={`delivery-${option}`}>
+              <Field orientation="horizontal">
+                <RadioGroupItem value={option} id={`delivery-${option}`} />
+                <FieldContent>
+                  <FieldTitle>{t(`${deliveries}.${option}.title`)}</FieldTitle>
+                  <FieldDescription>
+                    {t(`${deliveries}.${option}.description`)}
+                  </FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+          ))}
+        </RadioGroup>
       </div>
       <ControlledFooter
         processing={processing}
         isLast={false}
         onContinue={submit}
         onSkip={onSkip}
+        canContinue={selected !== null}
       />
     </>
   )
@@ -470,7 +611,7 @@ function NotificationsStep({
         <div className="grid gap-2">
           {configurations.map(({ id, key, title, description }) => (
             <div key={id} className="flex border-b py-3">
-              <div className="w-[90%] pr-5">
+              <div className="min-w-0 flex-1 pr-5">
                 <p className="font-medium">{title}</p>
                 <p className="text-muted-foreground text-sm">{description}</p>
               </div>

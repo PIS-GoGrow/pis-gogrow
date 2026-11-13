@@ -1,4 +1,4 @@
-import { Link, usePage } from "@inertiajs/react"
+import { Link } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -20,6 +20,7 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { formatLongDateInline, formatShortDate } from "@/lib/dates"
 import type { ProviderMenusEdit } from "@/types"
 
 export type EditScope = "day" | "saved"
@@ -88,30 +89,12 @@ export default function EditMenuAdaptableDialog({
   onApply,
 }: EditMenuAdaptableDialogProps) {
   const { t } = useTranslation()
-  const { locale } = usePage().props
   const [scope, setScope] = useState<EditScope>("day")
   const [confirmedOrders, setConfirmedOrders] =
     useState<ConfirmedOrders>("keep")
   const [ordersStep, setOrdersStep] = useState(false)
 
   const key = "pages.provider_menus.edit.sheet"
-
-  // Mientras el proveedor completa la agenda la fecha puede estar vacía, y
-  // Intl.DateTimeFormat tira un RangeError con una fecha inválida.
-  const formatDate = (date: string, options: Intl.DateTimeFormatOptions) => {
-    const parsed = new Date(`${date}T00:00:00Z`)
-    if (!date || Number.isNaN(parsed.getTime())) return ""
-
-    return new Intl.DateTimeFormat(locale, {
-      ...options,
-      timeZone: "UTC",
-    }).format(parsed)
-  }
-
-  const formatDayMonth = (date: string) =>
-    formatDate(date, { day: "numeric", month: "long" })
-
-  const formatWeekday = (date: string) => formatDate(date, { weekday: "long" })
 
   function affectedDays(selectedScope: EditScope) {
     switch (agenda.mode) {
@@ -178,8 +161,8 @@ export default function EditMenuAdaptableDialog({
       return {
         title: t(`${key}.range.title`),
         description: t(`${key}.range.description`, {
-          from: formatDayMonth(agenda.starts_on),
-          to: formatDayMonth(agenda.ends_on),
+          from: formatShortDate(agenda.starts_on),
+          to: formatShortDate(agenda.ends_on),
         }),
       }
     }
@@ -190,7 +173,7 @@ export default function EditMenuAdaptableDialog({
       return {
         title: t(`${key}.from.title`),
         description: t(`${key}.from.description`, {
-          date: formatDayMonth(from),
+          date: formatLongDateInline(from),
         }),
       }
     }
@@ -270,7 +253,7 @@ export default function EditMenuAdaptableDialog({
                   value: "day",
                   title: t(`${key}.scope.day`),
                   description: t(`${key}.scope.day_description`, {
-                    date: `${formatWeekday(agenda.date)} ${formatDayMonth(agenda.date)}`,
+                    date: formatLongDateInline(agenda.date),
                   }),
                 },
                 {

@@ -70,31 +70,33 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     click_button "Agregar #{dish.name}"
     options.each { |group, option| pick_option(group, option) }
     fill_in "notes", with: notes if notes
-    click_button "Agregar"
+    click_button "Agregar", exact: true
   end
 
   # Cada grupo es una <section> "Elegí tu <nombre>": buscar por el título evita
   # elegir la opción de otro grupo.
   def pick_option(group, option)
-    find("section", text: "Elegí tu #{group}").find("label", text: option).click
+    find("section", text: "Elegí tu/s #{group.downcase}").find("label", text: option).click
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
+    expect(page).to have_current_path(dashboard_cart_path)
     expect(page).to have_content("Tu carrito")
   end
 
   def use_new_address(name:, street:)
-    click_button "Agregar"
+    click_button "Agregar", exact: true
     within("[role=dialog]", text: "Agregar una dirección") do
       fill_in "Nombre", with: name
       fill_in "Dirección", with: street
-      click_button "Agregar"
+      click_button "Agregar", exact: true
     end
+    expect(page).to have_no_css("[role=dialog]")
   end
 
-  def publish(dish, date, amount: 5)
-    dish.schedules.create!(date:, amount:)
+  def publish(dish, date)
+    dish.schedules.create!(date:)
   end
 
   def place_order(consumer, schedule, quantity: 1, notes: nil)
@@ -105,7 +107,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   def edit_order(order)
-    visit order_path(order, edit: 1)
+    visit edit_order_path(order)
   end
 
   # Las dos vistas del pedido muestran solo lo elegido, no todo lo que ofrece el plato.
@@ -115,22 +117,22 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     expect(page).to have_no_content(instead_of)
   end
 
-  # La confirmación redondea a pesos; las demás vistas usan el formato de moneda.
-  def confirmation_money(amount) = "$#{amount.round}"
-  def uyu(amount) = /#{amount.to_i},00/
+  # Formato único de moneda de toda la app (Account.format_amount / formatMoney).
+  def confirmation_money(amount) = Account.format_amount(amount)
+  def uyu(amount) = Account.format_amount(amount)
 
   describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
     it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
       # P1 tiene publicado un menú para el martes.
-      milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
-      publish(p1_wok, tuesday, amount: 3)
+      milanesa_tuesday = publish(p1_milanesa, tuesday)
+      publish(p1_wok, tuesday)
       p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ], required: true)
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
       expect(page).to have_button("Agregar #{p1_wok.name}")
       click_button "Agregar #{p1_milanesa.name}"
-      within("section", text: "Elegí tu Guarnición") do
+      within("section", text: "Elegí tu/s guarnición") do
         expect(page).to have_css("[role=radio]", count: 2)
       end
       expect(page).to have_button("Agregar", exact: true, disabled: true)
@@ -154,13 +156,11 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       # E1 abre Mis pedidos y edita el pedido: cantidad, opción y nota.
       visit orders_path
       within(find("[data-slot=card]", text: "Milanesa al pan")) { click_link "Editar" }
-      within("[role=dialog]") do
-        click_button "Agregar uno"
-        pick_option("Guarnición", "Papas")
-        fill_in "notes", with: "Sin sal, con limón"
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_content("Pedido actualizado")
+      click_button "Agregar uno"
+      pick_option("Guarnición", "Papas")
+      fill_in "notes", with: "Sin sal, con limón"
+      click_button "Modificar"
+      confirm_order_modified
 
       edited = Order.find(order.id)
       expect(e1.orders.count).to eq(1)
@@ -177,7 +177,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
       expect(page).to have_content("Pendiente")
-      expect(page).to have_content(uyu(edited.price))
+      expect(page).to have_content(uyu(edited.price / edited.amount))
       sign_out
 
       # P1 consulta el mismo pedido y ve los mismos datos.
@@ -189,7 +189,6 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Colonia 1370")
       expect(page).to have_content("Por revisar")
       expect(page).to have_content(confirmation_money(edited.price))
-      expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
 
       # Persistencia: E1 vuelve a entrar y ve el pedido igual.
@@ -197,12 +196,12 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       visit order_path(edited)
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
-      expect(page).to have_content(uyu(edited.price))
+      expect(page).to have_content(uyu(edited.price / edited.amount))
     end
   end
 
   describe "Repetir con plato agotado (IBP-053)" do
-    let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
+    let!(:wok_tuesday) { publish(p1_wok, tuesday) }
     let!(:e2_order) { place_order(e2, wok_tuesday) }
 
     def toggle_wok_stock
@@ -254,61 +253,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e2_user, role: :consumer
 
       edit_order(e2_order)
-      within("[role=dialog]") do
-        click_button "Agregar uno"
-        click_button "Guardar cambios"
-      end
-
-      expect(page).to have_content("Este plato ya no está disponible para la fecha seleccionada.")
+      expect(page).to have_button("Agregar uno", disabled: true)
       expect(e2_order.reload.amount).to eq(1)
-    end
-  end
-
-  describe "Repetir sin cupo (IBP-051 CA4, IBP-008 CA2)" do
-    it "marca agotado el plato cuyo cupo ya se pidió entero" do
-      wok_tuesday = publish(p1_wok, tuesday, amount: 1)
-      place_order(e2, wok_tuesday)
-
-      open_menu(as: e1_user, day: tuesday)
-
-      expect(page).to have_content("Agotado")
-      expect(page).to have_button("Agregar #{p1_wok.name}", disabled: true)
-    end
-
-    it "rechaza confirmar si otro se llevó el último lugar mientras estaba en el carrito" do
-      wok_tuesday = publish(p1_wok, tuesday, amount: 1)
-      open_menu(as: e1_user, day: tuesday)
-      add_to_cart(p1_wok)
-      open_cart
-
-      place_order(e2, wok_tuesday)
-      click_button "Confirmar pedido"
-
-      expect(page).to have_content("Ya no hay suficiente stock para la cantidad solicitada.")
-      expect(e1.orders).to be_empty
-      expect(wok_tuesday.orders.count).to eq(1)
-    end
-
-    it "no deja pasar la cantidad del pedido más allá del cupo que queda" do
-      wok_tuesday = publish(p1_wok, tuesday, amount: 2)
-      e1_order = place_order(e1, wok_tuesday)
-      place_order(e2, wok_tuesday)
-      sign_in e1_user, role: :consumer
-
-      edit_order(e1_order)
-
-      within("[role=dialog]") { expect(page).to have_button("Agregar uno", disabled: true) }
-    end
-
-    it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
-      wok_tuesday = publish(p1_wok, tuesday, amount: 1)
-      place_order(e2, wok_tuesday)
-      wok_tuesday.update!(amount: 4)
-
-      open_menu(as: e1_user, day: tuesday)
-
-      expect(page).to have_button("Agregar #{p1_wok.name}", disabled: false)
-      expect(wok_tuesday.reload.id).to eq(wok_tuesday.id)
     end
   end
 
@@ -557,12 +503,12 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   describe "IBP-051 CA5: editar un menú publicado no cambia los pedidos ya creados" do
-    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday, amount: 5) }
-    let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
+    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
+    let!(:wok_tuesday) { publish(p1_wok, tuesday) }
     let!(:e1_order) { place_order(e1, milanesa_tuesday, quantity: 2) }
 
-    it "mantiene el pedido al bajar el stock del plato" do
-      milanesa_tuesday.update!(amount: 3)
+    it "mantiene el pedido al marcar el plato como agotado" do
+      milanesa_tuesday.update!(available: false)
 
       expect(e1_order.reload).to have_attributes(status: "pending", amount: 2, schedule_id: milanesa_tuesday.id)
     end
@@ -571,8 +517,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   describe "IBP-008: qué se puede modificar y cuándo" do
     let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
 
-    it "no deja editar un pedido que el proveedor ya confirmó" do
-      order = place_order(e1, milanesa_tuesday).tap { it.update!(status: :confirmed) }
+    it "no deja editar un pedido confirmado el día de la entrega" do
+      order = place_order(e1, publish(p1_milanesa, monday)).tap { it.update!(status: :confirmed) }
       sign_in e1_user, role: :consumer
 
       visit order_path(order)
@@ -586,11 +532,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
 
       edit_order(order)
-      within("[role=dialog]") do
-        find("label", text: "Colonia 1370").click
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_content("Pedido actualizado")
+      find("label", text: "Colonia 1370").click
+      click_button "Modificar"
+      confirm_order_modified
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
       sign_out
 
@@ -607,7 +551,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       open_menu(as: e1_user, day: tuesday)
       click_button "Agregar #{p1_milanesa.name}"
 
-      fill_in "notes", with: "a" * 141
+      fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
       expect(find_field("notes").value.length).to eq(140)
     end
@@ -622,12 +566,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         click_link "Editar"
       end
 
-      within("[role=dialog]") do
-        fill_in "notes", with: "a" * 141
+      fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
-        expect(find_field("notes").value.length).to eq(140)
-        expect(page).to have_content("140/140")
-      end
+      expect(find_field("notes").value.length).to eq(140)
+      expect(page).to have_content("140/140")
     end
   end
 
@@ -737,7 +679,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "un visitante sin sesión no ve el pedido" do
       visit order_path(e1_order)
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(consumer_welcome_path)
     end
   end
 end

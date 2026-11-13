@@ -6,13 +6,8 @@ require "rails_helper"
 # preferencias de notificación de mi perfil para gestionar mi cuenta."
 #
 # Criterio 1 (nombre) y criterio 3 (validación y persistencia) sobre la pantalla
-# /settings/profile, la misma donde vive el switch de entregas a domicilio
-# (IBP-068, cubierto en configurar_modalidad_de_entrega_spec.rb). Acá se ejercita
-# sólo nombre y teléfono, que es lo que este cambio agregó a esa pantalla.
-#
-# El correo electrónico se edita en otra pantalla (/settings/email) y tiene su
-# propio spec: editar_correo_proveedor_spec.rb. La foto no es editable todavía:
-# ver el TODO(integración) en consultar_cuenta_proveedor_spec.rb.
+# /settings/profile. Esta pantalla ofrece únicamente la edición de nombre y
+# teléfono; las entregas se configuran en su propia sección.
 RSpec.describe "Editar los datos personales del proveedor" do
   fixtures :users, :providers, :consumers, :companies, :admins
 
@@ -44,7 +39,7 @@ RSpec.describe "Editar los datos personales del proveedor" do
     fill_in "phone", with: "llamame"
     click_on "Guardar"
 
-    expect(page).to have_css("[data-slot=field-error]", text: "no es válido")
+    expect(page).to have_css("[data-slot=field-error]", text: "No es un celular válido. Si no es de Uruguay, escribilo con + y el código de país.")
     expect(provider_user.reload.phone).to be_nil
   end
 
@@ -58,7 +53,7 @@ RSpec.describe "Editar los datos personales del proveedor" do
     expect(page).to have_content("Tu perfil fue actualizado")
     expect(provider_user.reload.audit_logs.sole).to have_attributes(
       user: provider_user,
-      changeset: { "phone" => [ nil, "099123456" ] }
+      changeset: { "phone" => [ nil, "+59899123456" ] }
     )
   end
 

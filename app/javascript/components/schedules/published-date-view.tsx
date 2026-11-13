@@ -32,7 +32,7 @@ function PublishedScheduleRow({
   returnTo: string
 }) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
   const [processing, setProcessing] = useState(false)
 
   function handleAvailabilityChange(available: boolean) {
@@ -72,14 +72,14 @@ function PublishedScheduleRow({
             >
               {schedule.menu.name}{" "}
               <span className="text-muted-foreground">
-                | {formatMoneyShort(schedule.menu.price ?? 0)}
+                | {formatMoney(schedule.menu.price ?? 0)}
               </span>
             </Link>
           ) : (
             <>
               {schedule.menu.name}{" "}
               <span className="text-muted-foreground">
-                | {formatMoneyShort(schedule.menu.price ?? 0)}
+                | {formatMoney(schedule.menu.price ?? 0)}
               </span>
             </>
           )}
@@ -91,13 +91,13 @@ function PublishedScheduleRow({
         <CardFooter className="justify-between border-t">
           <RemoveScheduleDialog schedule={schedule} />
           <label className="relative z-10 flex items-center gap-2 text-sm">
-            {t("pages.schedules.index.availability.toggle_label")}
             <Switch
               checked={schedule.available}
               disabled={processing}
               onCheckedChange={handleAvailabilityChange}
               className="data-[state=checked]:bg-green-600 dark:data-[state=checked]:bg-green-600"
             />
+            {t("pages.schedules.index.availability.toggle_label")}
           </label>
         </CardFooter>
       )}

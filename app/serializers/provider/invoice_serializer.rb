@@ -16,7 +16,7 @@ class Provider::InvoiceSerializer < ApplicationSerializer
   # Formateada en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string
   attribute :issued_on do |invoice|
-    invoice.issued_on.strftime("%d/%m/%y")
+    DateFormat.short(invoice.issued_on)
   end
 
   typelize :string

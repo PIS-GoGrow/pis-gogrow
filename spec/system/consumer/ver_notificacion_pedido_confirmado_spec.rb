@@ -21,8 +21,8 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
   def confirm_order_as_provider
     sign_in users(:provider_user), role: :provider
-    visit provider_orders_path
-    within("[data-slot='card']", text: "PED-#{order.id}") do
+    visit_hydrated provider_orders_path
+    within(provider_order_card(order)) do
       click_button "Confirmar"
       expect(page).to have_content("Confirmado")
     end
@@ -40,10 +40,11 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
     sign_in users(:one), role: :consumer
     visit dashboard_path
+    open_notifications
 
     expect(page).to have_content(title)
     expect(page).to have_content(
-      "Tu pedido del #{I18n.l(order.schedule.date, format: :short)} fue confirmado por #{users(:provider_user).name}."
+      "Tu pedido del #{DateFormat.long(order.schedule.date, inline: true)} fue confirmado por #{users(:provider_user).name}."
     )
 
     click_button "Cerrar notificación"
@@ -51,6 +52,7 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
   end
 

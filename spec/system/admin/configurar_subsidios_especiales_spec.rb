@@ -9,9 +9,9 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
   let(:company) { companies(:gogrow) }
 
   before do
-    # Los fixtures gift y seniority son configuraciones sin MonthlyBenefit: para la
+    # Los fixtures gift, gift2 y seniority son configuraciones sin MonthlyBenefit: para la
     # pantalla serían subsidios especiales sin nombre.
-    benefit_configurations(:gift, :seniority).each(&:destroy)
+    benefit_configurations(:gift, :gift2, :seniority).each(&:destroy)
     sign_in admin_user, role: :admin
   end
 
@@ -58,6 +58,24 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
     configuration = company.benefit_configurations.find_by!(name: "2 años")
     expect(configuration.consumers).to eq([ consumers(:one) ])
     expect(configuration.benefit_rules.sole).to have_attributes(type: "SeniorityBenefit", min_years: 2)
+  end
+
+  it "muestra agrupados los campos de cantidad de viandas y validez para la condición cumpleaños" do
+    visit admin_benefit_configurations_path
+    without_animations
+
+    expect(page).to have_content("No hay subsidios especiales")
+    click_button "Agregar"
+
+    within("[role=dialog]") do
+      choose_option "Condición", "Cumpleaños"
+      expect(page).to have_content("Comienza automáticamente en la fecha de cumpleaños.")
+      expect(page).to have_field("condition_limit")
+      expect(page).to have_content("Cantidad de")
+      expect(page).to have_content("vianda(s)")
+      expect(page).to have_field("condition_validity_amount")
+      expect(page).to have_content("Validez")
+    end
   end
 
   context "con un subsidio especial cargado" do

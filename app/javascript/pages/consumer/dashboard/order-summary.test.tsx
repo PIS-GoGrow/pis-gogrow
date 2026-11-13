@@ -5,6 +5,7 @@ import { OrderSummary } from "./order-summary"
 import type { DiscountTier } from "./pricing"
 
 const tier = (percentage: number, discount: number): DiscountTier => ({
+  id: 1,
   percentage,
   quantity: discount > 0 ? 1 : 0,
   discount,
@@ -19,11 +20,12 @@ describe("OrderSummary", () => {
   it("shows one benefit line per combined percentage", () => {
     render(
       <OrderSummary
+        loading={false}
         subtotal={960}
         total={384}
         tiers={[
-          { percentage: 80, quantity: 1, discount: 256 },
-          { percentage: 50, quantity: 2, discount: 320 },
+          { id: 1, percentage: 80, quantity: 1, discount: 256 },
+          { id: 2, percentage: 50, quantity: 2, discount: 320 },
         ]}
       />,
     )
@@ -40,7 +42,14 @@ describe("OrderSummary", () => {
   })
 
   it("shows the price, the benefit and the amount to pay", () => {
-    render(<OrderSummary subtotal={640} total={320} tiers={[tier(50, 320)]} />)
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={640}
+        total={320}
+        tiers={[tier(50, 320)]}
+      />,
+    )
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
@@ -51,8 +60,48 @@ describe("OrderSummary", () => {
     )
   })
 
+  it("keeps the name of a special benefit separate from the base benefit", () => {
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={300}
+        total={0}
+        tiers={[
+          {
+            id: 1,
+            name: "Subsidio base",
+            percentage: 50,
+            quantity: 1,
+            discount: 150,
+          },
+          {
+            id: 3,
+            name: "Desafío de pasos",
+            percentage: 50,
+            quantity: 1,
+            discount: 150,
+          },
+        ]}
+        specialBenefitIds={[3]}
+      />,
+    )
+
+    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Desafío de pasos (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+      "$0",
+    )
+  })
+
   it("keeps showing the benefit line at zero instead of hiding it", () => {
-    render(<OrderSummary subtotal={640} total={640} tiers={[tier(0, 0)]} />)
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={640}
+        total={640}
+        tiers={[tier(0, 0)]}
+      />,
+    )
 
     expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
@@ -65,6 +114,7 @@ describe("OrderSummary", () => {
   it("shows only the amount to pay when compact", () => {
     render(
       <OrderSummary
+        loading={false}
         subtotal={640}
         total={320}
         tiers={[tier(50, 320)]}
@@ -79,16 +129,54 @@ describe("OrderSummary", () => {
     )
   })
 
-  it("rounds the amounts it shows", () => {
+  it("keeps the breakdown and leaves the amount to pay out when showTotal is false", () => {
     render(
-      <OrderSummary subtotal={640.5} total={320.1} tiers={[tier(50, 320.4)]} />,
+      <OrderSummary
+        loading={false}
+        subtotal={640}
+        total={320}
+        tiers={[tier(50, 320)]}
+        showTotal={false}
+      />,
     )
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
-      "$641",
+      "$640",
     )
+    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.queryByText("Monto a pagar")).not.toBeInTheDocument()
+  })
+
+  it("shows the cents only when the amount has them", () => {
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={640.5}
+        total={320.1}
+        tiers={[tier(50, 320.4)]}
+      />,
+    )
+
+    expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
+      "$640,50",
+    )
+    expect(
+      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
+    ).toHaveTextContent("- $320,40")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
+      "$320,10",
+    )
+  })
+
+  // IBP-006 CA10: sin beneficio no hay tiers, y el desglose igual tiene que
+  // decir que GoGrow cubre $0.
+  it("shows the GoGrow subsidy at zero when no benefit applies", () => {
+    render(
+      <OrderSummary loading={false} subtotal={301} total={301} tiers={[]} />,
+    )
+
+    expect(screen.getByText("Subsidio GoGrow").nextSibling).toHaveTextContent(
+      "$0",
     )
   })
 })
