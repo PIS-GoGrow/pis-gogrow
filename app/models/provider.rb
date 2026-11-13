@@ -84,6 +84,13 @@ class Provider < ApplicationRecord
     deadline_at.present? && Time.current >= deadline_at
   end
 
+  # SC-007: pasada la hora de cierre, el proveedor tiene media hora más para
+  # responder los pedidos pendientes del día; después se rechazan solos.
+  def response_deadline_passed_today?
+    deadline_at = order_deadline_today
+    deadline_at.present? && Time.current >= deadline_at + 30.minutes
+  end
+
   def seconds_until_order_deadline
     deadline_at = order_deadline_today
     (deadline_at - Time.current).ceil if deadline_at && Time.current < deadline_at

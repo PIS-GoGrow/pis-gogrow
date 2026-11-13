@@ -21,6 +21,7 @@ interface Props {
   activeProviders: Set<number>
   setActiveProviders: (providers: Set<number>) => void
   openDetail: (item: Schedule) => void
+  currentDate?: string
 }
 
 export default function FavoritesPanel({
@@ -31,6 +32,7 @@ export default function FavoritesPanel({
   activeProviders,
   setActiveProviders,
   openDetail,
+  currentDate,
 }: Props) {
   const { t } = useTranslation()
   const prefix = "pages.consumer_dashboard.index.favorites"
@@ -99,8 +101,12 @@ export default function FavoritesPanel({
     const schedule = schedules.find(
       (item) => item.menu.saved_menu_id === menu.id,
     )
+    const isPast =
+      !!schedule &&
+      ((currentDate ? schedule.date < currentDate : false) ||
+        schedule.remaining <= 0)
     const available =
-      !!schedule && !schedule.sold_out && !schedule.orders_closed
+      !!schedule && !schedule.sold_out && !schedule.orders_closed && !isPast
 
     return (
       <li

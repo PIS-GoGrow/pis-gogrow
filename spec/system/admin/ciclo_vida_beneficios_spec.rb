@@ -58,7 +58,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     expect(page).to have_content("Sorrentinos artesanales")
     open_dish(sorrentinos)
 
-    expect(page).to have_content("Subsidio Base (50%)")
+    expect(page).to have_content("Beneficio GoGrow (50%)")
     expect(page).to have_content("Monto a pagar")
     expect(page).to have_content("$160")
 
@@ -110,14 +110,14 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     open_dish(sorrentinos)
 
     # El límite de precio es 300, los sorrentinos no se subsidian pero la ensalada sí
-    expect(page).to have_no_content("Subsidio base")
+    expect(page).to have_no_content("Beneficio GoGrow")
     expect(page).to have_content("Monto a pagar")
     expect(page).to have_content("$320")
 
     visit dashboard_path
     open_dish(office_menu)
 
-    expect(page).to have_content("Subsidio base (70%)")
+    expect(page).to have_content("Beneficio GoGrow (70%)")
     expect(page).to have_content("- $175")
     expect(page).to have_content("Monto a pagar")
     expect(page).to have_content("$75")

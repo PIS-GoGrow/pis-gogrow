@@ -220,6 +220,32 @@ RSpec.describe Provider, type: :model do
     end
   end
 
+  describe "#response_deadline_passed_today?" do
+    let(:provider) { providers(:tuviandita) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 10, 2, 12, 30)) { example.run }
+    end
+
+    it "is false without a deadline" do
+      provider.order_deadline = nil
+
+      expect(provider.response_deadline_passed_today?).to be false
+    end
+
+    it "is false a minute before the half hour after the deadline" do
+      provider.order_deadline = Time.zone.parse("12:01")
+
+      expect(provider.response_deadline_passed_today?).to be false
+    end
+
+    it "is true half an hour after the deadline" do
+      provider.order_deadline = Time.zone.parse("12:00")
+
+      expect(provider.response_deadline_passed_today?).to be true
+    end
+  end
+
   describe "#seconds_until_order_deadline" do
     let(:provider) { providers(:tuviandita) }
 

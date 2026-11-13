@@ -251,6 +251,8 @@ describe("Uso del beneficio", () => {
     data.participation = {
       percent: null,
       eligible_employees: null,
+      eligible_with_confirmed_orders: null,
+      eligible_without_confirmed_orders: null,
       eligible_without_orders: null,
     }
     data.employee_activity = {

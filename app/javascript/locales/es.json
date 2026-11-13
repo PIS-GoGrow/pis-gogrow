@@ -472,6 +472,7 @@
           "dish_modified": "porque el plato fue modificado",
           "dish_unpublished": "porque el plato fue retirado del menú de ese día",
           "duplicate_order": "porque el pedido estaba duplicado",
+          "no_response": "porque no lo confirmó a tiempo",
           "order_error": "por un error en el pedido",
           "other": "por el siguiente motivo: %{details}",
           "out_of_stock": "porque no había stock disponible"
@@ -993,7 +994,7 @@
       },
       "cart": {
         "add_address": "Agregar",
-        "benefit": "Subsidio Base (%{percentage}%)",
+        "benefit": "Beneficio GoGrow (%{percentage}%)",
         "confirm": "Confirmar pedido",
         "confirming": "Confirmando pedido",
         "decrease": "Quitar una unidad de %{name}",
@@ -1278,7 +1279,7 @@
           }
         },
         "index": {
-          "all_providers": "Todos los proveedores",
+          "all_providers": "Todos",
           "base_price": "Precio base: %{amount}",
           "cancel": "Cancelar",
           "cancel_dialog": {
@@ -2019,6 +2020,7 @@
           "dish_modified": "Plato modificado",
           "dish_unpublished": "Plato retirado del menú",
           "duplicate_order": "Pedido duplicado",
+          "no_response": "Sin respuesta del proveedor",
           "order_error": "Error en el pedido",
           "other": "Otro motivo",
           "out_of_stock": "Sin stock disponible"
