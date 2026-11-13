@@ -100,7 +100,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     find("a[href='#{orders_path}']", match: :first).click
     expect(page).to have_current_path(orders_path)
     find("[role=tab]", text: "Historial").click
-    expect(page).to have_content("Todos los proveedores")
+    expect(page).to have_content("Proveedores: Todos")
     find("a[href='#{dashboard_path}']", match: :first).click
     expect(page).to have_current_path(dashboard_path)
     expect(page).to have_content("Milanesa con papas fritas")

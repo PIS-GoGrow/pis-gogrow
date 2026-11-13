@@ -42,7 +42,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               {order.reviewable ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full"
                   asChild
@@ -55,7 +55,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               ) : (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full"
                   disabled
@@ -76,30 +76,21 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               {order.cancellable ? (
                 <CancelOrderSheet order={order} />
               ) : (
-                <div className="flex flex-col gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    disabled
-                  >
-                    <X aria-hidden="true" />
-                    {t("pages.orders.index.cancel")}
-                  </Button>
-                  {order.status !== "confirmed" && (
-                    <p className="text-muted-foreground text-xs">
-                      {t(
-                        `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
-                      )}
-                    </p>
-                  )}
-                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  disabled
+                >
+                  <X aria-hidden="true" />
+                  {t("pages.orders.index.cancel")}
+                </Button>
               )}
               {order.modifiable ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full"
                   asChild
@@ -110,26 +101,37 @@ export default function OrderCard({ order, section }: OrderCardProps) {
                   </Link>
                 </Button>
               ) : (
-                <div className="flex flex-col gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    disabled
-                  >
-                    <Pencil aria-hidden="true" />
-                    {t("pages.orders.show.edit")}
-                  </Button>
-                  {order.status !== "confirmed" && (
-                    <p className="text-muted-foreground text-xs">
-                      {t(
-                        `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
-                      )}
-                    </p>
-                  )}
-                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  disabled
+                >
+                  <Pencil aria-hidden="true" />
+                  {t("pages.orders.show.edit")}
+                </Button>
               )}
+              {!order.cancellable &&
+                order.status !== "confirmed" &&
+                order.cancellation_block_reason && (
+                  <p className="text-muted-foreground col-span-2 text-xs">
+                    {t(
+                      `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                    )}
+                  </p>
+                )}
+              {!order.modifiable &&
+                order.status !== "confirmed" &&
+                order.modification_block_reason &&
+                order.modification_block_reason !==
+                  order.cancellation_block_reason && (
+                  <p className="text-muted-foreground col-span-2 text-xs">
+                    {t(
+                      `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                    )}
+                  </p>
+                )}
             </CardFooter>
           )}
         </>

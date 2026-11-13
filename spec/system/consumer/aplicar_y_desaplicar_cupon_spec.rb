@@ -77,7 +77,7 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
     expect(coupon_checkbox[:"data-state"]).to eq("checked")
 
     # 300 con 50% base (- $150) y 30% de cupón (- $90): paga 60.
-    expect(tier("Subsidio Base (50%)")).to have_text("- $150")
+    expect(tier("Beneficio GoGrow (50%)")).to have_text("- $150")
     expect(tier("Premio del mes (30%)")).to have_text("- $90")
     expect(tier("Monto a pagar")).to have_text("$60")
 
@@ -120,7 +120,7 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
 
     # 300 con 50% base (- $150), sin el cupón: paga 150.
     expect(page).to have_no_text("Premio del mes (30%)")
-    expect(tier("Subsidio Base (50%)")).to have_text("- $150")
+    expect(tier("Beneficio GoGrow (50%)")).to have_text("- $150")
     expect(tier("Monto a pagar")).to have_text("$150")
 
     click_button "Agregar"

@@ -77,20 +77,23 @@ export default function MenuItem({
             <StatusBadge status="confirmed" className="px-2 py-0.5" />
           )}
           {ordersClosed && (
-            <span className="text-destructive flex items-center gap-1 text-xs">
-              <span className="bg-destructive inline-block size-1.5 rounded-full" />
+            <span className="text-destructive flex w-full items-center gap-1 text-xs">
+              <span className="bg-destructive inline-block size-1.5 shrink-0 rounded-full" />
               {t("pages.consumer_dashboard.index.orders_closed")}
             </span>
           )}
           {soldOut && (
             <span className="text-destructive flex items-center gap-1 text-xs">
-              <span className="bg-destructive inline-block size-1.5 rounded-full" />
+              <span className="bg-destructive inline-block size-1.5 shrink-0 rounded-full" />
               Agotado
             </span>
           )}
         </div>
-        <p className="font-semibold">
-          {name} <span className="font-normal">| {formatMoney(price)}</span>
+        <p className="leading-snug font-semibold">
+          {name}{" "}
+          <span className="text-muted-foreground font-normal whitespace-nowrap">
+            | {formatMoney(price)}
+          </span>
         </p>
         {description && (
           <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
@@ -98,34 +101,36 @@ export default function MenuItem({
           </p>
         )}
       </div>
-      {onToggleFavorite && (
-        <FavoriteButton
-          active={!!favorite}
-          label={t(
-            `pages.consumer_dashboard.index.favorites.${favorite ? "remove" : "add"}`,
-            { name },
+      <div className="flex shrink-0 flex-col items-center gap-1.5 self-center">
+        <Button
+          size="icon"
+          variant="outline"
+          disabled={disabled}
+          onClick={(e) => {
+            e.stopPropagation()
+            onSelect?.()
+          }}
+          aria-label={`Agregar ${name}`}
+          className={cn(
+            "size-8 rounded-full",
+            counter
+              ? counterStyles[counter.tone]
+              : "border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
           )}
-          onToggle={onToggleFavorite}
-        />
-      )}
-      <Button
-        size="icon"
-        variant="outline"
-        disabled={disabled}
-        onClick={(e) => {
-          e.stopPropagation()
-          onSelect?.()
-        }}
-        aria-label={`Agregar ${name}`}
-        className={cn(
-          "size-8 shrink-0 rounded-full",
-          counter
-            ? counterStyles[counter.tone]
-            : "border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
+        >
+          {counter?.quantity ?? <Plus aria-hidden="true" className="size-4" />}
+        </Button>
+        {onToggleFavorite && (
+          <FavoriteButton
+            active={!!favorite}
+            label={t(
+              `pages.consumer_dashboard.index.favorites.${favorite ? "remove" : "add"}`,
+              { name },
+            )}
+            onToggle={onToggleFavorite}
+          />
         )}
-      >
-        {counter?.quantity ?? <Plus aria-hidden="true" className="size-4" />}
-      </Button>
+      </div>
     </div>
   )
 }

@@ -60,13 +60,13 @@ RSpec.describe "Pedidos del consumidor" do
     visit orders_path
     find("[role=tab]", text: "Historial").click
 
-    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Proveedores: Todos")
 
     open_provider_filter
 
     within("[role=dialog]") do
       expect(page).to have_content("Filtrar por proveedores")
-      expect(page).to have_content("Todos los proveedores")
+      expect(page).to have_content("Todos")
       expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
       find("#dashboard-filter-#{providers(:office_provider).id}").click
       click_button "Aplicar"
@@ -87,13 +87,13 @@ RSpec.describe "Pedidos del consumidor" do
       click_button "Aplicar"
     end
 
-    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Proveedores: Todos")
     expect(page).to have_content("Ensalada de quinoa")
     expect(page).to have_content("Milanesa con papas fritas")
 
     refresh
     find("[role=tab]", text: "Historial").click
-    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Proveedores: Todos")
     expect(page).to have_content("Ensalada de quinoa")
     expect(page).to have_content("Milanesa con papas fritas")
 
@@ -155,7 +155,7 @@ RSpec.describe "Pedidos del consumidor" do
       click_button "Aplicar"
     end
 
-    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Proveedores: Todos")
     expect(history).to have_content("Budín de limón")
     expect(history).to have_content("Milanesa con papas fritas")
     positions = [ "Tarta de verduras", "Budín de limón", "Ensalada de quinoa" ].map { |name| history.text.index(name) }
@@ -179,7 +179,7 @@ RSpec.describe "Pedidos del consumidor" do
 
     visit orders_path
 
-    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Proveedores: Todos")
     label_top = page.evaluate_script(
       "Array.from(document.querySelectorAll('span')).find((el) => el.textContent.startsWith('Proveedores:')).getBoundingClientRect().top"
     )

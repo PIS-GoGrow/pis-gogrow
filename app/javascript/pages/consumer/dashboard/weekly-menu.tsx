@@ -169,6 +169,7 @@ export function WeeklyMenu({
               activeProviders={activeProviders}
               setActiveProviders={setActiveProviders}
               openDetail={openDetail}
+              currentDate={currentDate}
             />
 
             <div className="mt-6 mb-3 flex items-center">

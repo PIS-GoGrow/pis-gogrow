@@ -1150,7 +1150,7 @@ es:
         history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
         history_loading: "Cargando pedidos anteriores…"
         providers_label: "Proveedores:"
-        all_providers: "Todos los proveedores"
+        all_providers: "Todos"
         quantity: "x%{count}"
         upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
         history_address: "Lo recibiste en: %{address} (%{delivery_method})"
@@ -1768,7 +1768,7 @@ es:
       decrease: "Quitar una unidad de %{name}"
       increase: "Agregar una unidad de %{name}"
       delivery: "Entrega: %{date}"
-      benefit: "Subsidio Base (%{percentage}%)"
+      benefit: "Beneficio GoGrow (%{percentage}%)"
       no_benefit: "Subsidio GoGrow"
       subtotal: "Precio vianda"
       monthly:

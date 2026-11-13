@@ -156,11 +156,11 @@ describe("OrderCard", () => {
 
       const cancelButton = screen.getByRole("button", { name: /Cancelar/i })
       expect(cancelButton).toBeDisabled()
-      expect(
-        screen.getByText(
-          "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
-        ),
-      ).toBeInTheDocument()
+      const reason = screen.getByText(
+        "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
+      )
+      expect(reason).toBeInTheDocument()
+      expect(reason.className).toContain("col-span-2")
     })
 
     it("renders active cancel sheet button when order is cancellable", () => {
@@ -168,11 +168,43 @@ describe("OrderCard", () => {
 
       const cancelButton = screen.getByRole("button", { name: /Cancelar/i })
       expect(cancelButton).toBeEnabled()
+      expect(cancelButton.className).toContain("bg-secondary")
+      expect(screen.getByRole("link", { name: /Editar/i }).className).toContain(
+        "bg-secondary",
+      )
       expect(
         screen.queryByText(
           "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
         ),
       ).not.toBeInTheDocument()
     })
+  })
+
+  it("uses filled actions when cancel and edit are disabled", () => {
+    render(
+      <OrderCard
+        order={{
+          ...baseOrder,
+          status: "confirmed",
+          cancellable: false,
+          modifiable: false,
+        }}
+        section="upcoming"
+      />,
+    )
+
+    for (const name of ["Cancelar", "Editar"]) {
+      const button = screen.getByRole("button", { name })
+      expect(button).toBeDisabled()
+      expect(button).toHaveAttribute("data-variant", "secondary")
+    }
+  })
+
+  it("keeps the review action filled when disabled", () => {
+    render(<OrderCard order={baseOrder} section="history" />)
+
+    const reviewButton = screen.getByRole("button", { name: /Calificar/i })
+    expect(reviewButton).toBeDisabled()
+    expect(reviewButton.className).toContain("bg-secondary")
   })
 })

@@ -22,6 +22,7 @@ import type { DiscountTier, Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 interface Props {
+  specialBenefitIds?: number[]
   monthlyLimit: number
   monthlyRemaining: number
   weeklyLimit: number
@@ -40,6 +41,7 @@ interface Props {
 }
 
 export function ConsumerCart({
+  specialBenefitIds = [],
   monthlyLimit,
   monthlyRemaining,
   weeklyLimit,
@@ -95,7 +97,7 @@ export function ConsumerCart({
     })
 
   return (
-    <MobileCard>
+    <MobileCard className="pb-48">
       <Link href={consumerDashboard.index()}>
         <Button
           type="button"
@@ -103,20 +105,24 @@ export function ConsumerCart({
           size="icon"
           disabled={processing}
           aria-label="Volver"
-          className="mb-3"
+          className="mb-2 -ml-2 size-9 rounded-[10px]"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
         </Button>
       </Link>
-      <h1 className="text-xl font-bold">{t("pages.cart.title")}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">
+        {t("pages.cart.title")}
+      </h1>
       {singleDeliveryDate && (
-        <p className="text-muted-foreground mt-2 text-sm">
+        <p className="mt-1 text-base text-[#737373] dark:text-neutral-400">
           {deliveryLabel(singleDeliveryDate)}
         </p>
       )}
-      <section className="border-border mt-8 border-b pb-4">
-        <div className="mb-3 flex items-center justify-between text-sm font-semibold">
-          <h2>{t("pages.cart.delivery_address")}</h2>
+      <section className="mt-6 pb-2">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
+            {t("pages.cart.delivery_address")}
+          </h2>
           <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
         </div>
         <RadioGroup
@@ -192,63 +198,71 @@ export function ConsumerCart({
         <Spinner className="mx-auto my-3" />
       ) : (
         <>
-          <section className="border-border mt-6 pb-4 text-sm md:border-b">
+          <section className="mt-4 border-t border-[#898887] text-sm">
             {cart.map((item, i) => {
               const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
               return (
                 <div
                   key={item.cartId}
-                  className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
+                  className="border-b border-[#E5E5E5] py-3 last:border-b-0"
                 >
                   {!singleDeliveryDate && (
-                    <p className="text-muted-foreground mb-2">
+                    <p className="text-muted-foreground mb-1 text-xs">
                       {deliveryLabel(item.date)}
                     </p>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[#737373] dark:text-neutral-400">
                       {item.menu.name} x{item.quantity}
                     </span>
-                    <span>{formatMoney(line)}</span>
+                    <div className="flex items-center gap-3">
+                      <QuantityInput
+                        size="compact"
+                        value={item.quantity}
+                        max={item.remaining}
+                        disabled={processing}
+                        onChange={(quantity) =>
+                          setQuantity(item.cartId, quantity)
+                        }
+                        onRemove={() => remove(item.cartId)}
+                        decreaseLabel={t("pages.cart.decrease", {
+                          name: item.menu.name,
+                        })}
+                        increaseLabel={t("pages.cart.increase", {
+                          name: item.menu.name,
+                        })}
+                        removeLabel={t("pages.cart.remove", {
+                          name: item.menu.name,
+                        })}
+                      />
+                      <span className="min-w-12 text-right font-normal text-[#171717] dark:text-neutral-100">
+                        {formatMoney(line)}
+                      </span>
+                    </div>
                   </div>
                   {pricing?.lines?.[i] && (
-                    <ItemBenefitLines tiers={pricing.lines[i].tiers} />
+                    <ItemBenefitLines
+                      tiers={pricing.lines[i].tiers}
+                      specialBenefitIds={specialBenefitIds}
+                    />
                   )}
                   {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
                     aparte, así que el carrito lo muestra por su cuenta. */}
                   {item.menu.option_groups
                     .filter((group) => item.selections[group.id]?.length)
                     .map((group) => (
-                      <p key={group.id} className="text-muted-foreground mt-2">
+                      <p
+                        key={group.id}
+                        className="text-muted-foreground mt-1.5 text-xs"
+                      >
                         {group.name}: {item.selections[group.id].join(", ")}
                       </p>
                     ))}
                   {item.notes && (
-                    <p className="text-muted-foreground mt-2 [overflow-wrap:anywhere]">
+                    <p className="text-muted-foreground mt-1.5 text-xs [overflow-wrap:anywhere]">
                       {item.notes}
                     </p>
                   )}
-                  <div className="mt-2">
-                    <QuantityInput
-                      size="sm"
-                      value={item.quantity}
-                      max={item.remaining}
-                      disabled={processing}
-                      onChange={(quantity) =>
-                        setQuantity(item.cartId, quantity)
-                      }
-                      onRemove={() => remove(item.cartId)}
-                      decreaseLabel={t("pages.cart.decrease", {
-                        name: item.menu.name,
-                      })}
-                      increaseLabel={t("pages.cart.increase", {
-                        name: item.menu.name,
-                      })}
-                      removeLabel={t("pages.cart.remove", {
-                        name: item.menu.name,
-                      })}
-                    />
-                  </div>
                 </div>
               )
             })}
@@ -258,12 +272,13 @@ export function ConsumerCart({
               </p>
             )}
           </section>
-          <BottomAction>
+          <BottomAction className="border-t border-[#898887] pt-4">
             <OrderSummary
               loading={loading}
               subtotal={pricing?.subtotal}
               total={pricing?.total}
               compact
+              className="pt-0"
             />
             <Button
               disabled={
@@ -271,7 +286,7 @@ export function ConsumerCart({
               }
               onClick={confirm}
               className={cn(
-                "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+                "mt-2 h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 hover:text-[#FAFAFA] disabled:opacity-100 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200",
                 processing && "bg-muted hover:bg-muted",
               )}
             >
@@ -335,16 +350,23 @@ function fullPriceNotice(
   return [reason, detail].filter(Boolean).join(" ")
 }
 
-function ItemBenefitLines({ tiers }: { tiers: DiscountTier[] }) {
+function ItemBenefitLines({
+  tiers,
+  specialBenefitIds,
+}: {
+  tiers: DiscountTier[]
+  specialBenefitIds: number[]
+}) {
   const discounted = tiers.filter((tier) => tier.discount > 0)
 
-  if (discounted.length === 0) return <BenefitLine className="mt-3" />
+  if (discounted.length === 0) return <BenefitLine className="mt-2" />
 
   return discounted.map((tier, index) => (
     <BenefitLine
       key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
       tier={tier}
-      className="mt-3"
+      special={specialBenefitIds.includes(tier.id)}
+      className="mt-2"
     />
   ))
 }

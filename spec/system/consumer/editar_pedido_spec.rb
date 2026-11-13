@@ -99,7 +99,7 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
     total = find("span", text: "Monto a pagar")
     bar = total.find(:xpath, "ancestor::div[contains(@class, 'fixed')]")
     expect(bar).to have_button("Modificar")
-    expect(page).to have_no_css("div.fixed", text: "Precio vianda")
+    expect(bar).to have_content("Precio vianda")
 
     page.execute_script("window.scrollTo(0, document.body.scrollHeight)")
     viewport_height = page.evaluate_script("window.innerHeight")

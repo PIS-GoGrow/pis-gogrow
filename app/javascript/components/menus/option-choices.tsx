@@ -35,12 +35,12 @@ export default function OptionChoices({
   return (
     <section className="border-border border-b py-5">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-xs font-semibold">
+        <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
           {t("pages.consumer_dashboard.options.choose", {
             name: neutralName(group.name),
           })}
         </h2>
-        <span className="text-muted-foreground shrink-0 text-[10px]">
+        <span className="shrink-0 text-xs text-[#737373] dark:text-neutral-400">
           {t(
             group.required
               ? "pages.consumer_dashboard.options.required"
@@ -49,7 +49,7 @@ export default function OptionChoices({
         </span>
       </div>
       {group.limit > 1 && (
-        <p className="text-muted-foreground mt-1 text-[10px]">
+        <p className="mt-1 text-xs text-[#737373] dark:text-neutral-400">
           {t("pages.consumer_dashboard.options.limit", { count: group.limit })}
         </p>
       )}
@@ -63,7 +63,7 @@ export default function OptionChoices({
           {group.options.map((option) => (
             <label
               key={option}
-              className="flex cursor-pointer items-center gap-2 text-xs"
+              className="flex cursor-pointer items-center gap-3 text-sm text-[#0A0A0A] dark:text-neutral-100"
             >
               <RadioGroupItem
                 value={option}
@@ -86,7 +86,7 @@ export default function OptionChoices({
             return (
               <label
                 key={option}
-                className="flex cursor-pointer items-center gap-2 text-xs"
+                className="flex cursor-pointer items-center gap-3 text-sm text-[#0A0A0A] dark:text-neutral-100"
               >
                 <Checkbox
                   checked={checked}

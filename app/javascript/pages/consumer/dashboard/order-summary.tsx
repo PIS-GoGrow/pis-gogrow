@@ -11,6 +11,7 @@ interface Props {
   subtotal?: number
   total?: number
   tiers?: DiscountTier[]
+  specialBenefitIds?: number[]
   compact?: boolean
   showTotal?: boolean
   className?: string
@@ -21,6 +22,7 @@ export function OrderSummary({
   subtotal,
   total,
   tiers = [],
+  specialBenefitIds = [],
   compact = false,
   showTotal = true,
   className,
@@ -33,16 +35,19 @@ export function OrderSummary({
         {!compact && (
           <>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {t("pages.cart.subtotal")}
               </span>
-              <span>{formatMoney(subtotal ?? 0)}</span>
+              <span className="text-sm font-normal text-[#171717] dark:text-neutral-100">
+                {formatMoney(subtotal ?? 0)}
+              </span>
             </div>
             {tiers.length === 0 && <BenefitLine />}
             {tiers.map((tier, index) => (
               <BenefitLine
                 key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
                 tier={tier}
+                special={specialBenefitIds.includes(tier.id)}
               />
             ))}
           </>
@@ -50,8 +55,8 @@ export function OrderSummary({
         {showTotal && (
           <div
             className={cn(
-              "flex justify-between text-xl font-bold",
-              !compact && "border-border border-t pt-3",
+              "flex justify-between text-xl font-bold text-[#171717] dark:text-neutral-100",
+              !compact && "border-t border-[#898887] pt-3",
             )}
           >
             <span>{t("pages.cart.total")}</span>
@@ -69,9 +74,11 @@ export function OrderSummary({
 // $0, para que el desglose diga cuánto cubre GoGrow aunque sea nada.
 export function BenefitLine({
   tier,
+  special = false,
   className,
 }: {
   tier?: DiscountTier
+  special?: boolean
   className?: string
 }) {
   const { t } = useTranslation()
@@ -87,14 +94,17 @@ export function BenefitLine({
     )
   }
 
-  const label = tier.name
-    ? `${tier.name} (${tier.percentage}%)`
-    : t("pages.cart.benefit", { percentage: tier.percentage })
+  const label =
+    special && tier.name
+      ? `${tier.name} (${tier.percentage}%)`
+      : t("pages.cart.benefit", { percentage: tier.percentage })
 
   return (
-    <div className={cn("flex justify-between", className)}>
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-[#29944c]">- {formatMoney(tier.discount)}</span>
+    <div className={cn("flex justify-between text-sm", className)}>
+      <span className="text-[#737373] dark:text-neutral-400">{label}</span>
+      <span className="font-normal text-[#15803D]">
+        - {formatMoney(tier.discount)}
+      </span>
     </div>
   )
 }

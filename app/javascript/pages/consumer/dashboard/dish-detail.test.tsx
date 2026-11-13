@@ -101,7 +101,7 @@ describe("DishDetail", () => {
     expect(bar).toContainElement(
       screen.getByRole("button", { name: "Agregar" }),
     )
-    expect(screen.getByText("Precio vianda").closest(".fixed")).toBeNull()
+    expect(screen.getByText("Precio vianda").closest(".fixed")).not.toBeNull()
   })
 
   // Criterio 3: sin descripción no se inventa texto, y sobre todo no se filtra

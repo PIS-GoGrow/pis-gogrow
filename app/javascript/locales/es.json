@@ -994,7 +994,7 @@
       },
       "cart": {
         "add_address": "Agregar",
-        "benefit": "Subsidio Base (%{percentage}%)",
+        "benefit": "Beneficio GoGrow (%{percentage}%)",
         "confirm": "Confirmar pedido",
         "confirming": "Confirmando pedido",
         "decrease": "Quitar una unidad de %{name}",
@@ -1279,7 +1279,7 @@
           }
         },
         "index": {
-          "all_providers": "Todos los proveedores",
+          "all_providers": "Todos",
           "base_price": "Precio base: %{amount}",
           "cancel": "Cancelar",
           "cancel_dialog": {
