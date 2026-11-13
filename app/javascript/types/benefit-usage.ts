@@ -101,6 +101,8 @@ export interface BenefitUsageStats {
   participation: {
     percent: number | null
     eligible_employees: number | null
+    eligible_with_confirmed_orders: number | null
+    eligible_without_confirmed_orders: number | null
     eligible_without_orders: number | null
   }
   employee_activity: {

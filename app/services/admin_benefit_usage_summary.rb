@@ -26,6 +26,7 @@ class AdminBenefitUsageSummary
     - Diferenciá empleados elegibles, participantes, pedidos y viandas.
     - Si existen empleados elegibles sin pedidos confirmados, podés señalar ese grupo como una oportunidad de seguimiento, sin asumir por qué no realizaron pedidos.
     - No confundas empleados sin pedidos confirmados con empleados que no realizaron ningún pedido. Pueden existir pedidos pendientes. Utilizá siempre la denominación exacta que permitan los datos recibidos.
+    - La participación cuenta exclusivamente elegibles con al menos un pedido confirmado; quienes solo tienen pedidos pendientes no participan. eligible_without_orders cuenta quienes no hicieron ningún pedido y no es el complemento de la participación. Para ese complemento, utilizá eligible_without_confirmed_orders; nunca deduzcas participantes restando eligible_without_orders de eligible_employees.
     - Podés interpretar el aprovechamiento del cupo cuando el total y el consumo subsidiado sean conocidos y confiables.
     - Destacá variaciones relevantes, pero no afirmes que son anomalías estadísticas sin evidencia suficiente.
     - No califiques automáticamente un aumento como positivo ni una disminución como negativa.
@@ -38,6 +39,7 @@ class AdminBenefitUsageSummary
     - Utilizá exclusivamente la información del JSON recibido.
     - null significa desconocido, nunca cero.
     - No inventes cifras ni completes información faltante.
+    - Antes de declarar una inconsistencia, verificá las definiciones, los valores disponibles y la relación matemática correspondiente. Si faltan datos para comprobarla, no afirmes que existe una contradicción.
     - Podés calcular proporciones simples cuando todos sus componentes sean conocidos y el denominador sea mayor que cero.
     - Para cambios entre meses, utilizá exclusivamente las comparaciones proporcionadas en el payload.
     - difference representa una diferencia absoluta.
