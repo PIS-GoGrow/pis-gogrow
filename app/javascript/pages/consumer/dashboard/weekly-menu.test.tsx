@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -156,6 +156,15 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(asideButton).toBeEnabled()
 
     expect(asideButton).toHaveAttribute("href", dashboardCart().url)
+  })
+
+  it("deshabilita el acceso al carrito desde el aside cuando está vacío", () => {
+    renderComponent({ count: 0, total: 0, cart: [] })
+
+    const asideButton = screen.getByRole("link", { name: "Ver carrito" })
+    expect(asideButton).toHaveAttribute("aria-disabled", "true")
+    expect(asideButton).toHaveAttribute("tabindex", "-1")
+    expect(fireEvent.click(asideButton)).toBe(false)
   })
 
   it("muestra el resumen de viandas y monto en la tarjeta de carrito", () => {

@@ -96,19 +96,19 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     sign_in users(:other_consumer_user), role: :consumer
     visit dashboard_cart_path
 
-    expect(page).to have_content("Todavía no agregaste platos.")
-    expect(page).to have_no_content("Milanesa con papas fritas x1")
+    expect(page).to have_content("Todavía no agregaste platos al carrito.")
+    expect(page).to have_current_path(dashboard_path)
   end
 
-  it "empieza con el carrito vacío al iniciar una nueva sesión del mismo empleado" do
+  it "redirige con el carrito vacío al iniciar una nueva sesión del mismo empleado" do
     add_milanesa_to_cart
     sign_out_from_app(users(:one))
 
     sign_in users(:one), role: :consumer
     visit dashboard_cart_path
 
-    expect(page).to have_content("Todavía no agregaste platos.")
-    expect(page).to have_no_content("Milanesa con papas fritas x1")
+    expect(page).to have_content("Todavía no agregaste platos al carrito.")
+    expect(page).to have_current_path(dashboard_path)
   end
 
   it "vacía el carrito y limpia sessionStorage cuando el pedido se confirma con éxito" do
@@ -132,10 +132,36 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
 
     click_button "Quitar Milanesa con papas fritas"
     expect(page).to have_content("Todavía no agregaste platos.")
+    expect(page).to have_current_path(dashboard_cart_path)
+    expect(page).to have_no_content("Todavía no agregaste platos al carrito.")
 
-    # Al recargar la página, persiste vacío
-    visit dashboard_path
+    page.refresh
+    expect(page).to have_content("Todavía no agregaste platos al carrito.")
+    expect(page).to have_current_path(dashboard_path)
+
     stored_cart = page.evaluate_script("sessionStorage.getItem(#{cart_storage_key.inspect})")
     expect(stored_cart).to eq("[]")
+  end
+
+  it "se queda en el carrito al recargarlo con platos" do
+    add_milanesa_to_cart
+
+    page.refresh
+
+    expect(page).to have_content("Milanesa con papas fritas x1")
+    expect(page).to have_current_path(dashboard_cart_path)
+    expect(page).to have_no_content("Todavía no agregaste platos al carrito.")
+  end
+
+  it "redirige al menú al entrar por URL con el carrito vacío, sin dejar el carrito en el historial" do
+    visit orders_path
+    expect(page).to have_content("Mis pedidos")
+
+    visit dashboard_cart_path
+    expect(page).to have_content("Todavía no agregaste platos al carrito.")
+    expect(page).to have_current_path(dashboard_path)
+
+    page.go_back
+    expect(page).to have_current_path(orders_path)
   end
 end

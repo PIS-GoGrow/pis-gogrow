@@ -40,6 +40,10 @@ function parse<T>(raw: string | null, fallback: T): T {
   }
 }
 
+export function readSessionStorage<T>(key: string, fallback: T): T {
+  return parse(getRaw(key), fallback)
+}
+
 export default function useSessionStorage<T>(key: string, initialValue: T) {
   // initialValue congelado al montar (evita depender de la identidad de literales)
   const [initial] = useState<T>(initialValue)
