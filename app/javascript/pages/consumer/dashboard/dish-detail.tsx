@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import AddedBadge from "@/components/consumer/menus/added-badge"
-import { MobileCard } from "@/components/consumer/mobile-card"
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
@@ -200,7 +200,7 @@ export function DishDetail({
     submitDisabled
 
   return (
-    <MobileCard className="pb-6">
+    <MobileCard className="pb-36">
       <Button
         type="button"
         variant="ghost"
@@ -340,11 +340,17 @@ export function DishDetail({
       <OrderSummary
         loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
         subtotal={line?.subtotal}
-        total={line?.total}
         tiers={line?.tiers}
+        showTotal={false}
         specialBenefitIds={benefit.specials.map((special) => special.id)}
       />
-      <div className="mt-4 grid gap-2">
+      <BottomAction>
+        <OrderSummary
+          loading={line === null}
+          total={line?.total}
+          compact
+          className="pt-0"
+        />
         {!item.sold_out && maxQuantity > 0 && quantity >= maxQuantity && (
           <p role="status" className="text-muted-foreground text-sm">
             {t("pages.consumer_dashboard.detail.stock_limit", {
@@ -370,7 +376,7 @@ export function DishDetail({
               : t("pages.consumer_dashboard.index.add")}
           </Button>
         </div>
-      </div>
+      </BottomAction>
     </MobileCard>
   )
 }

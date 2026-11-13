@@ -92,15 +92,16 @@ describe("DishDetail", () => {
     expect(screen.getByText("$320")).toBeInTheDocument()
   })
 
-  it("shows the amount to pay with the price breakdown before adding", () => {
+  it("keeps the amount to pay in the bottom bar, next to the add button", () => {
     renderDetail()
 
-    const breakdown =
-      screen.getByText("Precio vianda").parentElement?.parentElement
-    expect(breakdown).toContainElement(screen.getByText("Monto a pagar"))
-    expect(breakdown?.nextElementSibling).toContainElement(
+    const bar = screen.getByText("Monto a pagar").closest(".fixed")
+
+    expect(bar).not.toBeNull()
+    expect(bar).toContainElement(
       screen.getByRole("button", { name: "Agregar" }),
     )
+    expect(screen.getByText("Precio vianda").closest(".fixed")).toBeNull()
   })
 
   // Criterio 3: sin descripción no se inventa texto, y sobre todo no se filtra
