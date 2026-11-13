@@ -165,25 +165,16 @@ export default function Show({ order, historical }: ConsumerOrdersShow) {
                 <CancelOrderSheet order={order} />
               ) : (
                 showCancelAction && (
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled
-                    >
-                      <X aria-hidden="true" />
-                      {t("pages.orders.index.cancel")}
-                    </Button>
-                    {order.status !== "confirmed" && (
-                      <p className="text-muted-foreground text-xs">
-                        {t(
-                          `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
-                        )}
-                      </p>
-                    )}
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled
+                  >
+                    <X aria-hidden="true" />
+                    {t("pages.orders.index.cancel")}
+                  </Button>
                 )
               )}
               {order.modifiable ? (
@@ -201,27 +192,40 @@ export default function Show({ order, historical }: ConsumerOrdersShow) {
                 </Button>
               ) : (
                 showEditAction && (
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled
-                    >
-                      <Pencil aria-hidden="true" />
-                      {t("pages.orders.show.edit")}
-                    </Button>
-                    {order.status !== "confirmed" && (
-                      <p className="text-muted-foreground text-xs">
-                        {t(
-                          `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
-                        )}
-                      </p>
-                    )}
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled
+                  >
+                    <Pencil aria-hidden="true" />
+                    {t("pages.orders.show.edit")}
+                  </Button>
                 )
               )}
+              {!order.cancellable &&
+                showCancelAction &&
+                order.status !== "confirmed" &&
+                order.cancellation_block_reason && (
+                  <p className="col-span-full text-muted-foreground text-xs">
+                    {t(
+                      `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                    )}
+                  </p>
+                )}
+              {!order.modifiable &&
+                showEditAction &&
+                order.status !== "confirmed" &&
+                order.modification_block_reason &&
+                order.modification_block_reason !==
+                  order.cancellation_block_reason && (
+                  <p className="col-span-full text-muted-foreground text-xs">
+                    {t(
+                      `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                    )}
+                  </p>
+                )}
             </CardFooter>
           )}
         </Card>

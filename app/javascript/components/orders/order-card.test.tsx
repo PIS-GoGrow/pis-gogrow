@@ -156,11 +156,11 @@ describe("OrderCard", () => {
 
       const cancelButton = screen.getByRole("button", { name: /Cancelar/i })
       expect(cancelButton).toBeDisabled()
-      expect(
-        screen.getByText(
-          "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
-        ),
-      ).toBeInTheDocument()
+      const reason = screen.getByText(
+        "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
+      )
+      expect(reason).toBeInTheDocument()
+      expect(reason.className).toContain("col-span-2")
     })
 
     it("renders active cancel sheet button when order is cancellable", () => {

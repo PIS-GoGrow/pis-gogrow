@@ -35,10 +35,10 @@ export function OrderSummary({
         {!compact && (
           <>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {t("pages.cart.subtotal")}
               </span>
-              <span>{formatMoney(subtotal ?? 0)}</span>
+              <span className="text-sm font-normal text-[#171717] dark:text-neutral-100">{formatMoney(subtotal ?? 0)}</span>
             </div>
             {tiers.length === 0 && <BenefitLine />}
             {tiers.map((tier, index) => (
@@ -53,8 +53,8 @@ export function OrderSummary({
         {showTotal && (
           <div
             className={cn(
-              "flex justify-between text-xl font-bold",
-              !compact && "border-border border-t pt-3",
+              "flex justify-between text-xl font-bold text-[#171717] dark:text-neutral-100",
+              !compact && "border-t border-[#898887] pt-3",
             )}
           >
             <span>{t("pages.cart.total")}</span>
@@ -98,9 +98,9 @@ export function BenefitLine({
       : t("pages.cart.benefit", { percentage: tier.percentage })
 
   return (
-    <div className={cn("flex justify-between", className)}>
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-[#29944c]">- {formatMoney(tier.discount)}</span>
+    <div className={cn("flex justify-between text-sm", className)}>
+      <span className="text-[#737373] dark:text-neutral-400">{label}</span>
+      <span className="text-[#15803D] font-normal">- {formatMoney(tier.discount)}</span>
     </div>
   )
 }

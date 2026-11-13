@@ -3,7 +3,7 @@ import { type TFunction } from "i18next"
 import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { MobileCard } from "@/components/consumer/mobile-card"
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -97,7 +97,7 @@ export function ConsumerCart({
     })
 
   return (
-    <MobileCard className="pb-6">
+    <MobileCard className="pb-48">
       <Link href={consumerDashboard.index()}>
         <Button
           type="button"
@@ -105,20 +105,20 @@ export function ConsumerCart({
           size="icon"
           disabled={processing}
           aria-label="Volver"
-          className="mb-3"
+          className="size-9 rounded-[10px] mb-2 -ml-2"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
         </Button>
       </Link>
-      <h1 className="text-xl font-bold">{t("pages.cart.title")}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">{t("pages.cart.title")}</h1>
       {singleDeliveryDate && (
-        <p className="text-muted-foreground mt-2 text-sm">
+        <p className="mt-1 text-base text-[#737373] dark:text-neutral-400">
           {deliveryLabel(singleDeliveryDate)}
         </p>
       )}
-      <section className="border-border mt-8 border-b pb-4">
-        <div className="mb-3 flex items-center justify-between text-sm font-semibold">
-          <h2>{t("pages.cart.delivery_address")}</h2>
+      <section className="mt-6 pb-2">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">{t("pages.cart.delivery_address")}</h2>
           <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
         </div>
         <RadioGroup
@@ -194,24 +194,47 @@ export function ConsumerCart({
         <Spinner className="mx-auto my-3" />
       ) : (
         <>
-          <section className="mt-6 pb-4 text-sm">
+          <section className="mt-4 text-sm border-t border-[#898887]">
             {cart.map((item, i) => {
               const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
               return (
                 <div
                   key={item.cartId}
-                  className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
+                  className="py-3 border-b border-[#E5E5E5] last:border-b-0"
                 >
                   {!singleDeliveryDate && (
-                    <p className="text-muted-foreground mb-2">
+                    <p className="text-muted-foreground mb-1 text-xs">
                       {deliveryLabel(item.date)}
                     </p>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[#737373] dark:text-neutral-400">
                       {item.menu.name} x{item.quantity}
                     </span>
-                    <span>{formatMoney(line)}</span>
+                    <div className="flex items-center gap-3">
+                      <QuantityInput
+                        size="compact"
+                        value={item.quantity}
+                        max={item.remaining}
+                        disabled={processing}
+                        onChange={(quantity) =>
+                          setQuantity(item.cartId, quantity)
+                        }
+                        onRemove={() => remove(item.cartId)}
+                        decreaseLabel={t("pages.cart.decrease", {
+                          name: item.menu.name,
+                        })}
+                        increaseLabel={t("pages.cart.increase", {
+                          name: item.menu.name,
+                        })}
+                        removeLabel={t("pages.cart.remove", {
+                          name: item.menu.name,
+                        })}
+                      />
+                      <span className="font-normal text-[#171717] dark:text-neutral-100 min-w-12 text-right">
+                        {formatMoney(line)}
+                      </span>
+                    </div>
                   </div>
                   {pricing?.lines?.[i] && (
                     <ItemBenefitLines
@@ -224,36 +247,15 @@ export function ConsumerCart({
                   {item.menu.option_groups
                     .filter((group) => item.selections[group.id]?.length)
                     .map((group) => (
-                      <p key={group.id} className="text-muted-foreground mt-2">
+                      <p key={group.id} className="text-muted-foreground mt-1.5 text-xs">
                         {group.name}: {item.selections[group.id].join(", ")}
                       </p>
                     ))}
                   {item.notes && (
-                    <p className="text-muted-foreground mt-2 [overflow-wrap:anywhere]">
+                    <p className="text-muted-foreground mt-1.5 text-xs [overflow-wrap:anywhere]">
                       {item.notes}
                     </p>
                   )}
-                  <div className="mt-2">
-                    <QuantityInput
-                      size="sm"
-                      value={item.quantity}
-                      max={item.remaining}
-                      disabled={processing}
-                      onChange={(quantity) =>
-                        setQuantity(item.cartId, quantity)
-                      }
-                      onRemove={() => remove(item.cartId)}
-                      decreaseLabel={t("pages.cart.decrease", {
-                        name: item.menu.name,
-                      })}
-                      increaseLabel={t("pages.cart.increase", {
-                        name: item.menu.name,
-                      })}
-                      removeLabel={t("pages.cart.remove", {
-                        name: item.menu.name,
-                      })}
-                    />
-                  </div>
                 </div>
               )
             })}
@@ -263,32 +265,34 @@ export function ConsumerCart({
               </p>
             )}
           </section>
-          <OrderSummary
-            loading={loading}
-            subtotal={pricing?.subtotal}
-            total={pricing?.total}
-            compact
-            className="border-border border-t pt-3"
-          />
-          <Button
-            disabled={
-              !cart.length || processing || !selectedAddress || missingOffice
-            }
-            onClick={confirm}
-            className={cn(
-              "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-              processing && "bg-muted hover:bg-muted",
-            )}
-          >
-            {processing ? (
-              <>
-                <Spinner />
-                {t("pages.cart.confirming")}
-              </>
-            ) : (
-              t("pages.cart.confirm")
-            )}
-          </Button>
+          <BottomAction className="border-t border-[#898887] pt-4">
+            <OrderSummary
+              loading={loading}
+              subtotal={pricing?.subtotal}
+              total={pricing?.total}
+              compact
+              className="pt-0"
+            />
+            <Button
+              disabled={
+                !cart.length || processing || !selectedAddress || missingOffice
+              }
+              onClick={confirm}
+              className={cn(
+                "h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 hover:text-[#FAFAFA] disabled:opacity-100 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 mt-2",
+                processing && "bg-muted hover:bg-muted",
+              )}
+            >
+              {processing ? (
+                <>
+                  <Spinner />
+                  {t("pages.cart.confirming")}
+                </>
+              ) : (
+                t("pages.cart.confirm")
+              )}
+            </Button>
+          </BottomAction>
           {error && (
             <Alert variant="destructive" className="mt-3">
               <AlertDescription>
@@ -348,14 +352,14 @@ function ItemBenefitLines({
 }) {
   const discounted = tiers.filter((tier) => tier.discount > 0)
 
-  if (discounted.length === 0) return <BenefitLine className="mt-3" />
+  if (discounted.length === 0) return <BenefitLine className="mt-2" />
 
   return discounted.map((tier, index) => (
     <BenefitLine
       key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
       tier={tier}
       special={specialBenefitIds.includes(tier.id)}
-      className="mt-3"
+      className="mt-2"
     />
   ))
 }

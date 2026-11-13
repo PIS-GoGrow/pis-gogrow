@@ -115,12 +115,15 @@ describe("FavoritesPanel", () => {
     ["sin programación ese día", []],
     ["agotado", [schedule(1, { sold_out: true })]],
     ["con pedidos cerrados", [schedule(1, { orders_closed: true })]],
+    ["con fecha pasada", [schedule(1, { date: "2026-10-25" })]],
+    ["sin disponibilidad", [schedule(1, { remaining: 0 })]],
   ])(
     "muestra como referencia un plato %s y no deja pedirlo",
     async (_, schedules) => {
       const { openDetail } = renderPanel({
         favorites: { menus: [dish(1, "Milanesa")], provider_ids: [] },
         schedules,
+        currentDate: "2026-10-26",
       })
 
       expect(screen.getByText("No disponible este día")).toBeInTheDocument()

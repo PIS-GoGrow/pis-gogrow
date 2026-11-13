@@ -152,14 +152,11 @@ describe("ConsumerCart price summary", () => {
 
       await renderCart({ cart, pricing })
 
-      const list = screen.getByText("Plato 1 x1").closest("section")
-      const summary =
-        screen.getByText("Monto a pagar").parentElement?.parentElement
       const confirm = screen.getByRole("button", { name: "Confirmar pedido" })
+      const bottomBar = screen.getByText("Monto a pagar").closest(".fixed")
 
-      expect(list?.nextElementSibling).toBe(summary)
-      expect(summary?.nextElementSibling).toBe(confirm)
-      expect(summary).not.toHaveClass("fixed")
+      expect(bottomBar).not.toBeNull()
+      expect(bottomBar).toContainElement(confirm)
       expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
         `$${140 * count}`,
       )

@@ -49,6 +49,10 @@ export default function Index({
   const [date, setDate] = useState(initialDate)
   const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
   const [cart, setCart] = useConsumerCart()
+
+  useEffect(() => {
+    setCart((items) => items.filter((item) => item.quantity > 0))
+  }, [setCart])
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
@@ -102,7 +106,18 @@ export default function Index({
   }
 
   function addToCart(benefitsSelected: number[]) {
-    if (!selected || selected.sold_out || selected.orders_closed) return
+    if (
+      !selected ||
+      selected.sold_out ||
+      selected.orders_closed ||
+      selected.remaining <= 0 ||
+      (todayDate && selected.date < todayDate)
+    ) {
+      return
+    }
+
+    const availableQuantity = Math.min(selected.remaining, quantity)
+    if (availableQuantity <= 0) return
 
     // Dos veces el mismo plato con distinta personalización son dos líneas del
     // carrito, así que la clave incluye lo elegido además de las notas.
@@ -124,7 +139,7 @@ export default function Index({
             item.cartId === cartId
               ? {
                   ...item,
-                  quantity: Math.min(item.remaining, item.quantity + quantity),
+                  quantity: Math.min(item.remaining, item.quantity + availableQuantity),
                 }
               : item,
           )
@@ -133,7 +148,7 @@ export default function Index({
         const updatedItem: CartItem = {
           ...selected,
           cartId,
-          quantity: Math.min(selected.remaining, quantity),
+          quantity: availableQuantity,
           notes,
           selections,
           benefits: benefitsSelected,
@@ -151,7 +166,7 @@ export default function Index({
             item.cartId === cartId
               ? {
                   ...item,
-                  quantity: Math.min(item.remaining, item.quantity + quantity),
+                  quantity: Math.min(item.remaining, item.quantity + availableQuantity),
                 }
               : item,
           )
@@ -160,7 +175,7 @@ export default function Index({
             {
               ...selected,
               cartId,
-              quantity: Math.min(selected.remaining, quantity),
+              quantity: availableQuantity,
               notes,
               selections,
               benefits: benefitsSelected,
@@ -256,6 +271,7 @@ export default function Index({
             editingCartId={editingCartId}
             onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
             benefit={benefit}
+            todayDate={todayDate}
           />
         )}
       </div>

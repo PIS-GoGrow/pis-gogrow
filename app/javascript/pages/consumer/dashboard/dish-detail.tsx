@@ -43,6 +43,7 @@ interface Props {
   processing?: boolean
   submitDisabled?: boolean
   children?: ReactNode
+  todayDate?: string
 }
 
 export function DishDetail({
@@ -65,6 +66,7 @@ export function DishDetail({
   processing = false,
   submitDisabled = false,
   children,
+  todayDate,
 }: Props) {
   const { t } = useTranslation()
   const [pricing, setPricing] = useState<Pricing | null>(null)
@@ -192,36 +194,42 @@ export function DishDetail({
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
   )
+  const isPast =
+    (todayDate ? item.date < todayDate : false) || item.remaining <= 0
   const addDisabled =
     item.sold_out ||
     item.orders_closed ||
+    isPast ||
+    maxQuantity <= 0 ||
     choicesMissing ||
     processing ||
     submitDisabled
 
   return (
-    <MobileCard className="pb-36">
+    <MobileCard className="pb-56">
       <Button
         type="button"
         variant="ghost"
         size="icon"
         onClick={back}
         aria-label="Volver"
-        className="mb-3"
+        className="size-9 rounded-[10px] mb-2 -ml-2"
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-muted-foreground text-xs">
+        <p className="text-base font-medium text-[#737373] dark:text-neutral-400">
           {item.menu.provider_name}
         </p>
         {badge ?? (inCart > 0 && <AddedBadge />)}
       </div>
-      <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
-      <p className="text-muted-foreground mt-2 text-xs leading-5">
-        {item.menu.description}
-      </p>
-      <p className="mt-1 font-bold">{formatMoney(item.menu.price)}</p>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">{item.menu.name}</h1>
+      {item.menu.description && (
+        <p className="mt-1 text-base text-[#737373] dark:text-neutral-400 leading-normal">
+          {item.menu.description}
+        </p>
+      )}
+      <p className="mt-2 text-xl font-bold text-[#0A0A0A] dark:text-neutral-100">{formatMoney(item.menu.price)}</p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}
@@ -238,53 +246,53 @@ export function DishDetail({
         />
       ))}
       <section className="border-border border-b py-5">
-        <div className="flex items-center justify-between text-sm font-medium">
-          <h2>{t("pages.consumer_dashboard.index.reviews.title")}</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">{t("pages.consumer_dashboard.index.reviews.title")}</h2>
           {ratingCount > 0 && ratingAverage !== null && (
-            <span className="text-xs leading-4">
-              <Star className="fill-foreground mr-1 inline size-3" />
+            <span className="text-sm font-semibold text-[#0A0A0A] dark:text-neutral-100 flex items-center">
+              <Star className="fill-[#0A0A0A] text-[#0A0A0A] dark:fill-neutral-100 dark:text-neutral-100 mr-1 inline size-4" />
               {ratingAverage.toFixed(1)} ({ratingCount})
             </span>
           )}
         </div>
         {ratingCount > 0 ? (
-          <div className="mt-3 flex gap-4 overflow-x-auto">
+          <div className="mt-4 flex gap-4 overflow-x-auto">
             {reviews.map((review) => (
               <article
                 key={review.id}
-                className="border-border bg-muted flex min-h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border p-4"
+                className="border-[#E5E5E5] bg-[#F5F5F5] dark:border-neutral-700 dark:bg-neutral-800 flex min-h-[136px] w-[280px] shrink-0 flex-col justify-between rounded-lg border p-4"
               >
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm leading-5 font-medium">
+                    <span className="text-sm font-medium text-[#0A0A0A] dark:text-neutral-100">
                       {review.author ??
                         t("pages.consumer_dashboard.index.reviews.anonymous")}
                     </span>
-                    <span className="text-muted-foreground text-xs leading-4">
+                    <span className="text-xs font-medium text-[#737373] dark:text-neutral-400">
                       {formatShortDate(review.created_at)}
                     </span>
                   </div>
                   <p className="text-xs leading-4">
                     {"★".repeat(review.rating)}
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground opacity-30">
                       {"★".repeat(5 - review.rating)}
                     </span>
                   </p>
                 </div>
                 {review.description && (
-                  <p className="text-xs leading-4">{review.description}</p>
+                  <p className="text-xs text-[#0A0A0A] dark:text-neutral-200 line-clamp-3 leading-snug">{review.description}</p>
                 )}
               </article>
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground mt-3 text-xs leading-5">
+          <p className="text-[#737373] dark:text-neutral-400 mt-3 text-sm">
             {t("pages.consumer_dashboard.index.reviews.empty")}
           </p>
         )}
       </section>
-      <section className="border-border border-b py-4">
-        <label htmlFor="notes" className="text-xs font-semibold">
+      <section className="border-border border-b py-5">
+        <label htmlFor="notes" className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
           Notas para este plato
         </label>
         <Textarea
@@ -293,9 +301,9 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribí las notas que necesites..."
-          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
+          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-base text-[#737373] dark:text-neutral-300 placeholder:text-[#737373]"
         />
-        <p className="text-muted-foreground text-right text-[10px]">
+        <p className="text-[#737373] dark:text-neutral-400 text-right text-sm mt-1">
           {notes.length}/140
         </p>
       </section>
@@ -337,21 +345,16 @@ export function DishDetail({
           )}
         </section>
       )}
-      <OrderSummary
-        loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
-        subtotal={line?.subtotal}
-        tiers={line?.tiers}
-        showTotal={false}
-        specialBenefitIds={benefit.specials.map((special) => special.id)}
-      />
       <BottomAction>
         <OrderSummary
-          loading={line === null}
+          loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
+          subtotal={line?.subtotal}
           total={line?.total}
-          compact
+          tiers={line?.tiers}
+          specialBenefitIds={benefit.specials.map((special) => special.id)}
           className="pt-0"
         />
-        {!item.sold_out && maxQuantity > 0 && quantity >= maxQuantity && (
+        {!item.sold_out && !isPast && maxQuantity > 0 && quantity >= maxQuantity && (
           <p role="status" className="text-muted-foreground text-sm">
             {t("pages.consumer_dashboard.detail.stock_limit", {
               count: maxQuantity,
@@ -364,6 +367,7 @@ export function DishDetail({
             max={maxQuantity}
             onChange={setQuantity}
             onRemove={onRemove}
+            disabled={item.sold_out || maxQuantity <= 0 || isPast}
           />
           <Button
             disabled={addDisabled}
