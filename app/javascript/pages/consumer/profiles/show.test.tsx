@@ -169,11 +169,11 @@ describe("Consumer account page", () => {
   it("links to account settings", () => {
     render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
 
-    expect(
-      screen.getByRole("link", {
-        name: /Modificá tu teléfono, nombre, correo, contraseña y apariencia/,
-      }),
-    ).toHaveAttribute("href", settingsProfiles.show().url)
+    const link = screen.getByRole("link", {
+      name: /Modificá tu teléfono, nombre, correo, contraseña y apariencia/,
+    })
+    expect(link).toHaveAttribute("href", settingsProfiles.show().url)
+    expect(link).toHaveTextContent("Perfil")
   })
 
   it("applies bottom padding on mobile to clear the fixed navigation bar", () => {

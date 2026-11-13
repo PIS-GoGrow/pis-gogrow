@@ -120,7 +120,7 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.orders.index.title")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-6 p-5 pb-24 md:pb-5">
+      <div className="mx-auto grid w-full max-w-300 gap-6 p-5 pb-24 md:pb-5">
         <h1 className="text-2xl font-bold">{t("pages.orders.index.title")}</h1>
 
         <div className="flex items-center">

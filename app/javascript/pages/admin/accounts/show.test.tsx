@@ -79,9 +79,10 @@ describe("Admin account page", () => {
   it("links to profile and appearance without security options", () => {
     render(<AdminAccount />)
 
-    expect(
-      screen.getByRole("link", { name: /^Perfil y Apariencia/ }),
-    ).toHaveAttribute("href", "/rrhh/preferencias")
+    expect(screen.getByRole("link", { name: /^Perfil/ })).toHaveAttribute(
+      "href",
+      "/configuracion/perfil",
+    )
     expect(screen.queryByText("Seguridad")).not.toBeInTheDocument()
     expect(screen.queryByText("Cambiar contraseña")).not.toBeInTheDocument()
     expect(screen.queryByText("Eliminar cuenta")).not.toBeInTheDocument()

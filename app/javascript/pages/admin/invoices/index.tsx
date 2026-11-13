@@ -40,9 +40,11 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
 
       <PageContainer
         title={t(`${page}.title`)}
+        titleVariant="prominent"
         description={t(`${page}.description`)}
+        mobileBack
         back={
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" className="md:hidden" asChild>
             <Link href={adminAccount()} aria-label={t(`${page}.back`)}>
               <ArrowLeft aria-hidden="true" />
             </Link>

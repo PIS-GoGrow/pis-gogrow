@@ -195,7 +195,7 @@ describe("Admin Dashboard Page", () => {
     render(<AdminDashboard {...props} />)
 
     const debts = screen.getByRole("region", {
-      name: "Ranking deuda de empleados",
+      name: "Saldos pendientes por empleado",
     })
     expect(
       within(debts).getByRole("link", { name: "Martín Bonnet" }),

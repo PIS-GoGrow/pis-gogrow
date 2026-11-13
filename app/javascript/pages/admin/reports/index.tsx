@@ -107,8 +107,10 @@ export default function AdminReports({
 
       <PageContainer
         title={t(`${page}.title`)}
+        titleVariant="prominent"
+        mobileBack
         back={
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" className="md:hidden" asChild>
             <Link href={adminDashboard.index()} aria-label={t(`${page}.back`)}>
               <ArrowLeft aria-hidden="true" />
             </Link>

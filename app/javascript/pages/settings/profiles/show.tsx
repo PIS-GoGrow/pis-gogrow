@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator"
 import AppLayout from "@/layouts/app-layout"
 import SettingsPageLayout from "@/layouts/settings/page-layout"
 import {
-  adminPreferences,
+  adminAccount,
   identityEmailVerifications,
   settingsEmails,
   settingsPasswords,
@@ -62,7 +62,7 @@ export default function Profile({ phone }: SettingsProfilesShow) {
               ? t("pages.provider_accounts.show.profile_description")
               : t("pages.settings.profile.description")
         }
-        adminBackHref={adminPreferences.show().url}
+        adminBackHref={adminAccount().url}
         adminBackLabel={t("pages.settings.profile.back")}
       >
         {allowsCredentialsEditing && (
@@ -368,18 +368,18 @@ export default function Profile({ phone }: SettingsProfilesShow) {
                 )}
               </Form>
             </div>
-
-            <Separator className="my-8" />
-
-            <div className="space-y-4">
-              <HeadingSmall
-                title={t("pages.settings.appearance.title")}
-                description={t("pages.settings.appearance.description")}
-              />
-              <AppearanceTabs />
-            </div>
           </>
         )}
+
+        <Separator className="my-8" />
+
+        <div className="space-y-4">
+          <HeadingSmall
+            title={t("pages.settings.appearance.title")}
+            description={t("pages.settings.appearance.description")}
+          />
+          <AppearanceTabs />
+        </div>
       </SettingsPageLayout>
     </AppLayout>
   )

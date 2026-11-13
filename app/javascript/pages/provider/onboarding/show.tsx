@@ -233,7 +233,7 @@ function ProviderAvatar({ name }: { name: string }) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-background flex min-h-svh justify-center p-6">
-      <div className="flex w-full max-w-md flex-col gap-6">{children}</div>
+      <div className="flex w-full max-w-300 flex-col gap-6">{children}</div>
     </div>
   )
 }

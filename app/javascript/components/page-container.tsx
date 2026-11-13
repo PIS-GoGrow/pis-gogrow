@@ -14,6 +14,7 @@ interface PageContainerProps {
   centered?: boolean
   mobileCentered?: boolean
   actionsCentered?: boolean
+  mobileBack?: boolean
   children: ReactNode
 }
 
@@ -29,6 +30,7 @@ export default function PageContainer({
   centered,
   mobileCentered,
   actionsCentered,
+  mobileBack,
   children,
 }: PageContainerProps) {
   return (
@@ -45,6 +47,7 @@ export default function PageContainer({
         centered={centered}
         mobileCentered={mobileCentered}
         actionsCentered={actionsCentered}
+        mobileBack={mobileBack}
       />
       <div className="flex flex-col gap-4">{children}</div>
     </div>

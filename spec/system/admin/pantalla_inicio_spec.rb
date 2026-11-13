@@ -33,7 +33,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     expect(page).to have_content(I18n.l(Date.current, format: "%A %-d de %B").capitalize)
     expect(page).to have_content("Tu beneficio")
     expect(page).to have_content("Tus pagos de #{I18n.l(Date.current.prev_month, format: "%B").downcase}")
-    expect(page).to have_content("Ranking deuda de empleados")
+    expect(page).to have_content("Saldos pendientes por empleado")
   end
 
   # Historia IBP-032: el chevron del ranking abre Empleados en Pendientes y
@@ -123,7 +123,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
       expect(page).to have_css("[data-active='true']", text: "Inicio")
       expect(page).to have_link("Subsidios")
       expect(page).to have_link("Empleados")
-      expect(page).to have_no_link("Cuenta")
+      expect(page).to have_link("Cuenta", href: admin_account_path)
       expect(page).to have_link("Pagos", href: admin_payments_path)
     end
   end

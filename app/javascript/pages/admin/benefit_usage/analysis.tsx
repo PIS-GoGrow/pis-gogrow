@@ -123,9 +123,11 @@ function AnalysisMonth({
       <Head title={t(`${p}.title`)} />
       <PageContainer
         title={t(`${p}.title`)}
+        titleVariant="prominent"
         description={formatBenefitMonth(month)}
+        mobileBack
         back={
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="sm" className="md:hidden">
             <Link href={adminDashboard.index({ query: { month } }).url}>
               <ArrowLeft aria-hidden="true" />
               {t(`${p}.back`)}

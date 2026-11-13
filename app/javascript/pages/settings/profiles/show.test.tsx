@@ -96,6 +96,10 @@ describe("Settings Profiles Show Page", () => {
     expect(screen.getByLabelText("Correo electrónico")).toHaveAttribute(
       "readonly",
     )
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/rrhh/cuenta")
     expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 

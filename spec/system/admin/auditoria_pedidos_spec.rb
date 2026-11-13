@@ -80,7 +80,8 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     without_animations
 
     find("#event_action").click
-    page.document.find("[role=option]", text: "Confirmación", exact_text: true).click
+    option = page.document.find("[role=option]", text: "Confirmación", exact_text: true)
+    page.execute_script("arguments[0].scrollIntoView({ block: 'center', behavior: 'instant' }); arguments[0].click();", option)
     expect(page).not_to have_css("[role=option]", visible: true, wait: 5)
     expect(page).to have_css("#event_action", text: "Confirmación")
     click_button "Filtrar"
@@ -119,11 +120,14 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     expect(page).to have_no_css("tbody button, tbody a, tbody input")
   end
 
-  it "permite volver a Cuenta con la flecha junto al título" do
+  it "permite volver a Cuenta con la flecha junto al título en mobile" do
+    page.current_window.resize_to(375, 667)
     sign_in users(:admin), role: :admin
     visit_hydrated admin_order_events_path
 
     find("a[aria-label='Volver a Cuenta']").click
     expect(page).to have_current_path(admin_account_path)
+  ensure
+    page.current_window.resize_to(1400, 1400)
   end
 end

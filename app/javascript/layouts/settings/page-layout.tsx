@@ -63,9 +63,7 @@ export default function SettingsPageLayout({
         >
           <div
             className={
-              role === "provider"
-                ? "space-y-6"
-                : "max-w-xl space-y-6 pb-28 md:pb-0"
+              role === "provider" ? "space-y-6" : "space-y-6 pb-28 md:pb-0"
             }
           >
             {children}

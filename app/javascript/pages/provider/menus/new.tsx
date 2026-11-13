@@ -66,7 +66,7 @@ export default function New(props: ProviderMenusNew) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t(`${key}.title`)} />
 
-      <div className="mx-auto w-full max-w-xl p-5">
+      <div className="mx-auto w-full max-w-300 p-5">
         <div className="relative mb-6 flex h-9 items-center justify-center">
           <Button
             variant="ghost"

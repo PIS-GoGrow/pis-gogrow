@@ -89,12 +89,12 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={title} />
 
-      <div className="mx-auto flex w-full max-w-200 flex-col gap-6 p-5 md:p-8">
+      <div className="mx-auto flex w-full max-w-300 flex-col gap-6 p-5 md:p-8">
         <div className="flex flex-col gap-6">
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 rounded-[10px] p-0"
+            className="size-9 rounded-[10px] p-0 md:hidden"
             asChild
           >
             <Link

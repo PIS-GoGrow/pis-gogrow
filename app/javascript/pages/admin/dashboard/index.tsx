@@ -97,7 +97,9 @@ export default function AdminDashboard({
         <div className="grid gap-4 lg:grid-cols-2 lg:gap-8">
           <Card className="bg-muted/60 h-fit gap-4 rounded-lg py-4 shadow-none">
             <CardHeader className="grid-cols-[1fr_auto] grid-rows-1 items-center px-4">
-              <CardDescription>{t(`${page}.benefit.title`)}</CardDescription>
+              <CardDescription className="text-base font-medium">
+                {t(`${page}.benefit.title`)}
+              </CardDescription>
               <MonthSelect
                 value={month}
                 currentMonth={current_month}
@@ -108,8 +110,8 @@ export default function AdminDashboard({
             </CardHeader>
 
             <CardContent className="space-y-4 px-4">
-              <p className="flex flex-wrap items-baseline gap-x-1">
-                <strong className="text-2xl font-semibold tracking-tight md:text-3xl">
+              <p className="flex flex-wrap items-baseline gap-x-1.5">
+                <strong className="text-2xl font-bold tracking-tight">
                   {summary.meals_limit === null
                     ? summary.meals
                     : t(`${page}.benefit.meals_of_limit`, {
@@ -117,7 +119,7 @@ export default function AdminDashboard({
                         limit: summary.meals_limit,
                       })}
                 </strong>
-                <span className="text-base font-medium md:text-lg">
+                <span className="text-lg font-semibold">
                   {t(`${page}.benefit.meals_ordered`, {
                     count: summary.meals_limit ?? summary.meals,
                   })}
@@ -238,7 +240,7 @@ export default function AdminDashboard({
                       </Avatar>
                       <Link
                         href={adminConsumers.show(debtor.id).url}
-                        className="min-w-0 flex-1 truncate font-medium after:absolute after:inset-0 hover:underline"
+                        className="min-w-0 flex-1 truncate font-semibold after:absolute after:inset-0 hover:underline"
                       >
                         {debtor.name}
                       </Link>

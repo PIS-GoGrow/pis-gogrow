@@ -75,6 +75,7 @@ export default function Index({
 
       <PageContainer
         title={t(`${page}.title`)}
+        titleVariant="prominent"
         badge={
           <Badge variant="secondary">
             <span aria-hidden="true">{inTab.length}</span>

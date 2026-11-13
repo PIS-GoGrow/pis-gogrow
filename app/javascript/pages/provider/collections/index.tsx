@@ -127,7 +127,10 @@ export default function Index({
         onClose={() => setReviewResult(null)}
       />
 
-      <PageContainer title={t("pages.provider_collections.index.title")}>
+      <PageContainer
+        title={t("pages.provider_collections.index.title")}
+        titleVariant="prominent"
+      >
         <Stat
           label={t("pages.provider_collections.index.sales")}
           badge={

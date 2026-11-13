@@ -126,11 +126,11 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     visit profile_path
 
     within(find("section[aria-labelledby=consumer-settings-title]")) do
-      expect(page).to have_link("Cuenta", href: settings_profile_path)
+      expect(page).to have_link("Perfil", href: settings_profile_path)
       expect(page).to have_content("Modificá tu teléfono, nombre, correo, contraseña y apariencia")
       expect(page).to have_link("Direcciones", href: delivery_addresses_path)
       expect(page).to have_link("Notificaciones", href: settings_notifications_path)
-      click_link "Cuenta"
+      click_link "Perfil"
     end
 
     expect(page).to have_current_path(settings_profile_path)

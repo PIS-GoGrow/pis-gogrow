@@ -12,9 +12,9 @@ import {
   adminBenefitConfigurations,
   adminInvoices,
   adminOrderEvents,
-  adminPreferences,
   sessions,
   settingsNotifications,
+  settingsProfiles,
 } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
@@ -28,6 +28,11 @@ export default function AdminAccount() {
     { title: t(`${account}.title`), href: adminAccount().url },
   ]
   const primarySettings = [
+    {
+      title: t(`${account}.profile`),
+      description: t(`${account}.profile_description`),
+      href: settingsProfiles.show().url,
+    },
     {
       title: t(`${account}.subsidies`),
       description: t(`${account}.subsidies_description`),
@@ -100,22 +105,6 @@ export default function AdminAccount() {
                 href={href}
               />
             ))}
-          </div>
-        </section>
-
-        <section aria-labelledby="admin-more-settings-title" className="mt-4">
-          <h3
-            id="admin-more-settings-title"
-            className="mb-3 text-base font-semibold"
-          >
-            {t(`${account}.more_options`)}
-          </h3>
-          <div className="border-t">
-            <AccountLink
-              title={t(`${account}.preferences`)}
-              description={t(`${account}.preferences_description`)}
-              href={adminPreferences.show().url}
-            />
           </div>
         </section>
       </PageContainer>

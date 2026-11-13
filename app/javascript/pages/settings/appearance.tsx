@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import AppearanceTabs from "@/components/appearance-tabs"
 import AppLayout from "@/layouts/app-layout"
 import SettingsPageLayout from "@/layouts/settings/page-layout"
-import { adminPreferences, settingsAppearance } from "@/routes"
+import { adminAccount, settingsAppearance } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
 export default function Appearance() {
@@ -24,7 +24,7 @@ export default function Appearance() {
       <SettingsPageLayout
         title={t("pages.settings.appearance.title")}
         description={t("pages.settings.appearance.description")}
-        adminBackHref={adminPreferences.show().url}
+        adminBackHref={adminAccount().url}
         adminBackLabel={t("pages.settings.appearance.back")}
       >
         <AppearanceTabs />
