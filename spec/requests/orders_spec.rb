@@ -603,6 +603,9 @@ RSpec.describe "Orders", type: :request do
           monthly_limit: 16,
           monthly_used: 2,
           monthly_remaining: 14,
+          weekly_limit: 5,
+          weekly_used: 2,
+          weekly_remaining: 3,
           specials: []
         }
       )

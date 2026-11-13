@@ -1,6 +1,22 @@
 # frozen_string_literal: true
 
 class AdminBenefitUsageAiPayload
+  class InsufficientData < StandardError; end
+
+  HISTORICAL_COUNTS = %i[
+    employees eligible_employees employees_with_confirmed_orders eligible_with_confirmed_orders
+    monthly_quota_meals monthly_subsidized_meals monthly_pending_reserved_meals monthly_available_meals
+    monthly_unused_closed_meals confirmed_orders confirmed_meals confirmed_meals_without_monthly_subsidy
+  ].freeze
+  HISTORICAL_DECIMALS = %i[participation_percent average_confirmed_meals_per_employee].freeze
+  HISTORICAL_CHANGES = %i[
+    confirmed_meals monthly_subsidized_meals monthly_quota_meals eligible_with_confirmed_orders
+    participation_percent company_subsidy_amount
+  ].freeze
+  HISTORICAL_REASONS = %w[
+    source_unavailable eligibility_unknown no_eligible_employees no_employees quota_unknown_or_zero
+    period_open close_not_verified historical_snapshot_missing retained_records_current_roster
+  ].freeze
   WARNING_CODES = %w[
     employee_counts_use_current_roster historical_roster_incomplete historical_status_at_close_unavailable
     eligibility_unknown monthly_quota_unknown historical_discounts_without_benefit_records
@@ -12,11 +28,14 @@ class AdminBenefitUsageAiPayload
   ].freeze
   INDICATORS = %i[confirmed_orders confirmed_meals monthly_subsidized_meals company_subsidy_amount].freeze
 
-  def initialize(stats:)
+  def initialize(stats: nil, history: nil)
     @stats = stats
+    @history = history
   end
 
   def to_h
+    return historical_payload if @history
+
     months = @stats.fetch(:trends).fetch(:months)
     raise ArgumentError, "invalid trend length" unless months.size.between?(1, 4)
 
@@ -73,6 +92,71 @@ class AdminBenefitUsageAiPayload
   end
 
   private
+
+  def historical_payload
+    period = @history.fetch(:period)
+    month = period.fetch(:month)
+    state = period.fetch(:state)
+    source = period.fetch(:source)
+    raise ArgumentError, "invalid historical period" unless month.is_a?(String) && month.match?(/\A\d{4}-(?:0[1-9]|1[0-2])\z/) &&
+                                                      { "closed" => "historical_snapshot", "incomplete" => "historical_snapshot",
+                                                        "missing_snapshot" => "historical_reconstruction" }[state] == source
+
+    captured_at = period.fetch(:captured_at)
+    captured_at = Time.iso8601(captured_at).iso8601 if captured_at
+    raise ArgumentError, "invalid capture time" if (source == "historical_snapshot") != captured_at.present?
+
+    source_metrics = @history.fetch(:metrics)
+    metrics = HISTORICAL_COUNTS.to_h { |key| [ key, integer(source_metrics.fetch(key)) ] }
+    HISTORICAL_DECIMALS.each { |key| metrics[key] = percent(source_metrics.fetch(key)) }
+    metrics[:company_subsidy_amount] = money(source_metrics.fetch(:company_subsidy_amount))
+    metrics[:monthly_unused_closed_meals] = nil unless state == "closed"
+
+    enough = if state == "missing_snapshot"
+      metrics[:confirmed_orders].to_i.positive? || metrics[:confirmed_meals].to_i.positive?
+    else
+      %i[confirmed_orders confirmed_meals monthly_quota_meals eligible_employees participation_percent
+         company_subsidy_amount].any? { |key| !metrics[key].nil? }
+    end
+    raise InsufficientData unless enough
+
+    reasons = @history.fetch(:unavailable_reasons)
+    allowed_indicators = HISTORICAL_COUNTS + HISTORICAL_DECIMALS + %i[company_subsidy_amount period reconstructed_orders]
+    limitations = reasons.filter_map do |key, reason|
+      next unless allowed_indicators.include?(key.to_sym)
+
+      { indicator: key.to_s, reason: HISTORICAL_REASONS.include?(reason) ? reason : "source_unavailable" }
+    end
+
+    {
+      schema_version: 2,
+      period: { month:, state:, source:, captured_at: },
+      metrics:,
+      comparison: historical_comparison(month, state),
+      limitations:
+    }
+  end
+
+  def historical_comparison(month, state)
+    item = @history.fetch(:comparisons).find { it.fetch(:to) == month }
+    return unless item && item.fetch(:quality) == { "closed" => "verified_close", "incomplete" => "capture_only" }[state]
+
+    changes = item.fetch(:changes)
+    {
+      from: item.fetch(:from), to: month, quality: item.fetch(:quality),
+      changes: HISTORICAL_CHANGES.to_h do |key|
+        change = changes.fetch(key)
+        convert = key == :company_subsidy_amount ? method(:money) :
+                  (key == :participation_percent ? method(:percent) : method(:integer))
+        [ key, {
+          reference: convert.call(change.fetch(:reference)), current: convert.call(change.fetch(:current)),
+          difference: (convert.call(change.fetch(:difference)) unless key == :participation_percent),
+          percent: percent(change.fetch(:percent)),
+          difference_points: (percent(change.fetch(:difference_points)) if key == :participation_percent)
+        } ]
+      end
+    }
+  end
 
   def trend_months(months)
     months.each_with_index.map do |entry, index|

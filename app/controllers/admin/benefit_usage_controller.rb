@@ -27,7 +27,23 @@ class Admin::BenefitUsageController < Admin::InertiaController
     month = requested_month(default_current: true)
     return render_error("invalid_month", :unprocessable_content) unless month
 
-    render json: safe_statistics(month)
+    if month == Date.current.beginning_of_month
+      company = Current.user.admin.company
+      stats = AdminBenefitUsageStats.new(company:, month:).to_h
+      response.set_header("X-Benefit-Usage-Source", "current_calculation")
+      response.set_header("X-Benefit-Usage-State", "provisional")
+      render json: AdminBenefitUsagePresentationPayload.new(stats:).to_h.merge(
+        analysis_revision: analysis_revision(company:, month:, source: "current_calculation", data: stats)
+      )
+    else
+      company = Current.user.admin.company
+      history = AdminBenefitUsageHistory.new(company:, month:).to_h
+      response.set_header("X-Benefit-Usage-Source", history.dig(:period, :source))
+      response.set_header("X-Benefit-Usage-State", history.dig(:period, :state))
+      render json: AdminBenefitUsageHistoricalPresentation.new(history:).to_h.merge(
+        analysis_revision: analysis_revision(company:, month:, source: history.dig(:period, :source), data: history)
+      )
+    end
   end
 
   def create_summary
@@ -36,7 +52,20 @@ class Admin::BenefitUsageController < Admin::InertiaController
     month = requested_month
     return render_error("invalid_month", :unprocessable_content) unless month
 
-    payload = AdminBenefitUsageAiPayload.new(stats: statistics(month))
+    company = Current.user.admin.company
+    payload = if month == Date.current.beginning_of_month
+      stats = AdminBenefitUsageStats.new(company:, month:).to_h
+      return render_error("stale_analysis", :conflict) if params.key?(:analysis_revision) &&
+        params[:analysis_revision] != analysis_revision(company:, month:, source: "current_calculation", data: stats)
+
+      AdminBenefitUsageAiPayload.new(stats:)
+    else
+      history = AdminBenefitUsageHistory.new(company:, month:).to_h
+      return render_error("stale_analysis", :conflict) unless params[:analysis_revision].is_a?(String) &&
+        params[:analysis_revision] == analysis_revision(company:, month:, source: history.dig(:period, :source), data: history)
+
+      AdminBenefitUsageAiPayload.new(history:)
+    end
     result = AdminBenefitUsageSummary.new(payload:).call
     return render_summary_error(result.dig(:error, :code)) unless result[:ok]
 
@@ -53,12 +82,8 @@ class Admin::BenefitUsageController < Admin::InertiaController
 
   private
 
-  def statistics(month)
-    AdminBenefitUsageStats.new(company: Current.user.admin.company, month:).to_h
-  end
-
-  def safe_statistics(month)
-    AdminBenefitUsagePresentationPayload.new(stats: statistics(month)).to_h
+  def analysis_revision(company:, month:, source:, data:)
+    AdminBenefitUsageAnalysisRevision.call(company:, month:, source:, data:)
   end
 
   def requested_month(default_current: false)
@@ -71,11 +96,12 @@ class Admin::BenefitUsageController < Admin::InertiaController
     return unless year.positive?
 
     month = Date.new(year, value.last(2).to_i, 1)
-    month if month <= Date.current.beginning_of_month
+    current = Date.current.beginning_of_month
+    month if month.between?(current << 11, current)
   end
 
   def summary_parameters_only?
-    params.except(:controller, :action, :format, :month, :authenticity_token).empty?
+    params.except(:controller, :action, :format, :month, :analysis_revision, :authenticity_token).empty?
   end
 
   def render_summary_error(code)
@@ -86,19 +112,21 @@ class Admin::BenefitUsageController < Admin::InertiaController
       :too_many_requests
     when "timeout"
       :gateway_timeout
+    when "insufficient_data"
+      :unprocessable_content
     else
       :bad_gateway
     end
     code = "summary_unavailable" unless %w[
       configuration_missing authentication_failed permission_or_billing spend_limit_reached rate_limited
-      timeout external_unavailable invalid_response refused invalid_payload payload_too_large
+      timeout external_unavailable invalid_response refused invalid_payload payload_too_large insufficient_data
     ].include?(code)
     render_error(code, status)
   end
 
   def render_error(code, status)
     message_key = case code
-    when "invalid_month", "invalid_request", "rate_limited" then code
+    when "invalid_month", "invalid_request", "rate_limited", "insufficient_data", "stale_analysis" then code
     else "summary_unavailable"
     end
     render json: { success: false, error: { code:, message: t("benefit_usage.errors.#{message_key}") } }, status:

@@ -12,9 +12,11 @@ interface Props {
 export function BenefitCard({ benefit, mobile = false }: Props) {
   const { t } = useTranslation()
   const card = "pages.consumer_dashboard.benefit_card"
+  if (benefit.weekly_limit <= 0) return null
+
   const progress = Math.min(
     100,
-    (benefit.monthly_used / Math.max(benefit.monthly_limit, 1)) * 100,
+    (benefit.weekly_used / Math.max(benefit.weekly_limit, 1)) * 100,
   )
 
   return (
@@ -39,8 +41,8 @@ export function BenefitCard({ benefit, mobile = false }: Props) {
         <div className="flex items-end gap-1.5">
           <span className="text-[24px] leading-8 font-bold text-[#0A0A0A] dark:text-neutral-100">
             {t(`${card}.used`, {
-              used: benefit.monthly_used,
-              limit: benefit.monthly_limit,
+              used: benefit.weekly_used,
+              limit: benefit.weekly_limit,
             })}
           </span>
           <span className="text-[18px] leading-7 font-semibold text-[#0A0A0A] dark:text-neutral-100">

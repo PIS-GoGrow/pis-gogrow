@@ -93,8 +93,21 @@ RSpec.describe "Consumer dashboard", type: :request do
       }
     end
 
-  # La tarjeta "Tu consumo" muestra el mes contra el tope mensual: no hay tope
-  # semanal en los requisitos, y dividir el mensual entre 4 daba 0 con K < 4.
+  it "does not report quotas from a benefit expired by date" do
+    travel_to(Time.zone.local(2026, 9, 14, 10))
+    user = consumer_user
+    user.consumer.benefits.sole.update_columns(due_date: Date.current.yesterday)
+    sign_in_as_consumer(user)
+
+    get dashboard_path
+
+    expect(inertia).to have_props { |props|
+      props[:benefit].except(:specials).values.all?(&:zero?)
+    }
+  end
+
+  # El detalle mensual conserva los usos de otras semanas aunque la tarjeta de
+  # consumo principal muestre el cupo semanal.
   it "reports the monthly allowance using delivery dates" do
     travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
@@ -117,6 +130,9 @@ RSpec.describe "Consumer dashboard", type: :request do
         monthly_limit: 20,
         monthly_used: 5,
         monthly_remaining: 15,
+        weekly_limit: 5,
+        weekly_used: 2,
+        weekly_remaining: 3,
         specials: []
       }
     )
@@ -754,6 +770,32 @@ RSpec.describe "Consumer dashboard", type: :request do
       )
     end
 
+    it "shares the consumer's upcoming orders for the offline page" do
+      provider = Provider.create!(user: User.create!(email: "prov-conf-4@gmail.com", name: "La Cocina", password: "password123456"))
+      menu = Menu.create!(provider:, name: "Tarta Pascualina", description: "Plato de prueba", price: 250)
+      other_consumer = Consumer.create!(
+        user: User.create!(email: "other-conf-2@gmail.com", name: "Otro", password: "password123456"),
+        company: consumer.company,
+        address: "Dir 123"
+      )
+      order_on = ->(date, status: :pending, owner: consumer) do
+        Order.create!(
+          consumer: owner, schedule: Schedule.find_or_create_by!(menu:, date:), amount: 1, price: 250,
+          discounted_price: 250, address: "Dir 123", delivery_method: :office, status:
+        )
+      end
+      confirmed = order_on.call(Date.current)
+      later = order_on.call(Date.current + 2, status: :confirmed)
+      order_on.call(Date.current + 1, status: :cancelled)
+      order_on.call(Date.current - 1)
+      order_on.call(Date.current + 1, owner: other_consumer)
+
+      sign_in_as_consumer(user)
+      get dashboard_confirmation_path(confirmed_order_ids: [ confirmed.id ])
+
+      expect(inertia.props[:upcoming_orders].map { |order| order[:id] }).to eq([ confirmed.id, later.id ])
+    end
+
     it "redirects to the dashboard when order IDs do not belong to the signed-in consumer" do
       other_user = User.create!(email: "other-conf@gmail.com", name: "Otro", password: "password123456")
       other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 123")
@@ -864,6 +906,81 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
   # el precio con base + especial antes de confirmar.
+  # SC-008: sobre cada plato del menú semanal el empleado ve lo que ya pidió
+  # para ese día y si el proveedor se lo confirmó.
+  describe "GET /menu-semanal — lo ya pedido de cada plato" do
+    fixtures :users, :consumers, :companies, :providers, :menus, :benefit_configurations, :benefits
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:monday) { Date.current.beginning_of_week(:monday) }
+    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: monday) }
+
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    def order_for(schedule, quantity, consumer: consumers(:one), **attributes)
+      Order.create!(
+        consumer:,
+        schedule:,
+        amount: quantity,
+        price: schedule.menu.price * quantity,
+        address: consumer.company.address,
+        delivery_method: :office,
+        **attributes
+      )
+    end
+
+    def ordered_for(schedule)
+      inertia.props[:schedules].find { |dish| dish[:id] == schedule.id }[:ordered].symbolize_keys
+    end
+
+    it "reports nothing ordered on a dish the consumer never ordered" do
+      schedule
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 0, confirmed: 0)
+    end
+
+    # Cada línea del carrito se guarda como un pedido aparte, así que el
+    # proveedor puede haber confirmado una y todavía no la otra.
+    it "separates the units still pending from the ones already confirmed" do
+      order_for(schedule, 1, status: :pending)
+      order_for(schedule, 2, status: :confirmed)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 1, confirmed: 2)
+    end
+
+    it "leaves out the orders that were cancelled or rejected" do
+      order_for(schedule, 1, status: :cancelled)
+      order_for(schedule, 2, status: :rejected, rejection_reason: :out_of_stock)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 0, confirmed: 0)
+    end
+
+    # El menú es común a todos los empleados, pero lo pedido es personal.
+    it "does not report another employee orders on the dish" do
+      order_for(schedule, 3, consumer: consumers(:other), status: :confirmed)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 0, confirmed: 0)
+    end
+  end
+
   describe "GET /menu-semanal — subsidios especiales" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }

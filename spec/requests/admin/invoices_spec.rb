@@ -118,6 +118,28 @@ RSpec.describe "Admin::Invoices", type: :request do
   end
 
   describe "GET /admin/facturas/:id/archivo" do
+    it "redirects visitors to the sign in page" do
+      get file_admin_invoice_path(invoice, download: 1)
+
+      expect(response).to redirect_to(admin_welcome_path)
+    end
+
+    it "does not let a consumer download it" do
+      sign_in users(:one), role: :consumer
+
+      get file_admin_invoice_path(invoice, download: 1)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "does not let a provider download it from the HR route" do
+      sign_in users(:provider_user), role: :provider
+
+      get file_admin_invoice_path(invoice, download: 1)
+
+      expect(response).to redirect_to(root_path)
+    end
+
     it "lets HR open the invoice of any provider" do
       sign_in users(:admin), role: :admin
 

@@ -15,8 +15,18 @@ class Admin::AccountSerializer < AccountSerializer
 
   typelize :string?
   attribute :invoice_download_url do |account|
-    invoice = account.invoices.detect(&:approved?)
+    invoice = account.invoices.detect { it.pending? || it.approved? }
     file_admin_invoice_path(invoice, download: 1) if invoice
+  end
+
+  # Solo viene cuando hay que esperar para volver a recordar la factura.
+  typelize :number?
+  attribute :invoice_reminder_days_left do |account|
+    last_sent_at = params[:invoice_reminders]&.[](account.id)
+    eligibility = InvoiceReminders::Eligibility.new(account:, last_sent_at:)
+    next unless eligibility.reason == :cooldown
+
+    ((eligibility.next_available_at - Time.current) / 1.day).ceil
   end
 
   private

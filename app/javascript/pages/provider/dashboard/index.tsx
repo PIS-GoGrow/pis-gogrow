@@ -3,7 +3,9 @@ import { ChevronRight, Clock3, Star } from "lucide-react"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 
-import NotificationBanners from "@/components/notification-banners"
+import NotificationBanners, {
+  NotificationInbox,
+} from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
 import AiInsightCard from "@/components/provider/ai-insight-card"
 import DashboardMetric from "@/components/provider/dashboard-metric"
@@ -78,6 +80,8 @@ export default function ProviderDashboard({
         title={t("pages.provider_dashboard.index.greeting", {
           name: auth.user.name,
         })}
+        actions={<NotificationInbox />}
+        actionsCentered
       >
         <NotificationBanners />
 
@@ -214,7 +218,9 @@ export default function ProviderDashboard({
                 rating={average_rating}
               />
               <AiInsightCard>
-                {t("pages.provider_dashboard.index.insights.description")}
+                <p>
+                  {t("pages.provider_dashboard.index.insights.description")}
+                </p>
               </AiInsightCard>
             </section>
 

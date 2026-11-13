@@ -51,7 +51,7 @@ const account = {
 
 describe("CollectionAccountPanel", () => {
   it.each(["pending", "submitted", "rejected", "partial"] as const)(
-    "separa el saldo pendiente del consumo para una cuenta %s",
+    "muestra el saldo pendiente y las viandas de forma compacta para una cuenta %s",
     (status) => {
       render(
         <CollectionAccountPanel
@@ -65,11 +65,12 @@ describe("CollectionAccountPanel", () => {
         />,
       )
 
-      expect(screen.getByText("Saldo pendiente")).toBeInTheDocument()
       expect(screen.getByText("$150")).toBeInTheDocument()
+      expect(screen.getByText(/2 viandas/)).toBeInTheDocument()
+      expect(screen.queryByText("Saldo pendiente")).not.toBeInTheDocument()
       expect(
-        screen.getByText("2 viandas consumidas en octubre"),
-      ).toBeInTheDocument()
+        screen.queryByText("2 viandas consumidas en octubre"),
+      ).not.toBeInTheDocument()
       expect(screen.queryByText("$290")).not.toBeInTheDocument()
       expect(
         screen.getByRole("button", { name: "Ver detalle" }),
@@ -77,7 +78,7 @@ describe("CollectionAccountPanel", () => {
     },
   )
 
-  it("usa el singular y el mes de la cuenta", () => {
+  it("usa el singular para una sola vianda", () => {
     render(
       <CollectionAccountPanel
         account={{
@@ -89,9 +90,10 @@ describe("CollectionAccountPanel", () => {
       />,
     )
 
+    expect(screen.getByText(/1 vianda/)).toBeInTheDocument()
     expect(
-      screen.getByText("1 vianda consumida en septiembre"),
-    ).toBeInTheDocument()
+      screen.queryByText("1 vianda consumida en septiembre"),
+    ).not.toBeInTheDocument()
   })
 
   it("conserva el importe total y las viandas en el historial", () => {

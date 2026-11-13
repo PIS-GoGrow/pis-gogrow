@@ -146,6 +146,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
 
     visit_hydrated provider_dashboard_path
     without_animations
+    open_notifications
 
     expect(page).to have_css("[role=alert]", text: "Nuevo pedido")
     expect(page).to have_content("Test User pidió 1 de Milanesa con papas fritas para el")
@@ -155,6 +156,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     expect(page).to have_no_content("Nuevo pedido")
 
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_no_content("Nuevo pedido")
   end

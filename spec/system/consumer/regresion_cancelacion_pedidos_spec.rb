@@ -20,6 +20,11 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
   end
 
   before do
+    # Evitar colisión transitoria con las fechas generadas al cargar fixtures
+    schedules(:past).update_columns(date: Date.new(2000, 1, 1))
+    sched_today.update_columns(date: Date.new(2000, 1, 2))
+    sched_future.update_columns(date: Date.new(2000, 1, 3))
+
     schedules(:past).update!(date: Date.current - 5.days)
     sched_today.update!(available: true, date: Date.current)
     sched_future.update!(available: true, date: Date.tomorrow)
@@ -52,7 +57,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       # 1.1: Autenticarse como E1 y verificar consumo inicial en dashboard y navegar a Mis Órdenes
       sign_in consumer_user, role: :consumer
       visit dashboard_path
-      expect(page).to have_content("1 de 20")
+      expect(page).to have_content("1 de 5")
 
       visit orders_path
       sleep 1.5
@@ -82,7 +87,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       expect(consumer.remaining_monthly_benefit).to eq(20)
 
       visit dashboard_path
-      expect(page).to have_content("0 de 20")
+      expect(page).to have_content("0 de 5")
 
       sign_out
 

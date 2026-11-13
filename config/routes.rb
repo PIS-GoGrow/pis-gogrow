@@ -85,6 +85,7 @@ Rails.application.routes.draw do
     resources :closures, path: "cierres", only: [ :create, :update, :destroy ]
     get "inicio", to: "dashboard#index", as: :dashboard
     get "inicio/hallazgos", to: "insights#index", as: :insights
+    post "inicio/hallazgos/conclusiones", to: "insights#create_conclusions", as: :insights_conclusions
     resources :payments, path: "comprobantes", only: [ :update ] do
       get :receipt, on: :member, path: "archivo"
     end
@@ -100,6 +101,9 @@ Rails.application.routes.draw do
     get "menu-semanal/confirmacion", to: "dashboard#confirmation", as: :dashboard_confirmation
     get "menu-semanal/carrito", to: "dashboard#cart", as: :dashboard_cart
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
+    get "menu-semanal/platos/:schedule_id",
+        to: "dashboard#dish",
+        as: :dashboard_dish
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
     resource :favorite, path: "favoritos/:kind/:id", only: [ :update, :destroy ],
@@ -130,6 +134,7 @@ Rails.application.routes.draw do
     get "inicio", to: "dashboard#index", as: :dashboard
     get "uso-beneficio", to: "benefit_usage#show", as: :benefit_usage
     get "analisis-beneficio", to: "benefit_usage#analysis", as: :benefit_usage_analysis
+    get "reportes", to: "reports#index", as: :reports
     post "uso-beneficio/resumen", to: "benefit_usage#create_summary", as: :benefit_usage_summary
     get "cuenta", to: "accounts#show", as: :account
     get "preferencias", to: "preferences#show", as: :preferences
@@ -147,6 +152,7 @@ Rails.application.routes.draw do
     resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do
       get :receipt, on: :member, path: "archivo"
+      resources :invoice_reminders, path: "recordatorios-de-factura", only: [ :create ]
     end
   end
 
@@ -157,6 +163,10 @@ Rails.application.routes.draw do
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check
+
+  get "offline", to: "pwa#offline"
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
   match "500", to: "errors#internal_server_error", via: :all, format: false
   get "*unmatched_path", to: "errors#not_found", format: false,

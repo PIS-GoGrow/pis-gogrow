@@ -38,6 +38,11 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   end
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumers(:one).orders.destroy_all
     consumers(:one).accounts.destroy_all
   end
