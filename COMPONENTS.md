@@ -146,7 +146,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail`, `badge` y `action` opcionales |
 | `DashboardMetric` | `@/components/provider/dashboard-metric` | Número con su etiqueta en el Inicio y en Hallazgos del proveedor; `valueFirst` pone el número arriba y centrado. El fondo y el borde los pasa quien lo usa con `className` |
 | `InsightsMetrics` | `@/components/provider/insights-metrics` | Las tres métricas grises de los hallazgos del proveedor (Pedidos, Platos y ★ Valoración, con «—» si no hay reseñas). Recibe `orders`, `dishes` y `rating` |
-| `AiInsightCard` | `@/components/provider/ai-insight-card` | Tarjeta violeta con gradiente y el pie «Generado por IA»; el texto va como `children` |
+| `AiInsightCard` | `@/components/provider/ai-insight-card` | Tarjeta violeta con gradiente; recibe contenido en `children` y muestra el pie «Generado por IA» solo con `generated` |
 | `BenefitMetric` | `@/components/admin/benefit-metric` | Métrica blanca dentro de la tarjeta gris del beneficio (Participación y Gasto del Inicio, métricas de Reportes): `label`, `value` y `detail` opcional. El ancho lo da el `grid` de la tarjeta |
 | `SummarySection`, `SummaryList`, `SummaryRow` | `@/components/admin/summary-section` | Secciones con lista de RR. HH. («Tus pagos de agosto», «Consumo por proveedor»): título con `HeadingSmall` y `action` opcional (flecha a otra pantalla), la tarjeta con separadores y cada fila |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |

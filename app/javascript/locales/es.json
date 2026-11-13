@@ -1000,6 +1000,7 @@
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
         "empty": "Todavía no agregaste platos.",
+        "empty_cart": "Todavía no agregaste platos al carrito.",
         "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",
@@ -1565,7 +1566,7 @@
           "eyebrow": "Operación diaria",
           "greeting": "Hola, %{name} 👋",
           "insights": {
-            "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
+            "description": "Generá conclusiones sobre las reseñas desde Hallazgos.",
             "generated": "Generado por IA",
             "title": "Hallazgos del mes"
           },
@@ -1621,6 +1622,17 @@
       },
       "provider_insights": {
         "index": {
+          "ai_errors": {
+            "insufficient_data": "Se necesitan al menos 5 reseñas válidas para generar conclusiones sobre este período.",
+            "invalid_period": "El período seleccionado ya no es válido. Elegí otro período e intentá nuevamente.",
+            "rate_limited": "Alcanzaste el límite temporal de generaciones. Intentá nuevamente más tarde.",
+            "timeout": "La generación tardó demasiado. Podés intentar nuevamente.",
+            "unavailable": "No pudimos generar las conclusiones. Podés intentar nuevamente más tarde."
+          },
+          "ai_generate": "Generar conclusiones con IA",
+          "ai_generating": "Generando conclusiones…",
+          "ai_initial": "Las conclusiones de las reseñas estarán disponibles cuando las generes.",
+          "analysis_period": "Período analizado: %{from} – %{to}",
           "back": "Volver al inicio",
           "empty_orders": "Todavía no hay pedidos en este período",
           "empty_reviews": "Todavía no hay reseñas en este período",
@@ -1633,6 +1645,8 @@
             "today": "Hoy",
             "yesterday": "Ayer"
           },
+          "reviews_considered_one": "%{count} reseña considerada",
+          "reviews_considered_other": "%{count} reseñas consideradas",
           "title": "Hallazgos",
           "top_dishes": "Platos más pedidos",
           "top_rated_dishes": "Mejor valorados"
@@ -2259,6 +2273,15 @@
           "log_out": "Cerrar sesión",
           "title": "Sesiones"
         }
+      }
+    },
+    "review_insights": {
+      "errors": {
+        "generation_unavailable": "No pudimos generar las conclusiones. Intentá nuevamente más tarde.",
+        "insufficient_data": "Se necesitan al menos cinco reseñas para generar conclusiones.",
+        "invalid_period": "Seleccioná un período válido dentro de las fechas disponibles.",
+        "invalid_request": "Enviá únicamente el período que querés analizar.",
+        "rate_limited": "Alcanzaste el límite de generación. Intentá nuevamente más tarde."
       }
     }
   }

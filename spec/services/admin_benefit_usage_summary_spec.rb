@@ -66,8 +66,15 @@ RSpec.describe AdminBenefitUsageSummary do
   it "returns a controlled error for oversized payloads without sending them" do
     allow(payload).to receive(:to_h).and_return(data: "x" * described_class::MAX_PAYLOAD_BYTES)
     expect(client).not_to receive(:create_summary)
+    events = []
+    allow(Rails.logger).to receive(:warn) { |line| events << JSON.parse(line) }
 
-    expect(summary.call).to eq(ok: false, error: { code: "payload_too_large" })
+    Current.set(request_id: "rails-benefit-123") do
+      expect(summary.call).to eq(ok: false, error: { code: "payload_too_large" })
+    end
+    expect(events).to contain_exactly(include("event" => "benefit_usage.validation_failed",
+                                           "request_id" => "rails-benefit-123", "reason" => "payload_too_large"))
+    expect(events.to_json).not_to include("x" * 100)
   end
 
   it "does not call Claude when historical information is insufficient" do
@@ -79,9 +86,13 @@ RSpec.describe AdminBenefitUsageSummary do
 
   it "rejects a raw hash instead of sending unreviewed fields" do
     expect(client).not_to receive(:create_summary)
+    events = []
+    allow(Rails.logger).to receive(:warn) { |line| events << JSON.parse(line) }
     result = described_class.new(payload: { secret: "private" }, client:).call
 
     expect(result).to eq(ok: false, error: { code: "invalid_payload" })
+    expect(events).to contain_exactly(include("event" => "benefit_usage.validation_failed", "reason" => "invalid_payload"))
+    expect(events.to_json).not_to include("private")
   end
 
   it "preserves the original statistics if the external service fails" do
