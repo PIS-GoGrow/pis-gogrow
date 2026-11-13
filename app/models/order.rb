@@ -24,7 +24,8 @@ class Order < ApplicationRecord
     other: 4,
     dish_modified: 5,
     dish_deleted: 6,
-    dish_unpublished: 7
+    dish_unpublished: 7,
+    no_response: 8
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
@@ -237,6 +238,11 @@ class Order < ApplicationRecord
       rejecting = status.to_s == "rejected"
       return false unless pending? || (confirmed? && rejecting)
 
+      if response_window_closed?
+        errors.add(:base, I18n.t("validations.order_response_window_closed"))
+        return false
+      end
+
       if rejecting && !rejectable?
         errors.add(:base, I18n.t("validations.order_not_rejectable"))
         return false
@@ -355,6 +361,21 @@ class Order < ApplicationRecord
 
       notify_cancelled if before_cancellation_confirmed?
       true
+    end
+  end
+
+  # Un pendiente del día sin respuesta pasada la hora límite del proveedor ya no
+  # se confirma: UnansweredOrdersRejectionJob lo rechaza para que el empleado
+  # pueda pedirle a otro proveedor que todavía no cerró.
+  def response_window_closed?
+    pending? && delivery_date&.today? && provider&.response_deadline_passed_today?
+  end
+
+  def reject_unanswered!
+    with_lock do
+      return false unless response_window_closed?
+
+      update!(status: :rejected, rejection_reason: :no_response, rejected_at: Time.current)
     end
   end
 

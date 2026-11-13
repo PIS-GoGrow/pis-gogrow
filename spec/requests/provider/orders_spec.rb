@@ -453,6 +453,35 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(inertia).to have_props { |props| props["order"]["status"] == order.reload.status }
     end
 
+    it "refuses to confirm a pending order for today after the response deadline" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+      order.provider.update!(order_deadline: "12:00")
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_pending
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_response_window_closed"))
+    end
+
+    it "refuses to reject a pending order for today after the response deadline" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+      order.provider.update!(order_deadline: "12:00")
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_pending
+      expect(order.rejection_reason).to be_nil
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_response_window_closed"))
+    end
+
     it "leaves an order that is no longer pending as it was" do
       sign_in users(:provider_user), role: :provider
       order = orders(:history_cancelled_future)

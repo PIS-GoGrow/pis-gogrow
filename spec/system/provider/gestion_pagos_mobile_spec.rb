@@ -233,8 +233,21 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
 
     click_on "Ver detalle del consumo"
     within(find("[role=dialog]")) do
-      find("button", text: "Día: #{Date.current.change(day: 5).strftime("%d/%m")}").click
+      day = find("button", text: "Día: #{Date.current.change(day: 5).strftime("%d/%m")}")
+      expect(day).to match_selector("[aria-expanded=true]")
       expect(page).to have_content(employee.name)
+
+      day.click
+      expect(day).to match_selector("[aria-expanded=false]")
+      expect(page).not_to have_content(employee.name)
+
+      day.click
+      expect(day).to match_selector("[aria-expanded=true]")
+      expect(page).to have_content(employee.name)
+      within(find("tr", text: employee.name)) do
+        expect(page).to have_css("td", exact_text: "1")
+        expect(page).to have_css("td", exact_text: "$1.000")
+      end
     end
     expect(no_horizontal_overflow?).to be(true)
     within(find("[role=dialog]")) { click_on "Cerrar" }

@@ -16,7 +16,8 @@ RSpec.describe AdminBenefitUsagePresentationPayload do
         monthly_unused_closed_meals: nil
       },
       employees: {
-        participation_percent: 50.0, eligibility: { eligible: 4 }, eligible_without_orders: 1,
+        participation_percent: 50.0, eligibility: { eligible: 4 },
+        known_eligible_with_confirmed_orders: 2, eligible_without_orders: 1,
         current_employees: 4, current_employees_with_confirmed_orders: 2
       },
       trends: { months: [
@@ -39,6 +40,9 @@ RSpec.describe AdminBenefitUsagePresentationPayload do
     expect(payload[:capacity].keys).to eq(%i[monthly_quota_meals monthly_pending_reserved_meals monthly_available_meals])
     expect(payload[:capacity]).to eq(monthly_quota_meals: 20, monthly_pending_reserved_meals: 1,
                                      monthly_available_meals: 17)
+    expect(payload[:participation]).to eq(percent: 50.0, eligible_employees: 4,
+                                          eligible_with_confirmed_orders: 2,
+                                          eligible_without_confirmed_orders: 2, eligible_without_orders: 1)
     expect(payload[:employee_activity]).to eq(
       current_employees: 4, employees_with_confirmed_orders: 2,
       average_confirmed_meals_per_current_employee: 0.75
