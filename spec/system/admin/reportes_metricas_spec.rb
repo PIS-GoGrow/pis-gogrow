@@ -86,9 +86,11 @@ RSpec.describe "Reportes y métricas de RRHH", type: :system do
       expect(page).to have_content("No hay pedidos confirmados en este período.")
     end
 
-    # Volver al inicio
+    # Volver al inicio (la flecha solo está disponible en mobile)
+    page.current_window.resize_to(375, 667)
     find("a[aria-label='Volver al inicio']").click
     expect(page).to have_current_path(admin_dashboard_path)
+    page.current_window.resize_to(1400, 1400)
   end
 
   it "ofrece el enlace a Reportes en el menú de navegación de RR. HH." do

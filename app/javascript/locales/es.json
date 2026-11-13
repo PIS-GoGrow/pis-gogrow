@@ -583,6 +583,8 @@
           "order_events_description": "Consultá quién creó o cambió cada pedido",
           "preferences": "Perfil y Apariencia",
           "preferences_description": "Gestioná tus datos personales y el tema de la aplicación",
+          "profile": "Perfil",
+          "profile_description": "Modificá tu teléfono, nombre, correo y apariencia",
           "settings": "Configuración",
           "sign_out": "Salir",
           "subsidies": "Subsidios",
@@ -1152,7 +1154,7 @@
       },
       "consumer_profiles": {
         "show": {
-          "account": "Cuenta",
+          "account": "Perfil",
           "account_description": "Modificá tu teléfono, nombre, correo, contraseña y apariencia",
           "addresses": "Direcciones",
           "addresses_description": "Gestioná tus direcciones de entrega",
@@ -2225,7 +2227,7 @@
       },
       "settings": {
         "appearance": {
-          "back": "Volver a Perfil y Apariencia",
+          "back": "Volver a Cuenta",
           "description": "Actualizá la configuración de apariencia de tu cuenta",
           "title": "Configuración de apariencia"
         },
@@ -2254,7 +2256,7 @@
           "title": "Configuración de contraseña"
         },
         "profile": {
-          "back": "Volver a Perfil y Apariencia",
+          "back": "Volver a Cuenta",
           "description": "Actualizá tu nombre y tu teléfono",
           "email_description": "Este dato es solo de consulta y no se puede modificar.",
           "heading": "Información del perfil",

@@ -679,6 +679,8 @@ es:
         title: "Cuenta"
         sign_out: "Salir"
         settings: "Configuración"
+        profile: "Perfil"
+        profile_description: "Modificá tu teléfono, nombre, correo y apariencia"
         subsidies: "Subsidios"
         subsidies_description: "Gestioná los subsidios de tu empresa"
         invoices: "Facturas"
@@ -1852,7 +1854,7 @@ es:
         coupon_remaining: "Te quedan"
         coupon_period: "Para entregas del"
         settings: "Configuración"
-        account: "Cuenta"
+        account: "Perfil"
         account_description: "Modificá tu teléfono, nombre, correo, contraseña y apariencia"
         addresses: "Direcciones"
         addresses_description: "Gestioná tus direcciones de entrega"
@@ -2136,7 +2138,7 @@ es:
       appearance:
         title: "Configuración de apariencia"
         description: "Actualizá la configuración de apariencia de tu cuenta"
-        back: "Volver a Perfil y Apariencia"
+        back: "Volver a Cuenta"
       profile:
         title: "Configuración del perfil"
         heading: "Información del perfil"
@@ -2145,7 +2147,7 @@ es:
         phone_placeholder: "099 123 456"
         phone_description: "Lo usamos para enviarte notificaciones por WhatsApp. Si tu celular no es de Uruguay, escribilo con + y el código de país."
         email_description: "Este dato es solo de consulta y no se puede modificar."
-        back: "Volver a Perfil y Apariencia"
+        back: "Volver a Cuenta"
         home_delivery:
           heading: "Editar información de pedidos"
           label: "También realizo entregas a domicilio"

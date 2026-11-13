@@ -112,6 +112,11 @@ export function AppSidebar() {
         href: adminOrderEvents.index().url,
         icon: History,
       },
+      {
+        title: t("nav.admin.account"),
+        href: adminAccounts.show().url,
+        icon: UserRound,
+      },
     ],
     consumer: [
       {

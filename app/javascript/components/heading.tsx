@@ -35,7 +35,9 @@ export default function Heading({
         <div className={cn("flex", mobileBack && "md:hidden")}>{back}</div>
       )}
 
-      {back && mobileCentered && <div className="hidden md:flex">{back}</div>}
+      {back && mobileCentered && !mobileBack && (
+        <div className="hidden md:flex">{back}</div>
+      )}
       <div
         className={cn(
           "flex gap-4",
@@ -48,7 +50,14 @@ export default function Heading({
         )}
       >
         {back && centered && (
-          <div className="absolute top-1/2 left-0 -translate-y-1/2">{back}</div>
+          <div
+            className={cn(
+              "absolute top-1/2 left-0 -translate-y-1/2",
+              mobileBack && "md:hidden",
+            )}
+          >
+            {back}
+          </div>
         )}
 
         {back && mobileCentered && (
