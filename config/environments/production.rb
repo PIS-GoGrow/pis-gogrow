@@ -59,7 +59,14 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates and in jobs.
-  Rails.application.routes.default_url_options = { host: ENV.fetch("APP_HOST"), protocol: "https" }
+  # assets:precompile corre en el build, sin las variables de runtime, y lo
+  # único que lo distingue es el SECRET_KEY_BASE_DUMMY que le pasa el Dockerfile.
+  # Fuera de ese caso la variable sigue siendo obligatoria: sin ella los links
+  # de los mails apuntarían a cualquier lado.
+  Rails.application.routes.default_url_options = {
+    host: ENV.fetch("APP_HOST") { ENV["SECRET_KEY_BASE_DUMMY"] ? "localhost" : raise(KeyError, "APP_HOST no definida") },
+    protocol: "https"
+  }
   config.action_mailer.default_url_options = { host: ENV["APP_HOST"], protocol: "https" }
 
   config.action_mailer.smtp_settings = {
