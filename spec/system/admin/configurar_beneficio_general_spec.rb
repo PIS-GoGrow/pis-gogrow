@@ -39,9 +39,45 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
                                      .where(benefit_rules: { effective_from: Calendar.new.configurable_month })
                                      .last
     expect(new_config).to be_present
+    expect(new_config).to be_applies_to_all
     expect(new_config.subsidy_percentage).to eq(65)
     expect(new_config.benefit_rules.first.max_price).to eq(250)
     expect(new_config.benefit_rules.first.limit).to eq(15)
+  end
+
+  it "programa un subsidio base que aplica a toda la empresa y cubre a nuevos empleados" do
+    visit admin_benefit_configurations_path
+
+    open_editor
+
+    fill_in "subsidy_percentage", with: "60"
+    fill_in "max_voucher_price", with: "300"
+    fill_in "monthly_voucher_limit", with: "20"
+
+    click_button "Programar Subsidio"
+
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
+    expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
+
+    config = BenefitConfiguration.joins(:benefit_rules)
+                                 .where(benefit_rules: { effective_from: Calendar.new.configurable_month })
+                                 .last
+    expect(config).to be_applies_to_all
+
+    new_user = User.create!(name: "Lucía", email: "lucia@gogrow.com", password: "password123456")
+    new_consumer = Consumer.create!(
+      user: new_user,
+      company: admin_user.admin.company,
+      address: "Canelones 1234",
+      birthday: Date.new(1995, 8, 20),
+      onboarding_date: Date.current
+    )
+
+    travel_to Calendar.new.configurable_month do
+      BenefitAssignationJob.perform_now
+    end
+
+    expect(new_consumer.reload.benefits.where(benefit_configuration: config)).to be_present
   end
 
   it "muestra un aviso de conflicto y permite reemplazar cuando ya existe un cambio programado" do

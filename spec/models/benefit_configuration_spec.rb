@@ -276,6 +276,39 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(consumers(:other).benefits.first.percentage).to eq(50)
     end
 
+    it "does not apply monthly benefits to consumers of another company" do
+      other_company = Company.create!(name: "Empresa Externa", address: "Calle Falsa 123")
+      other_user = User.create!(name: "Externo", email: "externo@otro.com", password: "password123456")
+      external_consumer = Consumer.create!(user: other_user, company: other_company)
+
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save!
+
+      benefit_configuration.apply_to_all_consumers
+
+      expect(external_consumer.reload.benefits).to be_empty
+    end
+
+    it "is idempotent and does not duplicate benefits for consumers without explicit association" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save!
+
+      expect {
+        benefit_configuration.apply_to_all_consumers
+        benefit_configuration.apply_to_all_consumers
+      }.to change(consumers(:other).reload.benefits, :count).from(0).to(1)
+    end
+
+    it "does not apply benefits when the configuration is deactivated" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.deactivated_at = Time.current
+      benefit_configuration.save!
+
+      benefit_configuration.apply_to_all_consumers
+
+      expect(consumers(:other).reload.benefits).to be_empty
+    end
+
     it "applies gift benefits to associated consumers" do
       benefit_configuration = build_configuration
       benefit_configuration.benefit_rules.new(

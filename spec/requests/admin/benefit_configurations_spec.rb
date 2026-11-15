@@ -112,6 +112,31 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(configuration.benefit_rules.first.type).to eq(MonthlyBenefit.name)
       expect(configuration.benefit_rules.first.max_price).to eq(150)
       expect(configuration.benefit_rules.first.limit).to eq(20)
+      expect(configuration).to be_applies_to_all
+    end
+
+    it "ensures newly created employees receive the subsidy upon job execution" do
+      post admin_benefit_configurations_path, params: {
+        benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+      }
+
+      new_user = User.create!(name: "Empleado Nuevo", email: "nuevo_emp@gogrow.com", password: "password123456")
+      new_consumer = Consumer.create!(
+        user: new_user,
+        company: company,
+        address: "Av 18 de Julio 1234",
+        birthday: Date.new(1998, 4, 15),
+        onboarding_date: Date.current
+      )
+
+      expect(new_consumer.benefits).to be_empty
+
+      travel_to Calendar.new.configurable_month do
+        BenefitAssignationJob.perform_now
+      end
+
+      expect(new_consumer.reload.benefits).not_to be_empty
+      expect(new_consumer.benefits.first.percentage).to eq(50)
     end
 
     it "always applies the change from the configurable month, regardless of what is posted" do

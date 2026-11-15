@@ -65,6 +65,23 @@ RSpec.describe BenefitAssignationJob, type: :job do
           percentage: configuration.subsidy_percentage
         )
       end
+
+      it "no asigna el subsidio a un empleado de otra empresa" do
+        configuration = benefit_configurations(:monthly)
+        configuration.update!(applies_to_all: true)
+
+        other_company = Company.create!(name: "Otra Empresa", address: "Otra 456")
+        user = User.create!(
+          email: "other-company-employee@example.com",
+          name: "Empleado otra empresa",
+          password: "password123456"
+        )
+        other_consumer = Consumer.create!(user:, company: other_company)
+
+        described_class.perform_now
+
+        expect(other_consumer.benefits).to be_empty
+      end
     end
 
     context "con un subsidio especial" do
