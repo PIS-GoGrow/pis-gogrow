@@ -39,6 +39,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
                                      .where(benefit_rules: { effective_from: Calendar.new.configurable_month })
                                      .last
     expect(new_config).to be_present
+    expect(new_config).to be_applies_to_all
     expect(new_config.subsidy_percentage).to eq(65)
     expect(new_config.benefit_rules.first.max_price).to eq(250)
     expect(new_config.benefit_rules.first.limit).to eq(15)

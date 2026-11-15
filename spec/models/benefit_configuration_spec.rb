@@ -38,6 +38,12 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(build_base_subsidy).to be_valid
     end
 
+    it "applies to all consumers in the company" do
+      benefit_configurations(:monthly).destroy
+
+      expect(build_base_subsidy).to be_applies_to_all
+    end
+
     it "rejects a negative subsidy percentage" do
       benefit_configurations(:monthly).destroy
 
@@ -257,14 +263,50 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(consumers(:one).benefits.first.due_date).to eq(Date.current.end_of_month)
     end
 
-    it "does not apply monthly benefits to not associated consumers" do
+    it "applies monthly benefits to consumers without an explicit association" do
       benefit_configuration = build_base_subsidy
       benefit_configuration.save
       benefit_configuration.consumers = [ consumers(:one) ]
 
       expect(consumers(:other).reload.benefits.count).to eq(0)
+
       benefit_configuration.apply_to_all_consumers
-      expect(consumers(:other).benefits.count).to eq(0)
+
+      expect(consumers(:other).benefits.count).to eq(1)
+      expect(consumers(:other).benefits.first.percentage).to eq(50)
+    end
+
+    it "does not apply monthly benefits to consumers of another company" do
+      other_company = Company.create!(name: "Empresa Externa", address: "Calle Falsa 123")
+      other_user = User.create!(name: "Externo", email: "externo@otro.com", password: "password123456")
+      external_consumer = Consumer.create!(user: other_user, company: other_company)
+
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save!
+
+      benefit_configuration.apply_to_all_consumers
+
+      expect(external_consumer.reload.benefits).to be_empty
+    end
+
+    it "is idempotent and does not duplicate benefits for consumers without explicit association" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save!
+
+      expect {
+        benefit_configuration.apply_to_all_consumers
+        benefit_configuration.apply_to_all_consumers
+      }.to change(consumers(:other).reload.benefits, :count).from(0).to(1)
+    end
+
+    it "does not apply benefits when the configuration is deactivated" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.deactivated_at = Time.current
+      benefit_configuration.save!
+
+      benefit_configuration.apply_to_all_consumers
+
+      expect(consumers(:other).reload.benefits).to be_empty
     end
 
     it "applies gift benefits to associated consumers" do
