@@ -17,6 +17,8 @@ class Consumer < ApplicationRecord
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
 
+  after_create :assign_base_subsidies
+
   # Platos y proveedores que el empleado pide seguido, calculados con sus pedidos
   # vigentes. Dos pedidos alcanzan para considerarlo frecuente; los más pedidos
   # van primero.
@@ -189,7 +191,26 @@ class Consumer < ApplicationRecord
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
   end
+
+  private
+
+  def assign_base_subsidies
+    configurations = [
+      BenefitConfiguration.base_subsidy_for(company),
+      *BenefitConfiguration.pending_base_subsidies_for(company)
+    ].compact.uniq
+
+    configurations.each do |configuration|
+      consumer_benefit_configurations.find_or_create_by!(
+        benefit_configuration: configuration
+      )
+
+      configuration.apply_to_all_consumers
+    end
+  end
 end
+
+
 
 # == Schema Information
 #
