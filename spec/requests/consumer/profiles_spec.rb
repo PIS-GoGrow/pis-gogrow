@@ -104,6 +104,27 @@ RSpec.describe "Consumer::Profiles", type: :request do
         expect(inertia.props[:coupons]).to be_empty
       end
 
+      it "does not list coupons with no remaining uses" do
+        coupon = consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:gift),
+          description: "Cupón agotado",
+          percentage: 30,
+          amount: 1,
+          starts_on: Date.current,
+          due_date: Date.current + 5.days
+        )
+
+        OrderBenefit.create!(
+          order: orders(:upcoming_pending_future),
+          benefit: coupon,
+          benefit_used: 1
+        )
+
+        get profile_path
+
+        expect(inertia.props[:coupons]).to be_empty
+      end
+
       it "reports how many subsidized meals are left this month" do
         get profile_path
 
