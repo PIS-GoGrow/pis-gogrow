@@ -22,8 +22,9 @@ RSpec.describe "Cálculo único de viandas subsidiadas", type: :system do
   end
 
   it "unifies benefit counts across the weekly dashboard and monthly views" do
-    schedule1 = Schedule.create!(menu: menu1, date: Date.current)
-    schedule2 = Schedule.create!(menu: menu2, date: Date.current)
+    order_date = Calendar.new.schedule_week_range.first
+    schedule1 = Schedule.create!(menu: menu1, date: order_date)
+    schedule2 = Schedule.create!(menu: menu2, date: order_date)
 
     # Pedido 1 con Proveedor 1: 2 viandas confirmadas con beneficio mensual
     Order.create!(

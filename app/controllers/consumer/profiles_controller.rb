@@ -19,7 +19,7 @@ class Consumer::ProfilesController < Consumer::InertiaController
         remaining: pricing.remaining_uses(coupon),
         period: DateFormat.short_range(coupon.starts_on, coupon.due_date)
       }
-    end
+    end.reject { |coupon| coupon[:remaining] == 0 }
 
     @benefit = benefit && {
       percentage: benefit.percentage.to_i,

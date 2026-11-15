@@ -135,6 +135,37 @@ describe("Consumer account page", () => {
     expect(screen.getByText("26/10/26 al 01/11/26")).toBeInTheDocument()
   })
 
+  it("does not render the coupons section when coupons list is empty", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
+
+    expect(screen.queryByText("Mis cupones")).not.toBeInTheDocument()
+  })
+
+  it("renders only coupons that have remaining uses and presents their details", () => {
+    render(
+      <Show
+        benefit={benefit}
+        benefit_summary={summary}
+        coupons={[
+          {
+            id: 10,
+            name: "Cupón Activo",
+            percentage: 25,
+            remaining: 3,
+            period: "15/11/26 al 20/11/26",
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText("Mis cupones")).toBeInTheDocument()
+    expect(screen.getByText("Cupón Activo")).toBeInTheDocument()
+    expect(screen.getByText("25% de descuento")).toBeInTheDocument()
+    expect(screen.getByText("Te quedan").nextSibling).toHaveTextContent(
+      "3 viandas",
+    )
+  })
+
   it("offers signing out", () => {
     render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
 
