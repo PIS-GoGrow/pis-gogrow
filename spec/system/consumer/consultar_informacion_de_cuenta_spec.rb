@@ -19,7 +19,7 @@ require "rails_helper"
 # docs/reports/defects/DEFECT-avatar-sin-fixture-05-10-2026.md
 RSpec.describe "Consultar la información de la cuenta del empleado" do
   fixtures :users, :companies, :consumers, :providers,
-          :benefit_configurations, :benefit_rules, :benefits
+          :benefit_configurations, :benefit_rules, :benefits, :orders
 
   let(:employee) { users(:one) }
   let(:benefit) { benefits(:monthly) }
@@ -118,6 +118,66 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
       expect(page).to have_content("Cupón vigente")
       expect(page).to have_no_content("Cupón vencido")
     end
+  end
+
+  it "no muestra cupones agotados y mantiene los que tienen usos disponibles" do
+    consumer.benefits.create!(
+      benefit_configuration: benefit_configurations(:gift),
+      description: "Cupón con usos",
+      percentage: 25,
+      amount: 2,
+      starts_on: Date.current,
+      due_date: Date.current + 5.days,
+      status: :current
+    )
+
+    exhausted = consumer.benefits.create!(
+      benefit_configuration: benefit_configurations(:gift2),
+      description: "Cupón agotado",
+      percentage: 30,
+      amount: 1,
+      starts_on: Date.current,
+      due_date: Date.current + 5.days,
+      status: :current
+    )
+
+    OrderBenefit.create!(
+      order: orders(:upcoming_pending_future),
+      benefit: exhausted,
+      benefit_used: 1
+    )
+
+    sign_in employee
+    visit profile_path
+
+    within(find("section[aria-labelledby=coupons-title]")) do
+      expect(page).to have_content("Cupón con usos")
+      expect(page).to have_no_content("Cupón agotado")
+    end
+  end
+
+  it "oculta la sección de cupones por completo cuando todos están agotados" do
+    exhausted = consumer.benefits.create!(
+      benefit_configuration: benefit_configurations(:gift),
+      description: "Cupón único agotado",
+      percentage: 30,
+      amount: 1,
+      starts_on: Date.current,
+      due_date: Date.current + 5.days,
+      status: :current
+    )
+
+    OrderBenefit.create!(
+      order: orders(:upcoming_pending_future),
+      benefit: exhausted,
+      benefit_used: 1
+    )
+
+    sign_in employee
+    visit profile_path
+
+    expect(page).to have_no_selector("section[aria-labelledby=coupons-title]")
+    expect(page).to have_no_content("Mis cupones")
   end
 
   it "muestra las secciones de configuración en la cuenta del empleado y permite ingresar a cuenta" do
