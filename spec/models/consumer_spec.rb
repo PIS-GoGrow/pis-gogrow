@@ -8,64 +8,6 @@ RSpec.describe Consumer, type: :model do
   let(:consumer) { consumers(:one) }
   let(:company_address) { companies(:gogrow).address }
 
-  describe "base subsidy assignment on creation" do
-    it "assigns the current base subsidy to a new employee" do
-      company = companies(:gogrow)
-      configuration = BenefitConfiguration.base_subsidy_for(company)
-
-      user = User.create!(
-        email: "new-employee-#{SecureRandom.hex(4)}@gmail.com",
-        name: "Nuevo empleado",
-        password: "password123456"
-      )
-
-      new_consumer = Consumer.create!(
-        user:,
-        company:,
-        address: "Dirección de prueba",
-        birthday: Date.new(2000, 1, 1),
-        onboarding_date: Date.current
-      )
-
-      expect(new_consumer.benefit_configurations).to include(configuration)
-
-      expect(new_consumer.benefits.current.monthly.sole).to have_attributes(
-        benefit_configuration: configuration,
-        percentage: configuration.subsidy_percentage
-      )
-    end
-
-    it "associates a new employee with a pending base subsidy" do
-      company = companies(:gogrow)
-
-      pending = BenefitConfiguration.new_base_subsidy(
-        company:,
-        created_by: users(:admin),
-        subsidy_percentage: 60,
-        effective_from: Date.current.next_month.beginning_of_month,
-        max_price: 200,
-        limit: 25
-      )
-      pending.save!
-
-      user = User.create!(
-        email: "future-subsidy-#{SecureRandom.hex(4)}@gmail.com",
-        name: "Empleado futuro",
-        password: "password123456"
-      )
-
-      new_consumer = Consumer.create!(
-        user:,
-        company:,
-        address: "Dirección de prueba",
-        birthday: Date.new(2000, 1, 1),
-        onboarding_date: Date.current
-      )
-
-      expect(new_consumer.benefit_configurations).to include(pending)
-    end
-  end
-
   describe "#delivery_for" do
     it "derives office when the company address is chosen" do
       expect(consumer.delivery_for(providers(:tuviandita), company_address))

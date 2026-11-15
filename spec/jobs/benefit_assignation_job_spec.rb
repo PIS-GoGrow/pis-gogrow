@@ -33,6 +33,40 @@ RSpec.describe BenefitAssignationJob, type: :job do
       expect { described_class.perform_now }.not_to raise_error
     end
 
+    context "con un subsidio base para toda la empresa" do
+      it "asigna el subsidio a un empleado creado después de la configuración" do
+        configuration = benefit_configurations(:monthly)
+        configuration.update!(applies_to_all: true)
+
+        company = configuration.company
+
+        user = User.create!(
+          email: "employee-after-subsidy@example.com",
+          name: "Empleado posterior",
+          password: "password123456"
+        )
+
+        consumer = Consumer.create!(
+          user:,
+          company:,
+          address: "Dirección de prueba",
+          birthday: Date.new(2000, 1, 1),
+          onboarding_date: Date.current
+        )
+
+        expect(consumer.consumer_benefit_configurations).to be_empty
+        expect(consumer.benefits).to be_empty
+
+        described_class.perform_now
+
+        expect(
+          consumer.benefits.where(benefit_configuration: configuration).sole
+        ).to have_attributes(
+          percentage: configuration.subsidy_percentage
+        )
+      end
+    end
+
     context "con un subsidio especial" do
       include ActiveSupport::Testing::TimeHelpers
 

@@ -73,7 +73,8 @@ class BenefitConfiguration < ApplicationRecord
     benefit_configuration = company.benefit_configurations.new(
       created_by:,
       name: "Subsidio base",
-      subsidy_percentage:
+      subsidy_percentage:,
+      applies_to_all: true
     )
     benefit_configuration.new_monthly_benefit(
       effective_from:,
