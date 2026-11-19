@@ -206,6 +206,7 @@ es:
     email_verified: "Gracias por verificar tu correo electrónico"
     google_auth_failed: "No pudimos verificar tu cuenta de Google. Intentá nuevamente."
     google_domain_not_allowed: "Esta cuenta de Google no tiene permitido iniciar sesión aquí."
+    google_uid_mismatch: "El correo y la cuenta de Google guardados no coinciden. Hablá con el administrador."
     incorrect_credentials: "El correo electrónico o la contraseña son incorrectos"
     password_changed: "Tu contraseña fue modificada"
     password_reset_expired: "Tu solicitud venció. Solicitá un código nuevo para continuar."
