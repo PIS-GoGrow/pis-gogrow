@@ -54,7 +54,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
     it "signs in a provider user and creates a provider session" do
       provider_user = User.create!(name: "Panadería Provider", email: "panaderia@gmail.com", password: "password123456")
       Provider.create!(user: provider_user)
-      provider_user.sync_roles!
 
       auth = mock_google_auth(email: provider_user.email, name: provider_user.name)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -69,7 +68,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
       admin_user = User.create!(name: "RRHH Admin", email: "rrhh-login@gogrow.com", password: "password123456")
       Admin.create!(user: admin_user, company:)
-      admin_user.sync_roles!
 
       auth = mock_google_auth(email: admin_user.email, name: admin_user.name)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -84,7 +82,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       user = users(:one)
       user.update!(email: "multirole@gmail.com")
       Provider.create!(user: user)
-      user.sync_roles!
 
       auth = mock_google_auth(email: user.email)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -101,7 +98,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
         users(:one).tap do |u|
           u.update!(email: "empleado-rrhh@gmail.com")
           Admin.create!(user: u, company:)
-          u.sync_roles!
         end
       end
 
@@ -125,7 +121,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
 
       it "rejects a user without the role of the entry screen" do
         user.admin.destroy!
-        user.sync_roles!
 
         post "/auth/google_oauth2", params: { origin: "/rrhh" }
         get "/auth/google_oauth2/callback"
@@ -163,7 +158,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
           verified: true
         )
         Consumer.create!(user: user, company: company, address: "Julio Herrera y Reissig 565")
-        user.sync_roles!
 
         auth = mock_google_auth(email: "someone@gogrow.com")
         OmniAuth.config.mock_auth[:google_oauth2] = auth

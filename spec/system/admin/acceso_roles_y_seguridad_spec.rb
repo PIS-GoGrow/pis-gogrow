@@ -107,7 +107,6 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
     before do
       Consumer.create!(user: dual_user, company: companies(:gogrow), address: "Av. 18 de Julio 1234")
       Admin.create!(user: dual_user, company: companies(:gogrow))
-      dual_user.sync_roles!
     end
 
     it "mantiene navegación, permisos e independencia de sesión por rol" do

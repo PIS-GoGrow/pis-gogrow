@@ -32,7 +32,6 @@ RSpec.describe "Acceso y login según rol de pantalla de entrada", type: :system
   describe "Inicio de sesión con cuenta de doble rol (Empleado y RRHH)" do
     before do
       Admin.create!(user: users(:one), company: companies(:gogrow))
-      users(:one).sync_roles!
     end
 
     it "ingresa directamente al panel de consumidor cuando inicia desde /consumidor" do
