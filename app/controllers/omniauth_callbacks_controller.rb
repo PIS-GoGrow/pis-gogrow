@@ -6,7 +6,7 @@ class OmniauthCallbacksController < InertiaController
   # Rails only requires the CSRF token on unsafe requests (POST/PUT/DELETE).
   # This callback arrives as a GET from Google, so it doesn't apply here.
   def google_oauth2
-    user = User.find_from_google(request.env["omniauth.auth"])
+    user = User.find_and_update_from_google(request.env["omniauth.auth"])
 
     # Asegurarse de que los roles del usuario están bien calculados
     user&.sync_roles!
