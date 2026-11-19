@@ -7,8 +7,6 @@ class SessionsController < InertiaController
 
   def create
     if (user = User.authenticate_by(email: params[:email], password: params[:password]))
-      user.sync_roles!
-
       if user.roles.empty?
         redirect_to entry_path, alert: t("flash.role_not_available"), inertia: {
           errors: { auth: t("flash.role_not_available") }

@@ -8,9 +8,6 @@ class OmniauthCallbacksController < InertiaController
   def google_oauth2
     user = User.find_and_update_from_google(request.env["omniauth.auth"])
 
-    # Asegurarse de que los roles del usuario están bien calculados
-    user&.sync_roles!
-
     if !user || user.roles.empty?
       # No permitir loguearse si el usuario no existe aún, o si no tiene roles disponibles
       redirect_to entry_path, alert: t("flash.user_not_found"), inertia: {

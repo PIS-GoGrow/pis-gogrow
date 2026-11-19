@@ -50,6 +50,7 @@ class User < ApplicationRecord
 
   before_validation if: :email_changed?, on: :update do
     self.verified = false
+    self.google_uid = nil
   end
 
   after_update if: :password_digest_previously_changed? do
@@ -103,15 +104,12 @@ class User < ApplicationRecord
     admin.present?
   end
 
-  # Actualiza la columna roles para reflejar los datos reales de la base de
-  # datos. Se corre automáticamente cuando un Provider/Consumer/Admin se
-  # modifica
-  def sync_roles!
-    update_column(:roles, [
+  def roles
+    [
       ("provider" if Provider.exists?(user_id: id)),
       ("consumer" if Consumer.exists?(user_id: id)),
       ("admin" if Admin.exists?(user_id: id))
-    ].compact)
+    ].compact
   end
 
   private
