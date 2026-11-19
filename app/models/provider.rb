@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Provider < ApplicationRecord
-  include SyncsUserRoles
   include Auditable
 
   BANK_NAMES = [

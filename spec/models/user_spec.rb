@@ -74,7 +74,6 @@ end
 #  name            :string           not null
 #  password_digest :string           not null
 #  phone           :string
-#  roles           :string           default([]), not null, is an Array
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
