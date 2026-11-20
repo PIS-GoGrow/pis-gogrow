@@ -113,6 +113,50 @@ describe("Admin::OrderEvents Index Page", () => {
     expect(screen.getByText("Sistema")).toBeInTheDocument()
   })
 
+  it("shows the counterpart and delivery date when made by system", () => {
+    render(
+      <Index
+        events={[
+          {
+            ...event,
+            actor_name: undefined,
+            role: null,
+            counterpart_name: "Tu Viandita",
+            counterpart_role: "provider",
+            delivery_date: "25/10/2026",
+          },
+        ]}
+        total={1}
+        filters={{}}
+      />,
+    )
+
+    const row = screen.getByRole("row", { name: /PED-42/ })
+    expect(within(row).getByText("Sistema")).toBeInTheDocument()
+    expect(within(row).getByText("Tu Viandita")).toBeInTheDocument()
+    expect(within(row).getByText("Proveedor")).toBeInTheDocument()
+    expect(within(row).getByText("25/10/2026")).toBeInTheDocument()
+  })
+
+  it("renders placeholders when delivery date or counterpart name is missing", () => {
+    render(
+      <Index
+        events={[
+          {
+            ...event,
+            delivery_date: undefined,
+            counterpart_name: undefined,
+          },
+        ]}
+        total={1}
+        filters={{}}
+      />,
+    )
+
+    const row = screen.getByRole("row", { name: /PED-42/ })
+    expect(within(row).getAllByText("—").length).toBeGreaterThanOrEqual(2)
+  })
+
   it("offers no action to edit or delete an event", () => {
     render(<Index events={[event]} total={1} filters={{}} />)
 

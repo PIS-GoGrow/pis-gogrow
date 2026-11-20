@@ -76,6 +76,23 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     expect(confirmation[6..]).to eq([ "Confirmación", "Estado", "Pendiente", "Confirmado" ])
   end
 
+  it "muestra a RR. HH. los eventos del sistema con el proveedor como otra parte y la fecha de entrega" do
+    modified.update!(price: 450)
+
+    sign_in users(:admin), role: :admin
+    visit_hydrated admin_order_events_path
+
+    expect(page).to have_content("Auditoría de pedidos")
+    row = find("tbody tr", text: "Cambio económico").all("td").map(&:text)
+    _occurred_at, code, delivery_date, actor, role, counterpart, action = row
+    expect(code).to include("PED-#{modified.id}")
+    expect(delivery_date).to eq(I18n.l(modified.delivery_date, format: "%d/%m/%Y"))
+    expect(actor).to eq("Sistema")
+    expect(role).to eq("—")
+    expect(counterpart).to include(modified.provider_name, "Proveedor")
+    expect(action).to eq("Cambio económico")
+  end
+
   # CA4: cada filtro deja solo lo que coincide con él, desde la pantalla.
   it "filtra por acción, rol, actor y pedido desde la pantalla" do
     as(:one, :consumer) { modified.update!(notes: "Sin sal") }

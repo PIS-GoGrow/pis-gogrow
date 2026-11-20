@@ -73,6 +73,10 @@ RSpec.describe "Admin::OrderEvents", type: :request do
         expect(price_change).to include(
           action: "price_changed",
           actor_name: nil,
+          role: nil,
+          counterpart_name: order.provider_name,
+          counterpart_role: "provider",
+          delivery_date: I18n.l(order.delivery_date, format: "%d/%m/%Y"),
           changes: [ { field: "discounted_price", before: Account.format_amount(order.discounted_price_before_last_save), after: "$99,50" } ]
         )
       end
@@ -98,6 +102,46 @@ RSpec.describe "Admin::OrderEvents", type: :request do
         get admin_order_events_path
 
         expect(inertia.props[:events].pluck(:order_id)).to eq([ orders(:upcoming_pending_future).id ])
+
+        get admin_order_events_path, params: { order_id: "PED-0" }
+        expect(inertia.props[:events]).to be_empty
+      end
+
+      it "records events triggered by admin attributing the provider as counterpart" do
+        order = orders(:upcoming_pending_future)
+        Current.session = users(:admin).sessions.create!(role: :admin)
+        order.update!(notes: "Alergia a mariscos")
+        Current.reset
+        sign_in users(:admin), role: :admin
+
+        get admin_order_events_path
+
+        event = inertia.props[:events].sole
+        expect(event).to include(
+          order_id: order.id,
+          role: "admin",
+          counterpart_name: order.provider_name,
+          counterpart_role: "provider",
+          delivery_date: I18n.l(order.delivery_date, format: "%d/%m/%Y")
+        )
+      end
+
+      it "handles unexpected or malformed filter parameters safely" do
+        sign_in users(:admin), role: :admin
+
+        get admin_order_events_path, params: {
+          order_id: "PED-INVALID-###",
+          event_action: "invalid_action",
+          role: "unauthorized_role",
+          from: "99/99/9999",
+          to: "not-a-date",
+          actor: "'; DROP TABLE order_events; --"
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to render_component("admin/order_events/index")
+        expect(inertia.props[:total]).to eq(0)
+        expect(inertia.props[:events]).to be_empty
       end
 
       it "filters by order, action, role, actor and date" do
