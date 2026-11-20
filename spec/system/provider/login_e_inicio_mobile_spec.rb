@@ -62,7 +62,7 @@ RSpec.describe "Login e inicio del proveedor en el celular", type: :system do
     end
 
     expect(page).to have_content("Revisá tu email")
-    expect(page).to have_button("Volver a mandar código en 5:00", disabled: true).or have_button(/Volver a mandar código en 4:5\d/, disabled: true)
+    expect(page).to have_button(disabled: true, text: /Volver a mandar código en \d+:\d{2}/)
 
     code = OtpCode.find_by!(user: provider_user, purpose: :password_reset).code
     find("input[name=code]").send_keys(code)

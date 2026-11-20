@@ -31,7 +31,8 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
     sign_in admin_user, role: :admin
     visit admin_dashboard_path
 
-    within("[data-sidebar='sidebar']") { click_on "Facturas" }
+    within("[data-sidebar='sidebar']") { click_on "Cuenta" }
+    click_link "Facturas"
 
     expect(page).to have_current_path(admin_invoices_path)
     expect(page).to have_content("Todavía no hay facturas")

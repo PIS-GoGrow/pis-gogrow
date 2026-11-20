@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Provider < ApplicationRecord
-  include SyncsUserRoles
   include Auditable
 
   BANK_NAMES = [
@@ -27,6 +26,9 @@ class Provider < ApplicationRecord
 
   attribute :bank_account_type, :integer
   enum :bank_account_type, { savings: 0, checking: 1 }, prefix: :bank_account, validate: { allow_nil: true }
+
+  belongs_to :user
+
   has_many :menus, dependent: :destroy
   has_many :schedules, through: :menus
   has_many :orders, dependent: :nullify

@@ -53,8 +53,8 @@ RSpec.describe "Auditoría de pedidos", type: :system do
 
     sign_out
     sign_in users(:admin), role: :admin
-    visit_hydrated root_path
-    click_link "Auditoría", match: :first
+    visit_hydrated admin_account_path
+    click_link "Auditoría"
 
     expect(page).to have_content("Auditoría de pedidos")
     occurred_at, code, delivery_date, actor, role, counterpart, action = row_for("Modificación")

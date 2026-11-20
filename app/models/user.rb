@@ -9,6 +9,7 @@
 # un proveedor.
 class User < ApplicationRecord
   class DomainNotAllowed < StandardError; end
+  class GoogleUidMismatch < StandardError; end
 
   include Auditable
 
@@ -49,6 +50,7 @@ class User < ApplicationRecord
 
   before_validation if: :email_changed?, on: :update do
     self.verified = false
+    self.google_uid = nil
   end
 
   after_update if: :password_digest_previously_changed? do
@@ -59,11 +61,23 @@ class User < ApplicationRecord
     ENV.fetch("GOOGLE_ALLOWED_DOMAINS", "gmail.com,gogrow.com").split(",").filter_map { it.strip.downcase.presence }
   end
 
-  def self.find_from_google(auth)
+  def self.find_and_update_from_google(auth)
     email = auth.info.email.to_s.downcase
     raise DomainNotAllowed unless google_allowed_domains.include?(email.split("@").last)
 
-    find_by email: email
+    # Primero buscamos por el UID, y si no existe por el mail
+    user = find_by(google_uid: auth.uid) || find_by(email: email) || return
+
+    # Lanzamos una excepción si se tuvo que buscar por mail y el GoogleUID no coincidió.
+    # Esto significaría que la cuenta base cambió, aunque el mail se mantuvo.
+    raise GoogleUidMismatch if user.google_uid.present? && user.google_uid != auth.uid
+
+    # Actualizamos los datos del usuario si no están cargados.
+    user.google_uid ||= auth.uid
+    user.avatar_url ||= auth.info.image
+    user.save! if user.changed?
+
+    user
   end
 
   # Devuelve si el usuario es un proveedor
@@ -90,15 +104,12 @@ class User < ApplicationRecord
     admin.present?
   end
 
-  # Actualiza la columna roles para reflejar los datos reales de la base de
-  # datos. Se corre automáticamente cuando un Provider/Consumer/Admin se
-  # modifica
-  def sync_roles!
-    update_column(:roles, [
+  def roles
+    [
       ("provider" if Provider.exists?(user_id: id)),
       ("consumer" if Consumer.exists?(user_id: id)),
       ("admin" if Admin.exists?(user_id: id))
-    ].compact)
+    ].compact
   end
 
   private
@@ -122,7 +133,6 @@ end
 #  name            :string           not null
 #  password_digest :string           not null
 #  phone           :string
-#  roles           :string           default([]), not null, is an Array
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null

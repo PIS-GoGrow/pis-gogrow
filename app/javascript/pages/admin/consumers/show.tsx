@@ -9,7 +9,7 @@ import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import BenefitSummaryCard from "@/components/benefit-summary-card"
 import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PageContainer from "@/components/page-container"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -81,6 +81,10 @@ export default function Show({
             <CardContent className="grid gap-4 px-4">
               <div className="flex items-center gap-3">
                 <Avatar size="lg">
+                  <AvatarImage
+                    src={consumer.avatar_url ?? undefined}
+                    alt={consumer.name}
+                  />
                   <AvatarFallback className="text-foreground text-xs font-semibold">
                     {getInitials(consumer.name)}
                   </AvatarFallback>
