@@ -1027,4 +1027,50 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(inertia.props[:benefit][:specials]).to eq([])
     end
   end
+
+  describe "GET /menu-semanal/platos/:schedule_id — detalle del plato" do
+    fixtures :users, :consumers, :companies, :providers, :menus, :schedules,
+             :benefit_configurations, :benefits
+
+    let(:consumer_user) { users(:one) }
+    let(:schedule) { schedules(:sorrentinos_today) }
+
+    it "redirige a iniciar sesión a usuarios anónimos" do
+      get dashboard_dish_path(schedule)
+      expect(response).to redirect_to(consumer_welcome_path)
+    end
+
+    it "redirige a la raíz a usuarios con rol proveedor" do
+      sign_in users(:provider_user), role: :provider
+      get dashboard_dish_path(schedule)
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirige a la raíz a usuarios con rol admin" do
+      sign_in users(:admin), role: :admin
+      get dashboard_dish_path(schedule)
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "devuelve 404 para un schedule inexistente" do
+      sign_in consumer_user, role: :consumer
+      get "/menu-semanal/platos/999999"
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "renderiza el componente con las props del plato y beneficios" do
+      sign_in consumer_user, role: :consumer
+      get dashboard_dish_path(schedule)
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("consumer/dashboard/index")
+      expect(inertia).to have_props { |props|
+        schedule_prop = props[:schedules].find { |s| s[:id] == schedule.id }
+        schedule_prop.present? &&
+          schedule_prop.dig(:menu, :name) == schedule.menu.name &&
+          props[:benefit].key?(:percentage) &&
+          props[:benefit].key?(:specials)
+      }
+    end
+  end
 end
