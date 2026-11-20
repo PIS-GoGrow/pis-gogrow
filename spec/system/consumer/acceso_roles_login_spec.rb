@@ -89,4 +89,56 @@ RSpec.describe "Acceso y login según rol de pantalla de entrada", type: :system
       expect(page).to have_content(I18n.t("flash.incorrect_credentials"))
     end
   end
+
+  describe "Inicio de sesión con Google OAuth y manejo de UID" do
+    let(:user) { users(:one) }
+
+    before do
+      user.update!(email: "e2e-consumer@gmail.com", google_uid: nil, avatar_url: nil)
+    end
+
+    after do
+      OmniAuth.config.mock_auth[:google_oauth2] = nil
+    end
+
+    it "asigna google_uid y avatar_url en el primer login y accede al panel" do
+      OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+        provider: "google_oauth2",
+        uid: "google-uid-sys-123",
+        info: OmniAuth::AuthHash::InfoHash.new(
+          email: user.email,
+          name: user.name,
+          image: "https://example.com/avatar-sys.png"
+        )
+      )
+
+      visit_hydrated consumer_welcome_path
+      click_button "Iniciar sesión con Google"
+
+      expect(page).to have_current_path(dashboard_path)
+      user.reload
+      expect(user.google_uid).to eq("google-uid-sys-123")
+      expect(user.avatar_url).to eq("https://example.com/avatar-sys.png")
+    end
+
+    it "muestra alerta de error cuando el google_uid no coincide con el de la cuenta" do
+      user.update!(google_uid: "uid-original-guardado")
+
+      OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+        provider: "google_oauth2",
+        uid: "uid-discrepante-456",
+        info: OmniAuth::AuthHash::InfoHash.new(
+          email: user.email,
+          name: user.name,
+          image: "https://example.com/avatar-sys.png"
+        )
+      )
+
+      visit_hydrated consumer_welcome_path
+      click_button "Iniciar sesión con Google"
+
+      expect(page).to have_current_path(consumer_welcome_path)
+      expect(page).to have_content(I18n.t("flash.google_uid_mismatch"))
+    end
+  end
 end

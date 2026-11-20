@@ -3,6 +3,7 @@
 require "rails_helper"
 
 RSpec.describe User, type: :model do
+  fixtures :users, :consumers, :admins, :providers, :companies
   describe "provider password policy" do
     let(:user) { users(:provider_user) }
 
@@ -59,6 +60,157 @@ RSpec.describe User, type: :model do
 
         expect(user.errors[:phone]).to be_present
       end
+    end
+  end
+
+  describe ".find_and_update_from_google" do
+    def build_auth(email:, uid: "google-uid-123", image: "https://example.com/avatar.png")
+      OmniAuth::AuthHash.new(
+        provider: "google_oauth2",
+        uid: uid,
+        info: OmniAuth::AuthHash::InfoHash.new(
+          email: email,
+          name: "Test User",
+          image: image
+        )
+      )
+    end
+
+    let(:user) { users(:one) }
+
+    before do
+      user.update!(email: "test-oauth@gmail.com", google_uid: nil, avatar_url: nil)
+    end
+
+    it "asigna google_uid y avatar_url en el primer login cuando no existen" do
+      auth = build_auth(email: user.email, uid: "new-uid-100", image: "https://lh3.googleusercontent.com/avatar.jpg")
+
+      result = User.find_and_update_from_google(auth)
+
+      expect(result).to eq(user)
+      expect(user.reload.google_uid).to eq("new-uid-100")
+      expect(user.avatar_url).to eq("https://lh3.googleusercontent.com/avatar.jpg")
+    end
+
+    it "no sobreescribe el avatar_url si el usuario ya tiene uno cargado previamente" do
+      user.update!(avatar_url: "https://custom.cdn.com/manual-avatar.png")
+      auth = build_auth(email: user.email, uid: "new-uid-100", image: "https://lh3.googleusercontent.com/avatar.jpg")
+
+      result = User.find_and_update_from_google(auth)
+
+      expect(result).to eq(user)
+      expect(user.reload.avatar_url).to eq("https://custom.cdn.com/manual-avatar.png")
+      expect(user.google_uid).to eq("new-uid-100")
+    end
+
+    it "encuentra directamente al usuario por google_uid en logins posteriores" do
+      user.update!(google_uid: "existing-google-uid-555")
+      auth = build_auth(email: user.email, uid: "existing-google-uid-555")
+
+      result = User.find_and_update_from_google(auth)
+
+      expect(result).to eq(user)
+    end
+
+    it "lanza GoogleUidMismatch si el usuario existe por email pero tiene un google_uid diferente" do
+      user.update!(google_uid: "original-registered-uid")
+      auth = build_auth(email: user.email, uid: "hacked-or-changed-uid")
+
+      expect {
+        User.find_and_update_from_google(auth)
+      }.to raise_error(User::GoogleUidMismatch)
+    end
+
+    it "lanza DomainNotAllowed si el dominio de correo no pertenece a los permitidos" do
+      auth = build_auth(email: "malicious@unauthorized-domain.com")
+
+      expect {
+        User.find_and_update_from_google(auth)
+      }.to raise_error(User::DomainNotAllowed)
+    end
+
+    it "retorna nil si el usuario no existe ni por uid ni por email en la base de datos" do
+      auth = build_auth(email: "nonexistent-user@gmail.com", uid: "unknown-uid")
+
+      expect(User.find_and_update_from_google(auth)).to be_nil
+    end
+
+    it "normaliza correos con espacios y mayúsculas al buscar" do
+      auth = build_auth(email: " TEST-OAUTH@GMAIL.COM ", uid: "uid-normalized")
+
+      result = User.find_and_update_from_google(auth)
+
+      expect(result).to eq(user)
+      expect(user.reload.google_uid).to eq("uid-normalized")
+    end
+
+    it "soporta imágenes nulas sin fallar la persistencia" do
+      auth = build_auth(email: user.email, uid: "uid-no-avatar", image: nil)
+
+      result = User.find_and_update_from_google(auth)
+
+      expect(result).to eq(user)
+      expect(user.reload.avatar_url).to be_nil
+      expect(user.google_uid).to eq("uid-no-avatar")
+    end
+  end
+
+  describe "reseteo de google_uid al cambiar email" do
+    let(:user) { users(:one) }
+
+    before do
+      user.update!(google_uid: "saved-uid-123", verified: true)
+    end
+
+    it "resetea google_uid a nil y verified a false cuando se modifica el email" do
+      expect {
+        user.update!(email: "newemail@gmail.com")
+      }.to change(user, :google_uid).from("saved-uid-123").to(nil)
+        .and change(user, :verified).from(true).to(false)
+    end
+
+    it "mantiene google_uid y verified si solo se actualizan otros atributos" do
+      expect {
+        user.update!(name: "Nombre Actualizado", phone: "+59899123456")
+      }.not_to change(user, :google_uid)
+      expect(user.reload.verified).to be(true)
+    end
+  end
+
+  describe "validación de unicidad de google_uid" do
+    it "no permite que dos usuarios tengan el mismo google_uid" do
+      users(:one).update!(google_uid: "shared-uid-999")
+      duplicate = User.new(
+        name: "Clon",
+        email: "clon@gmail.com",
+        password: "Secret1*3*5*123",
+        google_uid: "shared-uid-999"
+      )
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:google_uid]).to be_present
+    end
+
+    it "permite múltiples usuarios con google_uid nil" do
+      users(:one).update!(google_uid: nil)
+      users(:two).update!(google_uid: nil)
+
+      expect(users(:one)).to be_valid
+      expect(users(:two)).to be_valid
+    end
+  end
+
+  describe "#roles" do
+    it "calcula dinámicamente los roles según la existencia en cada modelo" do
+      user = users(:two)
+      expect(user.roles).to eq([])
+
+      expect(users(:one).roles).to eq([ "consumer" ])
+      expect(users(:admin).roles).to eq([ "admin" ])
+      expect(users(:provider_user).roles).to eq([ "provider" ])
+
+      Admin.create!(user: users(:one), company: companies(:gogrow))
+      expect(users(:one).roles).to match_array([ "consumer", "admin" ])
     end
   end
 end
