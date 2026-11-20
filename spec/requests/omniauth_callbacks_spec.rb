@@ -51,10 +51,81 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       expect(cookies[:session_token]).to be_present
     end
 
+    it "persists google_uid and avatar_url on first login when missing" do
+      user = users(:one)
+      user.update!(email: "firstlogin@gmail.com", google_uid: nil, avatar_url: nil)
+
+      auth = mock_google_auth(email: user.email, uid: "google-uid-12345")
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(root_path)
+      user.reload
+      expect(user.google_uid).to eq("google-uid-12345")
+      expect(user.avatar_url).to eq("https://example.com/avatar.png")
+    end
+
+    it "does not overwrite an existing avatar_url on subsequent logins" do
+      user = users(:one)
+      user.update!(email: "avataruser@gmail.com", google_uid: "uid-existing", avatar_url: "https://custom.com/avatar.png")
+
+      auth = mock_google_auth(email: user.email, uid: "uid-existing")
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(root_path)
+      expect(user.reload.avatar_url).to eq("https://custom.com/avatar.png")
+    end
+
+    it "signs in successfully by matching google_uid" do
+      user = users(:one)
+      user.update!(email: "byuid@gmail.com", google_uid: "persistent-uid-999")
+
+      auth = mock_google_auth(email: user.email, uid: "persistent-uid-999")
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(root_path)
+      expect(user.sessions.last).to be_consumer
+    end
+
+    it "redirects with google_uid_mismatch error when google uid does not match registered account" do
+      user = users(:one)
+      user.update!(email: "mismatch@gmail.com")
+      user.update!(google_uid: "original-google-uid")
+
+      auth = mock_google_auth(email: user.email, uid: "different-google-uid")
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(consumer_welcome_path)
+      expect(session[:inertia_errors]).to eq(auth: I18n.t("flash.google_uid_mismatch"))
+    end
+
+    it "redirects to /rrhh with mismatch error when origin is /rrhh" do
+      company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+      user = users(:one)
+      user.update!(email: "adminmismatch@gmail.com")
+      user.update!(google_uid: "original-admin-uid")
+      Admin.find_or_create_by!(user: user, company: company)
+
+      auth = mock_google_auth(email: user.email, uid: "tampered-admin-uid")
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      post "/auth/google_oauth2", params: { origin: "/rrhh" }
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to("/rrhh")
+      expect(session[:inertia_errors]).to eq(auth: I18n.t("flash.google_uid_mismatch"))
+    end
+
     it "signs in a provider user and creates a provider session" do
       provider_user = User.create!(name: "Panadería Provider", email: "panaderia@gmail.com", password: "password123456")
       Provider.create!(user: provider_user)
-      provider_user.sync_roles!
 
       auth = mock_google_auth(email: provider_user.email, name: provider_user.name)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -69,7 +140,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
       admin_user = User.create!(name: "RRHH Admin", email: "rrhh-login@gogrow.com", password: "password123456")
       Admin.create!(user: admin_user, company:)
-      admin_user.sync_roles!
 
       auth = mock_google_auth(email: admin_user.email, name: admin_user.name)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -84,7 +154,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       user = users(:one)
       user.update!(email: "multirole@gmail.com")
       Provider.create!(user: user)
-      user.sync_roles!
 
       auth = mock_google_auth(email: user.email)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -101,7 +170,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
         users(:one).tap do |u|
           u.update!(email: "empleado-rrhh@gmail.com")
           Admin.create!(user: u, company:)
-          u.sync_roles!
         end
       end
 
@@ -125,7 +193,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
 
       it "rejects a user without the role of the entry screen" do
         user.admin.destroy!
-        user.sync_roles!
 
         post "/auth/google_oauth2", params: { origin: "/rrhh" }
         get "/auth/google_oauth2/callback"
@@ -163,7 +230,6 @@ RSpec.describe "OmniauthCallbacks", type: :request do
           verified: true
         )
         Consumer.create!(user: user, company: company, address: "Julio Herrera y Reissig 565")
-        user.sync_roles!
 
         auth = mock_google_auth(email: "someone@gogrow.com")
         OmniAuth.config.mock_auth[:google_oauth2] = auth

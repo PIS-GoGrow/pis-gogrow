@@ -122,3 +122,46 @@ RSpec.describe BenefitUsageMonthlySnapshot do
     expect(described_class.find_by(company:, month:)).to be_nil
   end
 end
+
+# == Schema Information
+#
+# Table name: benefit_usage_monthly_snapshots
+#
+#  id                                      :bigint           not null, primary key
+#  calculation_version                     :integer          default(1), not null
+#  captured_at                             :datetime         not null
+#  closed_at                               :datetime
+#  company_subsidy_amount                  :decimal(14, 2)
+#  confirmed_meals                         :integer
+#  confirmed_meals_without_monthly_subsidy :integer
+#  confirmed_orders                        :integer
+#  eligible_employees                      :integer
+#  eligible_with_confirmed_orders          :integer
+#  eligible_without_orders                 :integer
+#  employees                               :integer
+#  employees_with_confirmed_orders         :integer
+#  fictional                               :boolean          default(FALSE), not null
+#  month                                   :date             not null
+#  monthly_available_meals                 :integer
+#  monthly_pending_reserved_meals          :integer
+#  monthly_quota_meals                     :integer
+#  monthly_subsidized_meals                :integer
+#  monthly_unused_closed_meals             :integer
+#  pending_meals                           :integer
+#  pending_orders                          :integer
+#  status                                  :integer          default(0), not null
+#  unavailable_reasons                     :jsonb            not null
+#  unknown_eligibility_employees           :integer
+#  created_at                              :datetime         not null
+#  updated_at                              :datetime         not null
+#  company_id                              :bigint           not null
+#
+# Indexes
+#
+#  index_benefit_usage_monthly_snapshots_on_company_id            (company_id)
+#  index_benefit_usage_monthly_snapshots_on_company_id_and_month  (company_id,month) UNIQUE
+#
+# Foreign Keys
+#
+#  fk_rails_...  (company_id => companies.id)
+#
