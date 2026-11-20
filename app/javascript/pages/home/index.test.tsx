@@ -69,4 +69,24 @@ describe("Home Page Component", () => {
 
     expect(screen.getByTestId("dev-login-form")).toBeInTheDocument()
   })
+
+  it("renders auth error alert when errors.auth prop is provided", () => {
+    render(
+      <Home
+        variant="consumer"
+        dev_login_enabled={false}
+        errors={{
+          auth: "El identificador de Google no coincide con el de la cuenta.",
+        }}
+      />,
+    )
+
+    const alert = screen.getByRole("alert")
+    expect(alert).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "El identificador de Google no coincide con el de la cuenta.",
+      ),
+    ).toBeInTheDocument()
+  })
 })

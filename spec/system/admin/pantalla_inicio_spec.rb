@@ -121,7 +121,9 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
 
     within(sidebar) do
       expect(page).to have_css("[data-active='true']", text: "Inicio")
-      expect(page).to have_link("Subsidios")
+      expect(page).to have_no_link("Subsidios")
+      expect(page).to have_no_link("Facturas")
+      expect(page).to have_no_link("Auditoría")
       expect(page).to have_link("Empleados")
       expect(page).to have_link("Cuenta", href: admin_account_path)
       expect(page).to have_link("Pagos", href: admin_payments_path)
@@ -132,8 +134,8 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     sign_in admin_user, role: :admin
     visit admin_dashboard_path
 
-    within(sidebar) { click_on "Subsidios" }
-    expect(page).to have_current_path(admin_benefit_configurations_path)
+    within(sidebar) { click_on "Empleados" }
+    expect(page).to have_current_path(admin_consumers_path)
 
     within(sidebar) { click_on "Inicio" }
     expect(page).to have_current_path(admin_dashboard_path)

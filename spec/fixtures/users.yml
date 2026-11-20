@@ -3,21 +3,18 @@ one:
   email: one@example.com
   name: Test User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
-  roles: "{consumer}"
   verified: true
 
 two:
   email: two@example.com
   name: Another User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
-  roles: "{}"
   verified: true
 
 admin:
   email: admin@example.com
   name: Admin User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
-  roles: "{admin}"
   verified: true
 
 consumer_user:
@@ -60,7 +57,6 @@ office_provider_user:
 #  name            :string           not null
 #  password_digest :string           not null
 #  phone           :string
-#  roles           :string           default([]), not null, is an Array
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null

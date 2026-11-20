@@ -6,11 +6,8 @@ import {
   ChartPie,
   ClipboardList,
   CreditCard,
-  FileText,
-  History,
   LayoutGrid,
   Package,
-  Percent,
   UserRound,
   Wallet,
 } from "lucide-react"
@@ -30,10 +27,7 @@ import {
 } from "@/components/ui/sidebar"
 import {
   adminAccounts,
-  adminBenefitConfigurations,
   adminBenefitUsage,
-  adminInvoices,
-  adminOrderEvents,
   adminReports,
   consumerAccounts,
   consumerDashboard,
@@ -97,21 +91,6 @@ export function AppSidebar() {
       ...adminPrimaryNavItems
         .slice(1)
         .filter((item) => item.href !== adminAccounts.show().url),
-      {
-        title: t("nav.benefit_configurations"),
-        href: adminBenefitConfigurations.index().url,
-        icon: Percent,
-      },
-      {
-        title: t("nav.invoices"),
-        href: adminInvoices.index().url,
-        icon: FileText,
-      },
-      {
-        title: t("nav.order_events"),
-        href: adminOrderEvents.index().url,
-        icon: History,
-      },
       {
         title: t("nav.admin.account"),
         href: adminAccounts.show().url,

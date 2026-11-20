@@ -46,7 +46,6 @@ RSpec.describe "Sessions", type: :request do
     context "with a consumer and HR account" do
       before do
         Admin.create!(user: users(:one), company: Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006"))
-        users(:one).sync_roles!
       end
 
       it "opens the session with the role of the screen it came from" do
