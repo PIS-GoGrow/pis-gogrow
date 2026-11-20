@@ -1,6 +1,6 @@
 import { ChevronLeft, Star, TicketPercent } from "lucide-react"
-import type { ReactNode } from "react"
-import { useEffect, useMemo, useState } from "react"
+import type { CSSProperties, ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import AddedBadge from "@/components/consumer/menus/added-badge"
@@ -71,6 +71,25 @@ export function DishDetail({
   const { t } = useTranslation()
   const [pricing, setPricing] = useState<Pricing | null>(null)
   const line = pricing?.lines?.at(-1)
+
+  // La barra inferior es fija y crece con cada descuento: un margen fijo la deja
+  // tapando el final de la página. El margen solo crece: al tildar de nuevo un
+  // cupón la barra vuelve a crecer y, si el margen se hubiera achicado, tapa los
+  // cupones sin que el scroll se mueva.
+  const barRef = useRef<HTMLDivElement>(null)
+  const [barHeight, setBarHeight] = useState(224)
+
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar) return
+
+    const observer = new ResizeObserver(() =>
+      setBarHeight((current) => Math.max(current, bar.offsetHeight)),
+    )
+    observer.observe(bar)
+
+    return () => observer.disconnect()
+  }, [])
 
   const benefitHeld = benefit.specials.reduce(
     (acc, benefit) => {
@@ -206,7 +225,10 @@ export function DishDetail({
     submitDisabled
 
   return (
-    <MobileCard className="pb-56">
+    <MobileCard
+      className="pb-[var(--bottom-bar-height)]"
+      style={{ "--bottom-bar-height": `${barHeight}px` } as CSSProperties}
+    >
       <Button
         type="button"
         variant="ghost"
@@ -356,7 +378,7 @@ export function DishDetail({
           )}
         </section>
       )}
-      <BottomAction>
+      <BottomAction ref={barRef}>
         <OrderSummary
           loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
           subtotal={line?.subtotal}

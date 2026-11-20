@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -102,6 +102,56 @@ describe("DishDetail", () => {
       screen.getByRole("button", { name: "Agregar" }),
     )
     expect(screen.getByText("Precio vianda").closest(".fixed")).not.toBeNull()
+  })
+
+  it("reserves as much room below the content as the bottom bar measures", () => {
+    const barHeight = vi
+      .spyOn(HTMLElement.prototype, "offsetHeight", "get")
+      .mockReturnValue(310)
+    const original = globalThis.ResizeObserver
+    globalThis.ResizeObserver = class {
+      constructor(private callback: () => void) {}
+      observe = () => this.callback()
+      unobserve = () => undefined
+      disconnect = () => undefined
+    }
+
+    const { container } = renderDetail()
+
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "310px",
+    })
+
+    globalThis.ResizeObserver = original
+    barHeight.mockRestore()
+  })
+
+  it("keeps the room it reserved when the bottom bar gets shorter, so ticking a coupon again does not cover the coupons", () => {
+    let height = 400
+    const barHeight = vi
+      .spyOn(HTMLElement.prototype, "offsetHeight", "get")
+      .mockImplementation(() => height)
+    let notify = () => undefined
+    const original = globalThis.ResizeObserver
+    globalThis.ResizeObserver = class {
+      constructor(callback: () => void) {
+        notify = callback
+      }
+      observe = () => notify()
+      unobserve = () => undefined
+      disconnect = () => undefined
+    }
+
+    const { container } = renderDetail()
+    height = 300
+    act(() => notify())
+
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "400px",
+    })
+
+    globalThis.ResizeObserver = original
+    barHeight.mockRestore()
   })
 
   // Criterio 3: sin descripción no se inventa texto, y sobre todo no se filtra
