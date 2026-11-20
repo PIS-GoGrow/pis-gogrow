@@ -19,6 +19,11 @@ class ConsumerSerializer < ApplicationSerializer
   attribute :company_name do |consumer|
     consumer.company.name
   end
+
+  typelize avatar_url: "string | null"
+  attribute :avatar_url do |consumer|
+    consumer.user.avatar_url
+  end
 end
 
 # == Schema Information
