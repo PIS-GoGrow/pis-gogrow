@@ -201,8 +201,10 @@ export default function Index({
                   <TableRow>
                     <TableHead>{t(`${page}.occurred_at`)}</TableHead>
                     <TableHead>{t(`${page}.order`)}</TableHead>
+                    <TableHead>{t(`${page}.delivery_date`)}</TableHead>
                     <TableHead>{t(`${page}.actor`)}</TableHead>
                     <TableHead>{t(`${page}.role`)}</TableHead>
+                    <TableHead>{t(`${page}.counterpart`)}</TableHead>
                     <TableHead>{t(`${page}.action`)}</TableHead>
                     <TableHead>{t(`${page}.changes`)}</TableHead>
                     <TableHead>{t(`${page}.before`)}</TableHead>
@@ -238,6 +240,12 @@ export default function Index({
                             </TableCell>
                             <TableCell
                               rowSpan={event.changes.length}
+                              className="align-top whitespace-nowrap"
+                            >
+                              {event.delivery_date ?? t(`${page}.empty_value`)}
+                            </TableCell>
+                            <TableCell
+                              rowSpan={event.changes.length}
                               className="align-top"
                             >
                               {event.actor_name ?? t(`${page}.system`)}
@@ -249,6 +257,18 @@ export default function Index({
                               {event.role
                                 ? t(`${page}.roles.${event.role}`)
                                 : t(`${page}.empty_value`)}
+                            </TableCell>
+                            <TableCell
+                              rowSpan={event.changes.length}
+                              className="align-top"
+                            >
+                              <div>
+                                {event.counterpart_name ??
+                                  t(`${page}.empty_value`)}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                {t(`${page}.roles.${event.counterpart_role}`)}
+                              </div>
                             </TableCell>
                             <TableCell
                               rowSpan={event.changes.length}

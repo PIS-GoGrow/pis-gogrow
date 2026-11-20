@@ -22,6 +22,22 @@ class Admin::OrderEventSerializer < ApplicationSerializer
   end
 
   typelize :string?
+  attribute :delivery_date do |event|
+    date = event.order&.delivery_date
+    I18n.l(date, format: "%d/%m/%Y") if date
+  end
+
+  typelize "'consumer' | 'provider'"
+  attribute :counterpart_role do |event|
+    event.provider? ? "consumer" : "provider"
+  end
+
+  typelize :string?
+  attribute :counterpart_name do |event|
+    event.provider? ? event.order&.consumer&.user&.name : event.order&.provider_name
+  end
+
+  typelize :string?
   attribute :dish do |event|
     event.order&.menu_name
   end
