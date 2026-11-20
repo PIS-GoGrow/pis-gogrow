@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_19_114953) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -115,32 +115,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   end
 
   create_table "benefit_usage_monthly_snapshots", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.date "month", null: false
+    t.integer "status", default: 0, null: false
     t.integer "calculation_version", default: 1, null: false
     t.datetime "captured_at", null: false
     t.datetime "closed_at"
-    t.bigint "company_id", null: false
-    t.decimal "company_subsidy_amount", precision: 14, scale: 2
-    t.integer "confirmed_meals"
-    t.integer "confirmed_meals_without_monthly_subsidy"
-    t.integer "confirmed_orders"
-    t.datetime "created_at", null: false
+    t.boolean "fictional", default: false, null: false
+    t.jsonb "unavailable_reasons", default: {}, null: false
+    t.integer "employees"
     t.integer "eligible_employees"
+    t.integer "unknown_eligibility_employees"
+    t.integer "employees_with_confirmed_orders"
     t.integer "eligible_with_confirmed_orders"
     t.integer "eligible_without_orders"
-    t.integer "employees"
-    t.integer "employees_with_confirmed_orders"
-    t.boolean "fictional", default: false, null: false
-    t.date "month", null: false
-    t.integer "monthly_available_meals"
-    t.integer "monthly_pending_reserved_meals"
     t.integer "monthly_quota_meals"
     t.integer "monthly_subsidized_meals"
+    t.integer "monthly_pending_reserved_meals"
+    t.integer "monthly_available_meals"
     t.integer "monthly_unused_closed_meals"
-    t.integer "pending_meals"
+    t.integer "confirmed_orders"
+    t.integer "confirmed_meals"
+    t.integer "confirmed_meals_without_monthly_subsidy"
     t.integer "pending_orders"
-    t.integer "status", default: 0, null: false
-    t.jsonb "unavailable_reasons", default: {}, null: false
-    t.integer "unknown_eligibility_employees"
+    t.integer "pending_meals"
+    t.decimal "company_subsidy_amount", precision: 14, scale: 2
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["company_id", "month"], name: "index_benefit_usage_monthly_snapshots_on_company_id_and_month", unique: true
     t.index ["company_id"], name: "index_benefit_usage_monthly_snapshots_on_company_id"
@@ -307,19 +307,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   create_table "notifications", force: :cascade do |t|
     t.datetime "closed_at"
     t.datetime "created_at", null: false
+    t.datetime "whatsapp_delivered_at"
+    t.json "description_data"
     t.string "event", null: false
     t.bigint "notifiable_id", null: false
     t.string "notifiable_type", null: false
     t.bigint "notification_configuration_id", null: false
     t.boolean "requires_action", null: false
     t.string "role", null: false
+    t.json "title_data"
+    t.string "twilio_sid"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.datetime "whatsapp_last_sent_at"
-    t.string "twilio_sid"
-    t.datetime "whatsapp_delivered_at"
-    t.json "title_data"
-    t.json "description_data"
     t.integer "whatsapp_send_attempts", default: 0
     t.integer "whatsapp_send_status"
     t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
@@ -670,7 +670,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
     t.string "name", null: false
     t.string "password_digest", null: false
     t.string "phone"
-    t.string "roles", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.boolean "verified", default: false, null: false
     t.index ["email"], name: "index_users_on_email", unique: true

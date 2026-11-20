@@ -9,7 +9,6 @@ module AuthenticationHelpers
 
   module Request
     def sign_in(user, role: nil)
-      user.sync_roles!
       role = (role || user.roles.first)&.to_sym
       raise ArgumentError, "Cannot sign in #{user.email}: user has no profile/role assigned" unless role
 
@@ -24,7 +23,6 @@ module AuthenticationHelpers
 
   module System
     def sign_in(user, role: nil)
-      user.sync_roles!
       role = (role || user.roles.first)&.to_sym
       raise ArgumentError, "Cannot sign in #{user.email}: user has no profile/role assigned" unless role
 

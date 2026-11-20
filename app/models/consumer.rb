@@ -3,8 +3,6 @@
 class Consumer < ApplicationRecord
   WEEKLY_BENEFIT_LIMIT = 5
 
-  include SyncsUserRoles
-
   belongs_to :company
   belongs_to :user
 
