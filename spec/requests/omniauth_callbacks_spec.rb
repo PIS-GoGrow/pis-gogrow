@@ -94,7 +94,8 @@ RSpec.describe "OmniauthCallbacks", type: :request do
 
     it "redirects with google_uid_mismatch error when google uid does not match registered account" do
       user = users(:one)
-      user.update!(email: "mismatch@gmail.com", google_uid: "original-google-uid")
+      user.update!(email: "mismatch@gmail.com")
+      user.update!(google_uid: "original-google-uid")
 
       auth = mock_google_auth(email: user.email, uid: "different-google-uid")
       OmniAuth.config.mock_auth[:google_oauth2] = auth
@@ -108,7 +109,8 @@ RSpec.describe "OmniauthCallbacks", type: :request do
     it "redirects to /rrhh with mismatch error when origin is /rrhh" do
       company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
       user = users(:one)
-      user.update!(email: "adminmismatch@gmail.com", google_uid: "original-admin-uid")
+      user.update!(email: "adminmismatch@gmail.com")
+      user.update!(google_uid: "original-admin-uid")
       Admin.find_or_create_by!(user: user, company: company)
 
       auth = mock_google_auth(email: user.email, uid: "tampered-admin-uid")

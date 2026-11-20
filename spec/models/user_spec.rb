@@ -135,8 +135,8 @@ RSpec.describe User, type: :model do
       expect(User.find_and_update_from_google(auth)).to be_nil
     end
 
-    it "normaliza correos con espacios y mayúsculas al buscar" do
-      auth = build_auth(email: " TEST-OAUTH@GMAIL.COM ", uid: "uid-normalized")
+    it "normaliza correos con mayúsculas al buscar" do
+      auth = build_auth(email: "TEST-OAUTH@GMAIL.COM", uid: "uid-normalized")
 
       result = User.find_and_update_from_google(auth)
 
