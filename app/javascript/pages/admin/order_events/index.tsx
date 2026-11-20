@@ -71,9 +71,8 @@ export default function Index({
         title={t(`${page}.title`)}
         titleVariant="prominent"
         description={t(`${page}.description`)}
-        mobileBack
         back={
-          <Button variant="ghost" size="icon" className="md:hidden" asChild>
+          <Button variant="ghost" size="icon" asChild>
             <Link href={adminAccount().url} aria-label={t(`${page}.back`)}>
               <ArrowLeft aria-hidden="true" />
             </Link>
