@@ -784,6 +784,7 @@ es:
           order: "Pedido"
           actor: "Actor"
           role: "Rol"
+          counterpart: "Otra parte"
           action: "Acción"
           changes: "Cambio"
           before: "Anterior"

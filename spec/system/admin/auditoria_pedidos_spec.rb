@@ -57,10 +57,11 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     click_link "Auditoría", match: :first
 
     expect(page).to have_content("Auditoría de pedidos")
-    occurred_at, code, actor, role, action = row_for("Modificación")
+    occurred_at, code, actor, role, counterpart, action = row_for("Modificación")
     expect(occurred_at).to match(%r{\A\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}\z})
     expect(code).to include("PED-#{modified.id}", "Test User")
     expect([ actor, role, action ]).to eq([ "Test User", "Empleado", "Modificación" ])
+    expect(counterpart).to include("Provider User", "Proveedor")
     modified.reload
     expect(row_for("Cantidad").last(3)).to eq([ "Cantidad", "1", "2" ])
     expect(row_for("Precio de lista").last(3)).to eq([ "Precio de lista", Account.format_amount(300.5), Account.format_amount(modified.price) ])
@@ -68,7 +69,9 @@ RSpec.describe "Auditoría de pedidos", type: :system do
 
     confirmation = row_for("Confirmación")
     expect(confirmation[1]).to include("PED-#{confirmed.id}")
-    expect(confirmation[2..]).to eq([ "Provider User", "Proveedor", "Confirmación", "Estado", "Pendiente", "Confirmado" ])
+    expect(confirmation[2, 2]).to eq([ "Provider User", "Proveedor" ])
+    expect(confirmation[4]).to include("Test User", "Empleado")
+    expect(confirmation[5..]).to eq([ "Confirmación", "Estado", "Pendiente", "Confirmado" ])
   end
 
   # CA4: cada filtro deja solo lo que coincide con él, desde la pantalla.

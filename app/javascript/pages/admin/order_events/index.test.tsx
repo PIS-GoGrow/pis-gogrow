@@ -47,6 +47,8 @@ describe("Admin::OrderEvents Index Page", () => {
     occurred_at: "21/10/2026 10:15:00",
     actor_name: "Sofía",
     consumer_name: "Sofía",
+    counterpart_name: "Tu Viandita",
+    counterpart_role: "provider",
     dish: "Milanesa",
     changes: [
       { field: "amount", before: "1", after: "2" },
@@ -66,6 +68,35 @@ describe("Admin::OrderEvents Index Page", () => {
     const second = screen.getByRole("row", { name: /Notas/ })
     expect(within(second).getByText("—")).toBeInTheDocument()
     expect(within(second).getByText("Sin sal")).toBeInTheDocument()
+  })
+
+  it("shows the other party involved with its role", () => {
+    render(
+      <Index
+        events={[
+          event,
+          {
+            ...event,
+            id: 2,
+            order_id: 43,
+            role: "provider",
+            actor_name: "Tu Viandita",
+            counterpart_name: "Sofía",
+            counterpart_role: "consumer",
+          },
+        ]}
+        total={2}
+        filters={{}}
+      />,
+    )
+
+    const byEmployee = screen.getByRole("row", { name: /PED-42/ })
+    expect(within(byEmployee).getByText("Tu Viandita")).toBeInTheDocument()
+    expect(within(byEmployee).getAllByText("Proveedor")).toHaveLength(1)
+
+    const byProvider = screen.getByRole("row", { name: /PED-43/ })
+    expect(within(byProvider).getByText("Sofía")).toBeInTheDocument()
+    expect(within(byProvider).getAllByText("Empleado")).toHaveLength(1)
   })
 
   it("names the system as the actor of a change made without a session", () => {

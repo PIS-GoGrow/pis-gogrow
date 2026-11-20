@@ -21,6 +21,16 @@ class Admin::OrderEventSerializer < ApplicationSerializer
     event.order&.consumer&.user&.name
   end
 
+  typelize "'consumer' | 'provider'"
+  attribute :counterpart_role do |event|
+    event.provider? ? "consumer" : "provider"
+  end
+
+  typelize :string?
+  attribute :counterpart_name do |event|
+    event.provider? ? event.order&.consumer&.user&.name : event.order&.provider_name
+  end
+
   typelize :string?
   attribute :dish do |event|
     event.order&.menu_name

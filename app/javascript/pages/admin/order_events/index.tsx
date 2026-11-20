@@ -204,6 +204,7 @@ export default function Index({
                     <TableHead>{t(`${page}.order`)}</TableHead>
                     <TableHead>{t(`${page}.actor`)}</TableHead>
                     <TableHead>{t(`${page}.role`)}</TableHead>
+                    <TableHead>{t(`${page}.counterpart`)}</TableHead>
                     <TableHead>{t(`${page}.action`)}</TableHead>
                     <TableHead>{t(`${page}.changes`)}</TableHead>
                     <TableHead>{t(`${page}.before`)}</TableHead>
@@ -250,6 +251,18 @@ export default function Index({
                               {event.role
                                 ? t(`${page}.roles.${event.role}`)
                                 : t(`${page}.empty_value`)}
+                            </TableCell>
+                            <TableCell
+                              rowSpan={event.changes.length}
+                              className="align-top"
+                            >
+                              <div>
+                                {event.counterpart_name ??
+                                  t(`${page}.empty_value`)}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                {t(`${page}.roles.${event.counterpart_role}`)}
+                              </div>
                             </TableCell>
                             <TableCell
                               rowSpan={event.changes.length}
