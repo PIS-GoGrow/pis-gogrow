@@ -114,7 +114,7 @@ describe("DishDetail", () => {
       observe = () => this.callback()
       unobserve = () => undefined
       disconnect = () => undefined
-    }
+    } as unknown as typeof ResizeObserver
 
     const { container } = renderDetail()
 
@@ -131,7 +131,7 @@ describe("DishDetail", () => {
     const barHeight = vi
       .spyOn(HTMLElement.prototype, "offsetHeight", "get")
       .mockImplementation(() => height)
-    let notify = () => undefined
+    let notify: () => void = () => undefined
     const original = globalThis.ResizeObserver
     globalThis.ResizeObserver = class {
       constructor(callback: () => void) {
@@ -140,7 +140,7 @@ describe("DishDetail", () => {
       observe = () => notify()
       unobserve = () => undefined
       disconnect = () => undefined
-    }
+    } as unknown as typeof ResizeObserver
 
     const { container } = renderDetail()
     height = 300
@@ -148,6 +148,67 @@ describe("DishDetail", () => {
 
     expect(container.firstElementChild).toHaveStyle({
       "--bottom-bar-height": "400px",
+    })
+
+    globalThis.ResizeObserver = original
+    barHeight.mockRestore()
+  })
+
+  it("initializes with the default 224px bottom margin fallback before observation", () => {
+    const original = globalThis.ResizeObserver
+    globalThis.ResizeObserver = class {
+      observe = () => undefined
+      unobserve = () => undefined
+      disconnect = () => undefined
+    }
+
+    const { container } = renderDetail()
+
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "224px",
+    })
+
+    globalThis.ResizeObserver = original
+  })
+
+  it("grows monotonically as the bottom bar expands across multiple discount line updates", () => {
+    let height = 240
+    const barHeight = vi
+      .spyOn(HTMLElement.prototype, "offsetHeight", "get")
+      .mockImplementation(() => height)
+    let notify: () => void = () => undefined
+    const original = globalThis.ResizeObserver
+    globalThis.ResizeObserver = class {
+      constructor(callback: () => void) {
+        notify = callback
+      }
+      observe = () => notify()
+      unobserve = () => undefined
+      disconnect = () => undefined
+    } as unknown as typeof ResizeObserver
+
+    const { container } = renderDetail()
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "240px",
+    })
+
+    height = 320
+    act(() => notify())
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "320px",
+    })
+
+    height = 390
+    act(() => notify())
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "390px",
+    })
+
+    // Unticking coupon reduces bar size: margin must not shrink
+    height = 290
+    act(() => notify())
+    expect(container.firstElementChild).toHaveStyle({
+      "--bottom-bar-height": "390px",
     })
 
     globalThis.ResizeObserver = original

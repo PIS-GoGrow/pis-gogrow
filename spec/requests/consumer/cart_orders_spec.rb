@@ -556,6 +556,20 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ], order_id: order.id }
       expect(response.parsed_body["discount"]).to eq(schedule.menu.price.to_f * 0.5)
     end
+
+    it "ignora un cupón que pertenece a otro consumidor en el cálculo de precios (bypass de interfaz)" do
+      other_coupon = consumers(:other).benefits.create!(
+        benefit_configuration: benefit_configurations(:gift), percentage: 40, amount: 1, due_date: 1.month.from_now
+      )
+
+      post pricing_orders_path, params: {
+        items: [ { schedule_id: schedule.id, quantity: 1, benefits: [ other_coupon.id ] } ]
+      }
+
+      expect(response).to have_http_status(:ok)
+      tiers = response.parsed_body["lines"].first["tiers"]
+      expect(tiers.map { |t| t["id"] }).not_to include(other_coupon.id)
+    end
   end
 
   describe "POST /orders con restricción de max_price" do
