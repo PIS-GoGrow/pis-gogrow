@@ -839,6 +839,7 @@
             "before": "Anterior",
             "changes": "Cambio",
             "counterpart": "Otra parte",
+            "delivery_date": "Fecha de entrega",
             "description": "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar.",
             "empty_description": "Cuando se cree o cambie un pedido, va a quedar registrado acá.",
             "empty_title": "No hay eventos",

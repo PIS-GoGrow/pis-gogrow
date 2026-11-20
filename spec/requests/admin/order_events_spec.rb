@@ -47,6 +47,7 @@ RSpec.describe "Admin::OrderEvents", type: :request do
           consumer_name: users(:one).name,
           counterpart_name: users(:provider_user).name,
           counterpart_role: "provider",
+          delivery_date: I18n.l(order.delivery_date, format: "%d/%m/%Y"),
           changes: [ { field: "status", before: "Pendiente", after: "Cancelado" } ]
         )
         expect(event[:occurred_at]).to match(%r{\A\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}\z})

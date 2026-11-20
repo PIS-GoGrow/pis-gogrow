@@ -49,6 +49,7 @@ describe("Admin::OrderEvents Index Page", () => {
     consumer_name: "Sofía",
     counterpart_name: "Tu Viandita",
     counterpart_role: "provider",
+    delivery_date: "23/10/2026",
     dish: "Milanesa",
     changes: [
       { field: "amount", before: "1", after: "2" },
@@ -61,6 +62,7 @@ describe("Admin::OrderEvents Index Page", () => {
 
     const first = screen.getByRole("row", { name: /PED-42/ })
     expect(within(first).getByText("21/10/2026 10:15:00")).toBeInTheDocument()
+    expect(within(first).getByText("23/10/2026")).toBeInTheDocument()
     expect(within(first).getByText("Empleado")).toBeInTheDocument()
     expect(within(first).getByText("Modificación")).toBeInTheDocument()
     expect(within(first).getByText("Cantidad")).toBeInTheDocument()
